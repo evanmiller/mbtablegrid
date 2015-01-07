@@ -681,6 +681,8 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
 		// scrollers
 		[rowHeaderScrollView reflectScrolledClipView:[rowHeaderScrollView contentView]];
     }
+	
+	[self setNeedsDisplay:TRUE];
 }
 
 #pragma mark -
