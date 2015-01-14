@@ -193,12 +193,12 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
 	NSResponder *firstResponder = [[self window] firstResponder];
 	if (([[firstResponder class] isSubclassOfClass:[NSView class]] && [(NSView *)firstResponder isDescendantOf:self]) && [[self window] isKeyWindow]) {
 		[[NSGraphicsContext currentContext] saveGraphicsState];
-		NSSetFocusRingStyle(NSFocusRingOnly);
+		//NSSetFocusRingStyle(NSFocusRingOnly);
 		
 		[[NSBezierPath bezierPathWithRect:NSMakeRect(0,0,[self frame].size.width,[self frame].size.height)] fill];
 		
 		[[NSGraphicsContext currentContext] restoreGraphicsState];
-		[self setKeyboardFocusRingNeedsDisplayInRect:[self bounds]];
+		//[self setKeyboardFocusRingNeedsDisplayInRect:[self bounds]];
 	}
 	
 	// Draw the corner header
@@ -681,7 +681,7 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
 		// scrollers
 		[rowHeaderScrollView reflectScrolledClipView:[rowHeaderScrollView contentView]];
     }
-	[contentView setNeedsDisplay:YES];
+	[contentView setNeedsDisplayInRect:contentView.visibleRect];
 }
 
 #pragma mark -
