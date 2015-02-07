@@ -25,6 +25,7 @@
 
 #import "MBTableGrid.h"
 #import "MBTableGridHeaderView.h"
+#import "MBTableGridFooterView.h"
 #import "MBTableGridHeaderCell.h"
 #import "MBTableGridContentView.h"
 #import "MBTableGridCell.h"
@@ -48,6 +49,7 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
 - (void)_drawColumnHeaderBackgroundInRect:(NSRect)aRect;
 - (void)_drawRowHeaderBackgroundInRect:(NSRect)aRect;
 - (void)_drawCornerHeaderBackgroundInRect:(NSRect)aRect;
+- (void)_drawCornerFooterBackgroundInRect:(NSRect)aRect;
 @end
 
 @interface MBTableGrid (DataAccessors)
@@ -130,7 +132,7 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
 		[self addSubview:columnHeaderScrollView];
 
 		// Setup the row headers
-		NSRect rowHeaderFrame = NSMakeRect(0, MBTableGridColumnHeaderHeight, MBTableGridRowHeaderWidth, [self frame].size.height - MBTableGridColumnHeaderHeight);
+		NSRect rowHeaderFrame = NSMakeRect(0, MBTableGridColumnHeaderHeight, MBTableGridRowHeaderWidth, [self frame].size.height - MBTableGridColumnHeaderHeight * 2);
 		rowHeaderScrollView = [[NSScrollView alloc] initWithFrame:rowHeaderFrame];
 		rowHeaderView = [[MBTableGridHeaderView alloc] initWithFrame:NSMakeRect(0, 0, rowHeaderFrame.size.width, rowHeaderFrame.size.height)];
 		//[rowHeaderView setAutoresizingMask:NSViewHeightSizable];
@@ -139,9 +141,22 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
 		[rowHeaderScrollView setAutoresizingMask:NSViewHeightSizable];
 		[rowHeaderScrollView setDrawsBackground:NO];
 		[self addSubview:rowHeaderScrollView];
+		
+		// Setup the footer view
+		
+		NSRect columnFooterFrame = NSMakeRect(MBTableGridRowHeaderWidth, frameRect.size.height - MBTableGridColumnHeaderHeight, frameRect.size.width - MBTableGridRowHeaderWidth, MBTableGridColumnHeaderHeight);
+		
+		columnFooterScrollView = [[NSScrollView alloc] initWithFrame:columnFooterFrame];
+		columnFooterView = [[MBTableGridFooterView alloc] initWithFrame:NSMakeRect(0, 0, columnFooterFrame.size.width, columnFooterFrame.size.height)];
+		[columnFooterView setAutoresizingMask:NSViewWidthSizable];
+		[columnFooterScrollView setDocumentView:columnFooterView];
+		[columnFooterScrollView setAutoresizingMask:(NSViewWidthSizable | NSViewMinYMargin)];
+		[columnFooterScrollView setDrawsBackground:NO];
+		[self addSubview:columnFooterScrollView];
+
 
 		// Setup the content view
-		NSRect contentFrame = NSMakeRect(MBTableGridRowHeaderWidth, MBTableGridColumnHeaderHeight, [self frame].size.width - MBTableGridRowHeaderWidth, [self frame].size.height - MBTableGridColumnHeaderHeight);
+		NSRect contentFrame = NSMakeRect(MBTableGridRowHeaderWidth, MBTableGridColumnHeaderHeight, [self frame].size.width - MBTableGridRowHeaderWidth, [self frame].size.height - MBTableGridColumnHeaderHeight - MBTableGridColumnHeaderHeight);
 		contentScrollView = [[NSScrollView alloc] initWithFrame:contentFrame];
 		contentView = [[MBTableGridContentView alloc] initWithFrame:NSMakeRect(0, 0, contentFrame.size.width, contentFrame.size.height)];
 		[contentScrollView setDocumentView:contentView];
@@ -247,8 +262,12 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
 	NSRect columnHeaderRect = NSMakeRect(NSWidth(cornerRect), 0, [self frame].size.width - NSWidth(cornerRect), MBTableGridColumnHeaderHeight);
 	[self _drawColumnHeaderBackgroundInRect:columnHeaderRect];
 
+	// Draw the corner footer
+	NSRect footerRect = [self footerRectOfCorner];
+	[self _drawCornerFooterBackgroundInRect:footerRect];
+
 	// Draw the row header background
-	NSRect rowHeaderRect = NSMakeRect(0, NSMaxY(cornerRect), MBTableGridRowHeaderWidth, [self frame].size.height - MBTableGridColumnHeaderHeight);
+	NSRect rowHeaderRect = NSMakeRect(0, NSMaxY(cornerRect), MBTableGridRowHeaderWidth, [self frame].size.height - MBTableGridColumnHeaderHeight * 2);
 	[self _drawRowHeaderBackgroundInRect:rowHeaderRect];
 }
 
@@ -293,17 +312,23 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
 		currentWidth = MBTableHeaderMinimumColumnWidth;
 	}
 	
-	columnWidths[columnKey] = @(currentWidth);
-	
-	// Update views with new sizes
-	[contentView setFrameSize:NSMakeSize(NSWidth(contentView.frame) + distance, NSHeight(contentView.frame))];
-	[columnHeaderView setFrameSize:NSMakeSize(NSWidth(columnHeaderView.frame) + distance, NSHeight(columnHeaderView.frame))];
-	
-	NSRect rectOfResizedAndVisibleRightwardColumns = NSMakeRect(columnRect.origin.x - rowHeaderView.bounds.size.width, 0, contentView.bounds.size.width - columnRect.origin.x, NSHeight(contentView.frame));
-	[contentView setNeedsDisplayInRect:rectOfResizedAndVisibleRightwardColumns];
-	
-	NSRect rectOfResizedAndVisibleRightwardHeaders = NSMakeRect(columnRect.origin.x - rowHeaderView.bounds.size.width, 0, contentView.bounds.size.width - columnRect.origin.x, NSHeight(columnHeaderView.frame));
-	[columnHeaderView setNeedsDisplayInRect:rectOfResizedAndVisibleRightwardHeaders];
+	if (currentWidth > MBTableHeaderMinimumColumnWidth) {
+		columnWidths[columnKey] = @(currentWidth);
+		
+		// Update views with new sizes
+		[contentView setFrameSize:NSMakeSize(NSWidth(contentView.frame) + distance, NSHeight(contentView.frame))];
+		[columnHeaderView setFrameSize:NSMakeSize(NSWidth(columnHeaderView.frame) + distance, NSHeight(columnHeaderView.frame))];
+		[columnFooterView setFrameSize:NSMakeSize(NSWidth(columnFooterView.frame) + distance, NSHeight(columnFooterView.frame))];
+		
+		NSRect rectOfResizedAndVisibleRightwardColumns = NSMakeRect(columnRect.origin.x - rowHeaderView.bounds.size.width, 0, contentView.bounds.size.width - columnRect.origin.x, NSHeight(contentView.frame));
+		[contentView setNeedsDisplayInRect:rectOfResizedAndVisibleRightwardColumns];
+		
+		NSRect rectOfResizedAndVisibleRightwardHeaders = NSMakeRect(columnRect.origin.x - rowHeaderView.bounds.size.width, 0, contentView.bounds.size.width - columnRect.origin.x, NSHeight(columnHeaderView.frame));
+		[columnHeaderView setNeedsDisplayInRect:rectOfResizedAndVisibleRightwardHeaders];
+		
+		NSRect rectOfResizedAndVisibleRightwardFooters = NSMakeRect(columnRect.origin.x - rowHeaderView.bounds.size.width, 0, contentView.bounds.size.width - columnRect.origin.x, NSHeight(columnFooterView.frame));
+		[columnFooterView setNeedsDisplayInRect:rectOfResizedAndVisibleRightwardFooters];
+	}
 }
 
 - (void)registerForDraggedTypes:(NSArray *)pboardTypes {
@@ -826,6 +851,26 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
 		// scrollers
 		[rowHeaderScrollView reflectScrolledClipView:[rowHeaderScrollView contentView]];
 	}
+	
+	/*
+	 * Column Footer Synchronization
+	 */
+	
+	// Get the column headers' current origin
+	NSPoint curColumnFooterOffset = [[columnFooterScrollView contentView] bounds].origin;
+	NSPoint newColumnFooterOffset = curColumnFooterOffset;
+	
+	// Column headers are synchronized in the horizontal plane
+	newColumnFooterOffset.x = changedBoundsOrigin.x;
+	
+	// If the synced position is different from our current position, reposition the headers view
+	if (!NSEqualPoints(curColumnFooterOffset, changedBoundsOrigin)) {
+		[[columnFooterScrollView contentView] scrollToPoint:newColumnFooterOffset];
+		// we have to tell the NSScrollView to update its
+		// scrollers
+		[columnFooterScrollView reflectScrolledClipView:[columnFooterScrollView contentView]];
+	}
+
 }
 
 #pragma mark -
@@ -1147,6 +1192,11 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
 	return rect;
 }
 
+- (NSRect)footerRectOfCorner {
+	NSRect rect = NSMakeRect(0, [self frame].size.height - MBTableGridColumnHeaderHeight, MBTableGridRowHeaderWidth, MBTableGridColumnHeaderHeight);
+	return rect;
+}
+
 - (NSInteger)columnAtPoint:(NSPoint)aPoint {
 	NSInteger column = 0;
 	while (column < _numberOfColumns) {
@@ -1274,7 +1324,7 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
 		NSColor *bottomGradientTop = [NSColor colorWithDeviceWhite:1 alpha:1.0];
 		NSColor *bottomGradientBottom = [NSColor colorWithDeviceWhite:1 alpha:1.0];
 		NSColor *topColor = [NSColor colorWithDeviceWhite:1 alpha:1.0];
-		NSColor *borderColor = [NSColor colorWithDeviceWhite:0.4 alpha:1.0];
+		NSColor *borderColor = [NSColor colorWithDeviceWhite:0.8 alpha:1.0];
 
 		NSGradient *topGradient = [[NSGradient alloc] initWithColors:@[topGradientTop, topGradientBottom]];
 		NSGradient *bottomGradient = [[NSGradient alloc] initWithColors:@[bottomGradientTop, bottomGradientBottom]];
@@ -1300,22 +1350,8 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
 
 - (void)_drawRowHeaderBackgroundInRect:(NSRect)aRect {
 	if ([self needsToDrawRect:aRect]) {
-		NSColor *topGradientTop = [NSColor colorWithDeviceWhite:1 alpha:1.0];
-		NSColor *topGradientBottom = [NSColor colorWithDeviceWhite:1 alpha:1.0];
-		NSColor *bottomGradientTop = [NSColor colorWithDeviceWhite:1 alpha:1.0];
-		NSColor *bottomGradientBottom = [NSColor colorWithDeviceWhite:1 alpha:1.0];
 		NSColor *sideColor = [NSColor colorWithDeviceWhite:1.0 alpha:0.4];
-		NSColor *borderColor = [NSColor colorWithDeviceWhite:0.4 alpha:1.0];
-
-		NSGradient *topGradient = [[NSGradient alloc] initWithColors:@[topGradientTop, topGradientBottom]];
-		NSGradient *bottomGradient = [[NSGradient alloc] initWithColors:@[bottomGradientTop, bottomGradientBottom]];
-
-		NSRect leftRect = NSMakeRect(NSMinX(aRect), NSMinY(aRect), NSWidth(aRect) / 2, NSHeight(aRect));
-		NSRect rightRect = NSMakeRect(NSMidX(aRect) - 0.5, NSMinY(aRect), NSWidth(aRect) / 2 + 0.5, NSHeight(aRect));
-
-		// Draw the gradients
-		[topGradient drawInRect:leftRect angle:0.0];
-		[bottomGradient drawInRect:rightRect angle:0.0];
+		NSColor *borderColor = [NSColor colorWithDeviceWhite:0.8 alpha:1.0];
 
 		// Draw the left bevel line
 		NSRect leftLine = NSMakeRect(NSMinX(aRect), NSMinY(aRect), 1.0, NSHeight(aRect));
@@ -1331,24 +1367,9 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
 
 - (void)_drawCornerHeaderBackgroundInRect:(NSRect)aRect {
 	if ([self needsToDrawRect:aRect]) {
-		NSColor *topGradientTop = [NSColor colorWithDeviceWhite:1.0 alpha:1.0];
-		NSColor *topGradientBottom = [NSColor colorWithDeviceWhite:1.0 alpha:1.0];
-		NSColor *bottomGradientTop = [NSColor colorWithDeviceWhite:1.0 alpha:1.0];
-		NSColor *bottomGradientBottom = [NSColor colorWithDeviceWhite:1.0 alpha:1.0];
-		NSColor *topColor = [NSColor colorWithDeviceWhite:1 alpha:1.0];
-		NSColor *sideColor = [NSColor colorWithDeviceWhite:1.0 alpha:0.4];
-		NSColor *borderColor = [NSColor colorWithDeviceWhite:0.4 alpha:1.0];
-
-		NSGradient *topGradient = [[NSGradient alloc] initWithColors:@[topGradientTop, topGradientBottom]];
-		NSGradient *bottomGradient = [[NSGradient alloc] initWithColors:@[bottomGradientTop, bottomGradientBottom]];
-
-		// Divide the frame in two
-		NSRect mainRect = aRect;
-		NSRect bottomRightRect = NSMakeRect(NSMidX(aRect) - 0.5, NSMidY(aRect) - 0.5, NSWidth(aRect) / 2, NSHeight(aRect) / 2 + 0.5);
-
-		// Draw the gradients
-		[topGradient drawInRect:mainRect angle:90.0];
-		[bottomGradient drawInRect:bottomRightRect angle:90.0];
+		NSColor *topColor = [NSColor colorWithDeviceWhite:0.9 alpha:1.0];
+		NSColor *sideColor = [NSColor colorWithDeviceWhite:0.8 alpha:0.4];
+		NSColor *borderColor = [NSColor colorWithDeviceWhite:0.8 alpha:1.0];
 
 		// Draw the top bevel line
 		NSRect topLine = NSMakeRect(NSMinX(aRect), NSMinY(aRect), NSWidth(aRect), 1.0);
@@ -1370,6 +1391,34 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
 		NSRectFill(bottomLine);
 	}
 }
+
+- (void)_drawCornerFooterBackgroundInRect:(NSRect)aRect {
+	if ([self needsToDrawRect:aRect]) {
+		NSColor *topColor = [NSColor colorWithDeviceWhite:0.8 alpha:1.000];
+		NSColor *sideColor = [NSColor colorWithDeviceWhite:1.0 alpha:0.4];
+		NSColor *borderColor = [NSColor colorWithDeviceWhite:0.8 alpha:1.000];
+		
+		// Draw the top bevel line
+		NSRect topLine = NSMakeRect(NSMinX(aRect), NSMinY(aRect), NSWidth(aRect), 1.0);
+		[topColor set];
+		NSRectFill(topLine);
+		
+		// Draw the left bevel line
+		NSRect leftLine = NSMakeRect(NSMinX(aRect), NSMinY(aRect), 1.0, NSHeight(aRect));
+		[sideColor set];
+		[[NSBezierPath bezierPathWithRect:leftLine] fill];
+		
+		// Draw the right border
+		[borderColor set];
+		NSRect borderLine = NSMakeRect(NSMaxX(aRect) - 1, NSMinY(aRect), 1.0, NSHeight(aRect));
+		NSRectFill(borderLine);
+		
+		// Draw the bottom border
+		NSRect bottomLine = NSMakeRect(NSMinX(aRect), NSMaxY(aRect) - 1.0, NSWidth(aRect), 1.0);
+		NSRectFill(bottomLine);
+	}
+}
+
 
 @end
 

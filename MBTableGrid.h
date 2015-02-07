@@ -26,7 +26,7 @@
 #import <Cocoa/Cocoa.h>
 #import <QuartzCore/QuartzCore.h>
 
-@class MBTableGridHeaderView, MBTableGridHeaderCell, MBTableGridContentView;
+@class MBTableGridHeaderView, MBTableGridFooterView, MBTableGridHeaderCell, MBTableGridContentView;
 @protocol MBTableGridDelegate, MBTableGridDataSource;
 
 /* Notifications */
@@ -120,6 +120,10 @@ typedef enum {
 	MBTableGridHeaderView *columnHeaderView;
 	NSScrollView *rowHeaderScrollView;
 	MBTableGridHeaderView *rowHeaderView;
+	
+	/* Footer */
+	NSScrollView *columnFooterScrollView;
+	MBTableGridFooterView *columnFooterView;
 	
 	/* Content */
 	NSScrollView *contentScrollView;
