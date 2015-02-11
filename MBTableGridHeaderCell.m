@@ -33,9 +33,9 @@
 {
     
     
-	NSColor *topColor = [NSColor colorWithDeviceWhite:0.95 alpha:1.0];
-	NSColor *sideColor = [NSColor colorWithDeviceWhite:1.0 alpha:0.4];
-	NSColor *borderColor = [NSColor colorWithDeviceWhite:0.65 alpha:1.0];
+	NSColor *topColor = [NSColor controlHighlightColor];
+	NSColor *sideColor = [NSColor controlColor];
+	NSColor *borderColor = [NSColor gridColor];
 		
 	if(self.orientation == MBTableHeaderHorizontalOrientation) {
 		// Draw the side bevels
@@ -102,7 +102,7 @@
 	NSShadow *textShadow = [[NSShadow alloc] init];
 	[textShadow setShadowOffset:NSMakeSize(0,-1)];
 	[textShadow setShadowBlurRadius:0.0];
-	[textShadow setShadowColor:[NSColor colorWithDeviceWhite:1.0 alpha:0.8]];
+	[textShadow setShadowColor:[NSColor controlHighlightColor]];
 	[textShadow set];
 	
 //	[string drawInRect:textFrame];

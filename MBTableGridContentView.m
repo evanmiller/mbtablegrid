@@ -137,7 +137,7 @@
 			// Only draw the cell if we need to
 			if ([self needsToDrawRect:cellFrame] && !(row == editedRow && column == editedColumn)) {
                 
-                NSColor *backgroundColor = [[self tableGrid] _backgroundColorForColumn:column row:row] ?: [NSColor whiteColor];
+                NSColor *backgroundColor = [[self tableGrid] _backgroundColorForColumn:column row:row] ?: [NSColor controlBackgroundColor];
                 
                 
 				[_cell setObjectValue:[[self tableGrid] _objectValueForColumn:column row:row]];

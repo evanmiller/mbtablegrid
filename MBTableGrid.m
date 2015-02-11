@@ -1134,7 +1134,7 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
 		NSColor *bottomGradientTop = [NSColor colorWithDeviceWhite:0.85 alpha:1.0];
 		NSColor *bottomGradientBottom = [NSColor colorWithDeviceWhite:0.83 alpha:1.0];
 		NSColor *topColor = [NSColor colorWithDeviceWhite:0.95 alpha:1.0];
-		NSColor *borderColor = [NSColor colorWithDeviceWhite:0.65 alpha:1.0];
+		NSColor *borderColor = [NSColor gridColor];
 		
 		NSGradient *topGradient = [[NSGradient alloc] initWithColors:@[topGradientTop, topGradientBottom]];
 		NSGradient *bottomGradient = [[NSGradient alloc] initWithColors:@[bottomGradientTop, bottomGradientBottom]];
@@ -1167,7 +1167,7 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
 		NSColor *bottomGradientTop = [NSColor colorWithDeviceWhite:0.85 alpha:1.0];
 		NSColor *bottomGradientBottom = [NSColor colorWithDeviceWhite:0.83 alpha:1.0];
 		NSColor *sideColor = [NSColor colorWithDeviceWhite:1.0 alpha:0.4];
-		NSColor *borderColor = [NSColor colorWithDeviceWhite:0.65 alpha:1.0];
+		NSColor *borderColor = [NSColor gridColor];
 		
 		NSGradient *topGradient = [[NSGradient alloc] initWithColors:@[topGradientTop, topGradientBottom]];
 		NSGradient *bottomGradient = [[NSGradient alloc] initWithColors:@[bottomGradientTop, bottomGradientBottom]];
