@@ -704,9 +704,13 @@
 		for (NSMenuItem *item in menu.itemArray) {
 			item.action = @selector(cellPopupMenuItemSelected:);
 			item.target = self;
+
+			if ([item.title isEqualToString:currentValue])
+			{
+				[popupCell selectItem:item];
+			}
 		}
 
-		[popupCell selectItemAtIndex:[currentValue integerValue]];
 		[selectedCell.menu popUpMenuPositioningItem:nil atLocation:cellFrame.origin inView:self];
 		
 	} else {
