@@ -57,7 +57,10 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
     
 	columns = [[NSMutableArray alloc] initWithCapacity:10];
 
-	tableGrid.autosaveName = @"MBTableGrid";
+	NSDictionary *infoDict = [[NSBundle mainBundle] infoDictionary];
+	NSString *gridComponentID = [infoDict objectForKey:@"GridComponentID"];
+
+	tableGrid.autosaveName = [NSString stringWithFormat:@"MBTableGrid Columns records-table-%@", gridComponentID];
 	
 	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
 	self.columnWidths = [defaults objectForKey:tableGrid.autosaveName];
