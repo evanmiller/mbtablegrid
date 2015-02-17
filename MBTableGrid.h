@@ -190,6 +190,8 @@ typedef enum {
  */
 - (void) resizeColumnWithIndex:(NSUInteger)columnIndex withDistance:(float)distance;
 
+- (void) resizeColumnWithIndex:(NSUInteger)columnIndex width:(float)w;
+
 /**
  * @}
  */

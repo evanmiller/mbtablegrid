@@ -216,6 +216,26 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
 
 #pragma mark Resize scrollview content size
 
+- (void) resizeColumnWithIndex:(NSUInteger)columnIndex width:(float)w {
+	// Get column key
+	NSString *columnKey = [NSString stringWithFormat:@"column%lu", columnIndex];
+	
+	// Set new width of column
+	float currentWidth = w;
+	
+	if (currentWidth < MBTableHeaderMinimumColumnWidth) {
+		currentWidth = MBTableHeaderMinimumColumnWidth;
+	}
+	
+	columnWidths[columnKey] = @(currentWidth);
+	
+	// Update views with new sizes
+	[contentView setFrameSize:NSMakeSize(currentWidth, NSHeight(contentView.frame))];
+	[columnHeaderView setFrameSize:NSMakeSize(currentWidth, NSHeight(columnHeaderView.frame))];
+	[contentView setNeedsDisplay:YES];
+	[columnHeaderView setNeedsDisplayInRect:columnHeaderView.frame];
+}
+
 - (void) resizeColumnWithIndex:(NSUInteger)columnIndex withDistance:(float)distance
 {
     
