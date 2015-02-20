@@ -719,7 +719,6 @@
 	[selectedCell setSelectable:YES];
 	
 	id currentValue = [[self tableGrid] _objectValueForColumn:editedColumn row:editedRow];
-	NSLog(@"currentValue: %@", currentValue);
 
 	if ([selectedCell isKindOfClass:[MBPopupButtonCell class]]) {
 		MBPopupButtonCell *popupCell = (MBPopupButtonCell *)selectedCell;
@@ -745,26 +744,6 @@
 		[selectedCell editWithFrame:cellFrame inView:self editor:editor delegate:self event:nil];
 		editor.string = currentValue;
 	}
-}
-
-- (void)menuDidClose:(NSMenu *)menu
-{
-	
-		//[popupCell synchronizeTitleAndSelectedItem];
-		
-//		NSInteger selectedColumn = [[self tableGrid].selectedColumnIndexes firstIndex];
-//		NSCell *selectedCell = [[self tableGrid] _cellForColumn:selectedColumn];
-//		
-//		MBPopupButtonCell *popupCell = (MBPopupButtonCell *)selectedCell;
-//		
-//		NSLog(@"dfgdf: %@", [[popupCell selectedItem] title]);
-//		
-//		if ([[popupCell selectedItem] title] && ![[[popupCell selectedItem] title] isEqualToString:@""])
-//		{
-//			[popupCell setTitle:[[popupCell selectedItem] title]];
-//			//[popupCell selectItemWithTitle:[[popupCell selectedItem] title]];
-//		}
-	
 }
 
 - (void)cellPopupMenuItemSelected:(NSMenuItem *)menuItem {

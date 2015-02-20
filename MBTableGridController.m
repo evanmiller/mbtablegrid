@@ -229,7 +229,7 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 
 - (NSImage *)tableGrid:(MBTableGrid *)aTableGrid accessoryButtonImageForColumn:(NSUInteger)columnIndex row:(NSUInteger)row {
 	
-	if (columnIndex == 8) {
+	if (columnIndex == 8 || columnIndex == 2) {
 		return nil;
 	}
 	
