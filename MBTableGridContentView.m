@@ -160,12 +160,19 @@
 		while (row <= lastRow) {
 			NSRect cellFrame = [self frameOfCellAtColumn:column row:row];
 			// Only draw the cell if we need to
-			if ([self needsToDrawRect:cellFrame] && !(row == editedRow && column == editedColumn)) {
-                
+			NSCell *_cell = [[self tableGrid] _cellForColumn:column];
+			
+			// If we need to draw then check if we're a popup button. This may be a bit of
+			// a hack, but it seems to clear up the problem with the popup button clearing
+			// if you don't select a value. It's the editedRow and editedColumn bits that
+			// cause the problem. However, if you remove the row and column condition, then
+			// if you type into a text field, the text doesn't get cleared first before you
+			// start typing. So this seems to make both conditions work.
+			
+			if ([self needsToDrawRect:cellFrame] && (!(row == editedRow && column == editedColumn) || [_cell isKindOfClass:[MBPopupButtonCell class]])) {
+				
                 NSColor *backgroundColor = [[self tableGrid] _backgroundColorForColumn:column row:row] ?: [NSColor whiteColor];
 				
-				NSCell *_cell = [[self tableGrid] _cellForColumn:column];
-
 				if (!_cell) {
 					_cell = _defaultCell;
 				}
