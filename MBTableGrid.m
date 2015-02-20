@@ -98,6 +98,7 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
 @synthesize delegate;
 @synthesize selectedColumnIndexes;
 @synthesize selectedRowIndexes;
+@synthesize sortButton;
 
 
 #pragma mark -
@@ -141,6 +142,11 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
 		[rowHeaderScrollView setAutoresizingMask:NSViewHeightSizable];
 		[rowHeaderScrollView setDrawsBackground:NO];
 		[self addSubview:rowHeaderScrollView];
+
+		sortButton = [[NSButton alloc] init];
+		[sortButton setTarget:self];
+		[sortButton setAction:@selector(didTouch:)];
+		
 		
 		// Setup the footer view
 		
@@ -185,6 +191,11 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
 	return self;
 }
 
+- (void)didTouch:(id)sender
+{
+	NSLog(@"didTouch");
+}
+
 - (void)awakeFromNib {
 //	[self reloadData];
 	[self registerForDraggedTypes:nil];
@@ -212,14 +223,19 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
  *				column is being sorted by.
  *
  * @param		anImage			The sort indicator image.
- * @param		columnIndex		The index of the column.
+ * @param		reverseImage	The reversed sort indicator image.
  *
  * @return		The header value for the row.
  */
-- (void)setIndicatorImage:(NSImage *)anImage inColumn:(NSUInteger)columnIndex {
+- (void)setIndicatorImage:(NSImage *)anImage reverseImage:(NSImage*)reverseImg inColumns:(NSArray*)columns {
 	MBTableGridHeaderView *headerView = [self columnHeaderView];
-	headerView.indicatorImageColumn = columnIndex;
+	headerView.indicatorImageColumns = columns;
 	headerView.indicatorImage = anImage;
+	headerView.indicatorReverseImage = reverseImg;
+	
+	[self.sortButton setImage:anImage];
+
+	[headerView placeSortButton];
 }
 
 /**
@@ -300,7 +316,7 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
 		
 		CGFloat minColumnWidth = MBTableHeaderMinimumColumnWidth;
 		
-		if (columnHeaderView.indicatorImage && columnHeaderView.indicatorImageColumn == columnIndex) {
+		if (columnHeaderView.indicatorImage && [columnHeaderView.indicatorImageColumns containsObject:[NSNumber numberWithInteger:columnIndex]]) {
 			minColumnWidth += columnHeaderView.indicatorImage.size.width + 2.0f;
 		}
 		

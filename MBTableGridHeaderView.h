@@ -88,9 +88,14 @@
 @property (nonatomic, strong) NSImage *indicatorImage;
 
 /**
+ * @brief		The reverse indicator image for the header cell
+ */
+@property (nonatomic, strong) NSImage *indicatorReverseImage;
+
+/**
  * @brief		The column to set the indicator image on
  */
-@property (nonatomic) NSUInteger indicatorImageColumn;
+@property (nonatomic, strong) NSArray *indicatorImageColumns;
 
 /**
  * @brief		The autosave name for this grid
@@ -156,6 +161,19 @@
  * @see			headerRectOfColumn:
  */
 - (NSRect)headerRectOfRow:(NSUInteger)rowIndex;
+
+/**
+ * @brief
+ *
+ * @param
+ *
+ * @return
+ *
+ *
+ *
+ * @see
+ */
+- (void)placeSortButton;
 
 /**
  * @}

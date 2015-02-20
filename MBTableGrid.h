@@ -282,16 +282,25 @@ typedef enum {
 #pragma mark Sort Indicators
 
 /**
+ * @brief		The button to sort colums.
+ *
+ * @return		A NSButton for use with the sort indicator.
+ */
+
+@property (nonatomic, strong) NSButton *sortButton;
+
+/**
  * @brief		Sets the indicator image for the specified column.
  *				This is used for indicating which direction the
  *				column is being sorted by.
  *
  * @param		anImage			The sort indicator image.
- * @param		columnIndex		The index of the column.
+ * @param		reverseImage	The reversed sort indicator image.
+ * @param		inColumns		Array of columns.
  *
  * @return		The header value for the row.
  */
-- (void)setIndicatorImage:(NSImage *)anImage inColumn:(NSUInteger)columnIndex;
+- (void)setIndicatorImage:(NSImage *)anImage reverseImage:(NSImage*)reverseImg inColumns:(NSArray*)columns;
 
 /**
  * @brief		Returns the sort indicator image

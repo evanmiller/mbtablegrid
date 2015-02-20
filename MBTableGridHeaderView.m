@@ -60,9 +60,21 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
         // No resize at start
         canResize = NO;
         isResizing = NO;
-        
 	}
 	return self;
+}
+
+- (void)placeSortButton
+{
+	for (NSNumber *cellNumber in self.indicatorImageColumns)
+	{
+		// do view addSubview's here
+	}
+}
+
+- (void)layout
+{
+	// Set the frames of the sort buttons here
 }
 
 - (void)drawRect:(NSRect)rect
@@ -101,7 +113,7 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 					[headerCell setState:NSOffState];
 				}
 				
-				if (column == self.indicatorImageColumn) {
+				if ([self.indicatorImageColumns containsObject:[NSNumber numberWithInteger:column]]) {
 					[headerCell setSortIndicatorImage:self.indicatorImage];
 				} else {
 					[headerCell setSortIndicatorImage:nil];

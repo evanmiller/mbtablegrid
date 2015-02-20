@@ -87,7 +87,7 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 		j++;
 	}
 	
-	[tableGrid setIndicatorImage:[NSImage imageNamed:@"sort-asc"] inColumn:3];
+	[tableGrid setIndicatorImage:[NSImage imageNamed:@"sort-asc"] reverseImage:[NSImage imageNamed:@"sort-desc"] inColumns:@[@1,@3]];
 	
 	[tableGrid reloadData];
 	
