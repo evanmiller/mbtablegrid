@@ -38,7 +38,7 @@
  *				and editing capabilities of MBTableGrid. It is designed
  *				to be placed inside a scroll view.
  */
-@interface MBTableGridContentView : NSView <NSTextDelegate> {
+@interface MBTableGridContentView : NSView <NSTextDelegate, NSMenuDelegate> {
 	NSInteger mouseDownColumn;
 	NSInteger mouseDownRow;
 	

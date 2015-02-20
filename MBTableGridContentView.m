@@ -96,10 +96,26 @@
         [_defaultCell setBordered:YES];
 		[_defaultCell setScrollable:YES];
 		[_defaultCell setLineBreakMode:NSLineBreakByTruncatingTail];
+		
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(mylistener:) name:@"NSMenuDidChangeItemNotification" object:nil];
 	}
 	return self;
 }
 
+- (void)mylistener:(id)sender
+{
+	NSInteger selectedColumn = [[self tableGrid].selectedColumnIndexes firstIndex];
+	NSCell *selectedCell = [[self tableGrid] _cellForColumn:selectedColumn];
+
+	MBPopupButtonCell *popupCell = (MBPopupButtonCell *)selectedCell;
+	
+	if ([popupCell isKindOfClass:[MBPopupButtonCell class]])
+	{
+		[popupCell synchronizeTitleAndSelectedItem];
+		//[popupCell setTitle:[[popupCell selectedItem] title]];
+		//[popupCell selectItemWithTitle:[[popupCell selectedItem] title]];
+	}
+}
 
 - (void)drawRect:(NSRect)rect
 {
@@ -696,11 +712,14 @@
 	[selectedCell setSelectable:YES];
 	
 	id currentValue = [[self tableGrid] _objectValueForColumn:editedColumn row:editedRow];
+	NSLog(@"currentValue: %@", currentValue);
 
 	if ([selectedCell isKindOfClass:[MBPopupButtonCell class]]) {
 		MBPopupButtonCell *popupCell = (MBPopupButtonCell *)selectedCell;
 
 		NSMenu *menu = selectedCell.menu;
+		menu.delegate = self;
+		
 		for (NSMenuItem *item in menu.itemArray) {
 			item.action = @selector(cellPopupMenuItemSelected:);
 			item.target = self;
@@ -719,6 +738,26 @@
 		[selectedCell editWithFrame:cellFrame inView:self editor:editor delegate:self event:nil];
 		editor.string = currentValue;
 	}
+}
+
+- (void)menuDidClose:(NSMenu *)menu
+{
+	
+		//[popupCell synchronizeTitleAndSelectedItem];
+		
+//		NSInteger selectedColumn = [[self tableGrid].selectedColumnIndexes firstIndex];
+//		NSCell *selectedCell = [[self tableGrid] _cellForColumn:selectedColumn];
+//		
+//		MBPopupButtonCell *popupCell = (MBPopupButtonCell *)selectedCell;
+//		
+//		NSLog(@"dfgdf: %@", [[popupCell selectedItem] title]);
+//		
+//		if ([[popupCell selectedItem] title] && ![[[popupCell selectedItem] title] isEqualToString:@""])
+//		{
+//			[popupCell setTitle:[[popupCell selectedItem] title]];
+//			//[popupCell selectItemWithTitle:[[popupCell selectedItem] title]];
+//		}
+	
 }
 
 - (void)cellPopupMenuItemSelected:(NSMenuItem *)menuItem {
