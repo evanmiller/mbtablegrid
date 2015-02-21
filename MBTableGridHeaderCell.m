@@ -25,20 +25,9 @@
 
 #import "MBTableGridHeaderCell.h"
 
-#define kSortIndicatorXInset		4.0  	/* Number of pixels to inset the drawing of the indicator from the right edge */
-
 @implementation MBTableGridHeaderCell
 
 @synthesize orientation;
-
-- (NSRect)sortIndicatorRectForBounds:(NSRect)theRect {
-    NSRect indicatorRect = NSZeroRect;
-    NSSize sortImageSize = [self.sortIndicatorImage size];
-    indicatorRect.size = sortImageSize;
-    indicatorRect.origin.x = NSMaxX(theRect) - (sortImageSize.width + kSortIndicatorXInset);
-    indicatorRect.origin.y = NSMinY(theRect) + roundf((NSHeight(theRect) - sortImageSize.height) / 2.0);
-    return indicatorRect;
-}
 
 - (void)drawWithFrame:(NSRect)cellFrame inView:(NSView *)controlView
 {
@@ -124,10 +113,6 @@
 	[self.attributedStringValue drawWithRect:textFrame options:NSStringDrawingTruncatesLastVisibleLine | NSStringDrawingUsesLineFragmentOrigin];
 	
 	[[NSGraphicsContext currentContext] restoreGraphicsState];
-	
-	//NSRect sortIndicatorRect = [self sortIndicatorRectForBounds:cellFrame];
-	//[self.sortIndicatorImage drawInRect:sortIndicatorRect];
-	
 }
 
 @end

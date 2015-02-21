@@ -282,12 +282,12 @@ typedef enum {
 #pragma mark Sort Indicators
 
 /**
- * @brief		The button to sort colums.
+ * @brief		An array that holds the sort buttons that sort the colums.
  *
- * @return		A NSButton for use with the sort indicator.
+ * @return		A NSArray for use with the sort indicator.
  */
 
-@property (nonatomic, strong) NSButton *sortButton;
+@property (nonatomic, strong) NSArray *sortButtons;
 
 /**
  * @brief		Sets the indicator image for the specified column.

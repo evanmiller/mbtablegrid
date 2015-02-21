@@ -31,6 +31,8 @@ NSString* kAutosavedColumnWidthKey = @"AutosavedColumnWidth";
 NSString* kAutosavedColumnIndexKey = @"AutosavedColumnIndex";
 NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 
+#define kSortIndicatorXInset		4.0  	/* Number of pixels to inset the drawing of the indicator from the right edge */
+
 @interface MBTableGrid (Private)
 - (NSString *)_headerStringForColumn:(NSUInteger)columnIndex;
 - (NSString *)_headerStringForRow:(NSUInteger)rowIndex;
@@ -64,17 +66,82 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 	return self;
 }
 
-- (void)placeSortButton
+- (void)placeSortButtons
 {
+	NSMutableArray *capturingButtons = [NSMutableArray arrayWithCapacity:0];
+
+	NSButton *sortButton;
+
+	MBTableGrid *tableGrid = [self tableGrid];
+
 	for (NSNumber *cellNumber in self.indicatorImageColumns)
 	{
-		// do view addSubview's here
+		sortButton = [[NSButton alloc] init];
+		[sortButton setImage:self.indicatorImage];
+		[sortButton setAlternateImage:self.indicatorReverseImage];
+		[sortButton setBordered:NO];
+		[sortButton setState:NSOnState];
+		sortButton.tag = [cellNumber integerValue];
+		[sortButton setTarget:tableGrid];
+		[sortButton setAction:@selector(sortButtonClicked:)];
+
+		[self addSubview:sortButton];
+		
+		[sortButton setNextState];
+		
+		[capturingButtons addObject:sortButton];
+	}
+
+
+	tableGrid.sortButtons = [[NSArray alloc] initWithArray:capturingButtons];
+}
+
+- (void)toggleSortButtonIcon:(NSButton*)btn
+{
+	if ([[btn image] isEqualTo:self.indicatorImage])
+	{
+		[btn setImage:self.indicatorReverseImage];
+	}
+	else
+	{
+		[btn setImage:self.indicatorImage];
 	}
 }
 
-- (void)layout
+- (void)layoutSortButtonWithRect:(NSRect)rect forColumn:(NSInteger)column
 {
 	// Set the frames of the sort buttons here
+	NSRect indicatorRect = NSZeroRect;
+	NSSize sortImageSize = [self.indicatorImage size];
+	indicatorRect.size = sortImageSize;
+	indicatorRect.origin.x = NSMaxX(rect) - (sortImageSize.width + kSortIndicatorXInset);
+	indicatorRect.origin.y = NSMinY(rect) + roundf((NSHeight(rect) - sortImageSize.height) / 2.0);
+
+	MBTableGrid *tableGrid = [self tableGrid];
+	
+	for (NSButton *button in tableGrid.sortButtons)
+	{
+		if (button.tag == column)
+		{
+			[button setFrame:indicatorRect];
+		}
+	}
+}
+
+- (void)viewWillDraw
+{
+	[super viewWillDraw];
+
+	
+	for (NSNumber *columnNumber in self.indicatorImageColumns)
+	{
+		NSInteger column = [columnNumber integerValue];
+
+		NSRect headerRect = [self headerRectOfColumn:column];
+
+
+		[self layoutSortButtonWithRect:headerRect forColumn:column];
+	}
 }
 
 - (void)drawRect:(NSRect)rect

@@ -173,7 +173,9 @@
  *
  * @see
  */
-- (void)placeSortButton;
+- (void)placeSortButtons;
+
+- (void)toggleSortButtonIcon:(NSButton*)btn;
 
 /**
  * @}

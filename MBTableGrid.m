@@ -98,7 +98,7 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
 @synthesize delegate;
 @synthesize selectedColumnIndexes;
 @synthesize selectedRowIndexes;
-@synthesize sortButton;
+@synthesize sortButtons;
 
 
 #pragma mark -
@@ -142,10 +142,6 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
 		[rowHeaderScrollView setAutoresizingMask:NSViewHeightSizable];
 		[rowHeaderScrollView setDrawsBackground:NO];
 		[self addSubview:rowHeaderScrollView];
-
-		sortButton = [[NSButton alloc] init];
-		[sortButton setTarget:self];
-		[sortButton setAction:@selector(didTouch:)];
 		
 		
 		// Setup the footer view
@@ -191,9 +187,9 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
 	return self;
 }
 
-- (void)didTouch:(id)sender
+- (void)sortButtonClicked:(id)sender
 {
-	NSLog(@"didTouch");
+	[columnHeaderView toggleSortButtonIcon:(NSButton*)sender];
 }
 
 - (void)awakeFromNib {
@@ -232,10 +228,9 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
 	headerView.indicatorImageColumns = columns;
 	headerView.indicatorImage = anImage;
 	headerView.indicatorReverseImage = reverseImg;
-	
-	[self.sortButton setImage:anImage];
 
-	[headerView placeSortButton];
+
+	[headerView placeSortButtons];
 }
 
 /**
