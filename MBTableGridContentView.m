@@ -272,7 +272,7 @@
 		}
 		else {
 			// Draw grab handle
-			grabHandleRect = NSMakeRect(NSMidX(selectionInsetRect) - kGRAB_HANDLE_HALF_SIDE_LENGTH, NSMaxY(selectionInsetRect) - kGRAB_HANDLE_HALF_SIDE_LENGTH, kGRAB_HANDLE_SIDE_LENGTH, kGRAB_HANDLE_SIDE_LENGTH);
+			grabHandleRect = NSMakeRect(NSMidX(selectionInsetRect) - kGRAB_HANDLE_HALF_SIDE_LENGTH - 2, NSMaxY(selectionInsetRect) - kGRAB_HANDLE_HALF_SIDE_LENGTH - 2, kGRAB_HANDLE_SIDE_LENGTH + 4, kGRAB_HANDLE_SIDE_LENGTH + 4);
 			[grabHandleImage drawInRect:grabHandleRect fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1.0];
 		}
 		
@@ -980,12 +980,14 @@
 	[gc saveGraphicsState];
 	
 	// Set the color in the current graphics context
+	
 	[[NSColor darkGrayColor] setStroke];
 	[[NSColor colorWithCalibratedRed:0.996 green:0.827 blue:0.176 alpha:1.000] setFill];
 	
 	// Create our circle path
-	NSRect rect = NSMakeRect(0.0, 0.0, kGRAB_HANDLE_SIDE_LENGTH, kGRAB_HANDLE_SIDE_LENGTH);
+	NSRect rect = NSMakeRect(1.0, 1.0, kGRAB_HANDLE_SIDE_LENGTH - 2.0, kGRAB_HANDLE_SIDE_LENGTH - 2.0);
 	NSBezierPath *circlePath = [NSBezierPath bezierPath];
+	[circlePath setLineWidth:0.5];
 	[circlePath appendBezierPathWithOvalInRect: rect];
 	
 	// Outline and fill the path
