@@ -683,10 +683,10 @@
 	}
 
 	// Select it and only it
-	if([[self tableGrid].selectedColumnIndexes count] > 1) {
+	if([[self tableGrid].selectedColumnIndexes count] > 1 && editedColumn != NSNotFound) {
 		[self tableGrid].selectedColumnIndexes = [NSIndexSet indexSetWithIndex:editedColumn];
 	}
-	if([[self tableGrid].selectedRowIndexes count] > 1) {
+	if([[self tableGrid].selectedRowIndexes count] > 1 && editedRow != NSNotFound) {
 		[self tableGrid].selectedRowIndexes = [NSIndexSet indexSetWithIndex:editedRow];
 	}
 
@@ -934,21 +934,21 @@
 	NSImage *image = [[NSImage alloc] initWithSize:NSMakeSize(20, 20)];
 	[image lockFocusFlipped:YES];
 	
-	NSRect horizontalInner = NSMakeRect(7.0, 1.0, 1.0, 12.0);
-	NSRect verticalInner = NSMakeRect(1.0, 6.0, 12.0, 1.0);
+	NSRect horizontalInner = NSMakeRect(7.0, 1.0, 0.5, 12.0);
+	NSRect verticalInner = NSMakeRect(1.0, 6.0, 12.0, 0.5);
 	
 	NSRect horizontalOuter = NSInsetRect(horizontalInner, -1.0, -1.0);
 	NSRect verticalOuter = NSInsetRect(verticalInner, -1.0, -1.0);
 	
 	// Set the shadow
-	NSShadow *shadow = [[NSShadow alloc] init];
-	[shadow setShadowColor:[NSColor colorWithDeviceWhite:0.0 alpha:0.8]];
-	[shadow setShadowBlurRadius:1.0];
-	[shadow setShadowOffset:NSMakeSize(0, -1.0)];
+//	NSShadow *shadow = [[NSShadow alloc] init];
+//	[shadow setShadowColor:[NSColor colorWithDeviceWhite:0.0 alpha:0.8]];
+//	[shadow setShadowBlurRadius:1.0];
+//	[shadow setShadowOffset:NSMakeSize(0, -1.0)];
 	
 	[[NSGraphicsContext currentContext] saveGraphicsState];
 	
-	[shadow set];
+//	[shadow set];
 	
 	[[NSColor whiteColor] set];
 	NSRectFill(horizontalOuter);
