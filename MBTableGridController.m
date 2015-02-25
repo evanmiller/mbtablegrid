@@ -382,6 +382,33 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 
 }
 
+#pragma mark Adding and Removing Rows
+
+- (BOOL)tableGrid:(MBTableGrid *)aTableGrid addRows:(NSUInteger)numberOfRows;
+{
+    for (NSUInteger row = 0; row < numberOfRows; row++) {
+        for (NSMutableArray *column in columns) {
+            // Add a blank item to each row
+            [column addObject:@""];
+        }
+    }
+    
+    [aTableGrid reloadData];
+    
+    return YES;
+}
+
+- (BOOL)tableGrid:(MBTableGrid *)aTableGrid removeRows:(NSIndexSet *)rowIndexes;
+{
+    for (NSMutableArray *column in columns) {
+        [column removeObjectsAtIndexes:rowIndexes];
+    }
+    
+    [aTableGrid reloadData];
+    
+    return YES;
+}
+
 #pragma mark MBTableGridDelegate
 
 - (void)tableGridDidMoveRows:(NSNotification *)aNotification
@@ -399,6 +426,10 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 	}
 }
 
+- (void)tableGrid:(MBTableGrid *)aTableGrid didAddRows:(NSIndexSet *)rowIndexes;
+{
+    // Add the rows to the database, or whatever is needed
+}
 
 #pragma mark - QuickLook
 

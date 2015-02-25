@@ -978,6 +978,43 @@ typedef enum {
  */
 - (BOOL)tableGrid:(MBTableGrid *)aTableGrid acceptDrop:(id <NSDraggingInfo>)info column:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 
+#pragma mark -
+#pragma mark Adding and Removing Rows
+
+@optional
+
+/**
+ * @brief		Returns a Boolean value indicating whether the rows
+ *				were successfully added.
+ *
+ * @details		The data source should take care of modifiying the data model to
+ *				add the rows.
+ *
+ * @param		aTableGrid		The table grid that sent the message.
+ * @param		numberOfRows	The number of rows to add.
+ *
+ * @return		\c YES if the add was successful, otherwise \c NO.
+ *
+ * @see			tableGrid:removeRows:
+ */
+- (BOOL)tableGrid:(MBTableGrid *)aTableGrid addRows:(NSUInteger)numberOfRows;
+
+/**
+ * @brief		Returns a Boolean value indicating whether the specified rows
+ *				were removed.
+ *
+ * @details		The data source should take care of modifiying the data model to
+ *				reflect the removed rows.
+ *
+ * @param		aTableGrid		The table grid that sent the message.
+ * @param		rowIndexes		An index set describing the rows to remove.
+ *
+ * @return		\c YES if the removal was successful, otherwise \c NO.
+ *
+ * @see			tableGrid:addRows:
+ */
+- (BOOL)tableGrid:(MBTableGrid *)aTableGrid removeRows:(NSIndexSet *)rowIndexes;
+
 /**
  * @}
  */
@@ -1160,5 +1197,16 @@ typedef enum {
 /**
  * @}
  */
+
+#pragma mark Adding Rows
+
+/**
+ * @brief		Tells the delegate that the specified rows were added.
+ *
+ * @param		aTableGrid		The table grid object informing the delegate
+ *								about the added rows.
+ * @param		rowIndexes		An index set describing the rows that were added.
+ */
+- (void)tableGrid:(MBTableGrid *)aTableGrid didAddRows:(NSIndexSet *)rowIndexes;
 
 @end

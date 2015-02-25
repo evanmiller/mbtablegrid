@@ -387,6 +387,10 @@
 
         isFilling = NSPointInRect(mouseLocationInContentView, grabHandleRect);
         
+        if (isFilling) {
+            numberOfRowsWhenStartingFilling = [self tableGrid].numberOfRows;
+        }
+        
 		// Edit an already selected cell if it doesn't edit on first click
 		if (selectedColumn == mouseDownColumn && selectedRow == mouseDownRow && !cellEditsOnFirstClick && !isFilling) {
 			
@@ -477,6 +481,30 @@
 		NSPoint loc = [self convertPoint:[theEvent locationInWindow] fromView:nil];
 		NSInteger column = [self columnAtPoint:loc];
 		NSInteger row = [self rowAtPoint:loc];
+        NSInteger numberOfRows = [self tableGrid].numberOfRows;
+        
+        // While filling, if dragging beyond the size of the table, add more rows
+        if (isFilling && loc.y > 0.0 && row == NSNotFound && [[self tableGrid].dataSource respondsToSelector:@selector(tableGrid:addRows:)]) {
+            NSRect rowRect = [self rectOfRow:numberOfRows];
+            NSInteger numberOfRowsToAdd = ((loc.y - rowRect.origin.y) / rowRect.size.height) + 1;
+            
+            if (numberOfRowsToAdd > 0 && [[self tableGrid].dataSource tableGrid:[self tableGrid] addRows:numberOfRowsToAdd]) {
+                row = [self rowAtPoint:loc];
+            }
+        }
+        
+        // While filling, if dragging upwards, remove any rows added during the fill operation
+        if (isFilling && row < numberOfRows && [[self tableGrid].dataSource respondsToSelector:@selector(tableGrid:removeRows:)]) {
+            NSInteger firstRowToRemove = row + 1;
+            
+            if (firstRowToRemove < numberOfRowsWhenStartingFilling) {
+                firstRowToRemove = numberOfRowsWhenStartingFilling;
+            }
+            
+            NSIndexSet *rowIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(firstRowToRemove, numberOfRows - firstRowToRemove)];
+            
+            [[self tableGrid].dataSource tableGrid:[self tableGrid] removeRows:rowIndexes];
+        }
 		
 		MBTableGridEdge columnEdge = MBTableGridLeftEdge;
 		MBTableGridEdge rowEdge = MBTableGridTopEdge;
@@ -534,6 +562,15 @@
 			[[self tableGrid] _setObjectValue:[value copy] forColumn:mouseDownColumn row:idx];
 		}];
 		
+        NSInteger numberOfRows = [self tableGrid].numberOfRows;
+        
+        // If rows were added, tell the delegate
+        if (isFilling && numberOfRows > numberOfRowsWhenStartingFilling && [[self tableGrid].delegate respondsToSelector:@selector(tableGrid:didAddRows:)]) {
+            NSIndexSet *rowIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(numberOfRowsWhenStartingFilling, numberOfRows - numberOfRowsWhenStartingFilling)];
+            
+            [[self tableGrid].delegate tableGrid:[self tableGrid] didAddRows:rowIndexes];
+        }
+        
 		isFilling = NO;
 	}
 	

@@ -57,6 +57,7 @@
 	
 	BOOL isDraggingColumnOrRow;
     BOOL isFilling;
+    NSInteger numberOfRowsWhenStartingFilling;
 	
 	MBTableGridCell *_defaultCell;
     
