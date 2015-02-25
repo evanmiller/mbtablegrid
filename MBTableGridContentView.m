@@ -32,8 +32,8 @@
 #import "MBImageCell.h"
 #import "MBLevelIndicatorCell.h"
 
-#define kGRAB_HANDLE_HALF_SIDE_LENGTH 2.0f
-#define kGRAB_HANDLE_SIDE_LENGTH 4.0f
+#define kGRAB_HANDLE_HALF_SIDE_LENGTH 3.0f
+#define kGRAB_HANDLE_SIDE_LENGTH 6.0f
 
 @interface MBTableGrid (Private)
 - (id)_objectValueForColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
@@ -57,6 +57,7 @@
 - (NSImage *)_cellSelectionCursorImage;
 - (NSCursor *)_cellExtendSelectionCursor;
 - (NSImage *)_cellExtendSelectionCursorImage;
+- (NSImage *)_grabHandleImage;
 @end
 
 @interface MBTableGridContentView (DragAndDrop)
@@ -83,7 +84,7 @@
 		dropColumn = NSNotFound;
 		dropRow = NSNotFound;
         
-        
+		grabHandleImage = [self _grabHandleImage];
         grabHandleRect = NSRectFromCGRect(CGRectZero);
 		
 		// Cache the cursor image
@@ -120,6 +121,8 @@
 - (void)drawRect:(NSRect)rect
 {
     
+    NSIndexSet *selectedColumns = [[self tableGrid] selectedColumnIndexes];
+    NSIndexSet *selectedRows = [[self tableGrid] selectedRowIndexes];
 	NSUInteger numberOfColumns = [self tableGrid].numberOfColumns;
 	NSUInteger numberOfRows = [self tableGrid].numberOfRows;
 	
@@ -180,7 +183,13 @@
 				[_cell setFormatter:nil]; // An exception is raised if the formatter is not set to nil before changing at runtime
 				[_cell setFormatter:[[self tableGrid] _formatterForColumn:column]];
 				
-				id objectValue = [[self tableGrid] _objectValueForColumn:column row:row];
+				id objectValue = nil;
+				
+				if (isFilling && [selectedColumns containsIndex:column] && [selectedRows containsIndex:row]) {
+					objectValue = [[self tableGrid] _objectValueForColumn:mouseDownColumn row:mouseDownRow];
+				} else {
+					objectValue = [[self tableGrid] _objectValueForColumn:column row:row];
+				}
 				
 				if ([_cell isKindOfClass:[MBPopupButtonCell class]]) {
 					MBPopupButtonCell *cell = (MBPopupButtonCell *)_cell;
@@ -226,9 +235,6 @@
 	}
 	
 	// Draw the selection rectangle
-	NSIndexSet *selectedColumns = [[self tableGrid] selectedColumnIndexes];
-	NSIndexSet *selectedRows = [[self tableGrid] selectedRowIndexes];
-	
 	if([selectedColumns count] && [selectedRows count] && [self tableGrid].numberOfColumns > 0 && [self tableGrid].numberOfRows > 0) {
 		NSRect selectionTopLeft = [self frameOfCellAtColumn:[selectedColumns firstIndex] row:[selectedRows firstIndex]];
 		NSRect selectionBottomRight = [self frameOfCellAtColumn:[selectedColumns lastIndex] row:[selectedRows lastIndex]];
@@ -248,16 +254,11 @@
 		
 		// If the view is not the first responder, then use a gray selection color
 		NSResponder *firstResponder = [[self window] firstResponder];
-		if (![[firstResponder class] isSubclassOfClass:[NSView class]] || ![(NSView *)firstResponder isDescendantOf:[self tableGrid]] || ![[self window] isKeyWindow]) {
+		BOOL disabled = (![[firstResponder class] isSubclassOfClass:[NSView class]] || ![(NSView *)firstResponder isDescendantOf:[self tableGrid]] || ![[self window] isKeyWindow]);
+		
+		if (disabled) {
 			selectionColor = [[selectionColor colorUsingColorSpaceName:NSDeviceWhiteColorSpace] colorUsingColorSpaceName:NSDeviceRGBColorSpace];
 		}
-        else
-        {
-            // Draw grab handle
-            [selectionColor set];
-            grabHandleRect = NSMakeRect(NSMaxX(selectionInsetRect) - kGRAB_HANDLE_HALF_SIDE_LENGTH, NSMaxY(selectionInsetRect) - kGRAB_HANDLE_HALF_SIDE_LENGTH, kGRAB_HANDLE_SIDE_LENGTH, kGRAB_HANDLE_SIDE_LENGTH);
-            NSRectFill(grabHandleRect);
-        }
 		
 		[selectionColor set];
 		[selectionPath setLineWidth: 1.0];
@@ -266,6 +267,15 @@
         [[selectionColor colorWithAlphaComponent:0.2f] set];
         [selectionPath fill];
         
+		if (disabled || [selectedColumns count] > 1) {
+			grabHandleRect = NSZeroRect;
+		}
+		else {
+			// Draw grab handle
+			grabHandleRect = NSMakeRect(NSMidX(selectionInsetRect) - kGRAB_HANDLE_HALF_SIDE_LENGTH, NSMaxY(selectionInsetRect) - kGRAB_HANDLE_HALF_SIDE_LENGTH, kGRAB_HANDLE_SIDE_LENGTH, kGRAB_HANDLE_SIDE_LENGTH);
+			[grabHandleImage drawInRect:grabHandleRect fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1.0];
+		}
+		
         // Inavlidate cursors so we use the correct cursor for the selection in the right place
         [[self window] invalidateCursorRectsForView:self];
 	}
@@ -366,7 +376,8 @@
 	mouseDownRow = [self rowAtPoint:mouseLocationInContentView];
 	NSCell *cell = [[self tableGrid] _cellForColumn:mouseDownColumn];
 	BOOL cellEditsOnFirstClick = ([cell respondsToSelector:@selector(editOnFirstClick)] && [(id<MBTableGridEditable>)cell editOnFirstClick]);
-
+    isFilling = NO;
+    
 	if (theEvent.clickCount == 1) {
 		// Pass the event back to the MBTableGrid (Used to give First Responder status)
 		[[self tableGrid] mouseDown:theEvent];
@@ -374,8 +385,10 @@
 		NSUInteger selectedColumn = [[self tableGrid].selectedColumnIndexes firstIndex];
 		NSUInteger selectedRow = [[self tableGrid].selectedRowIndexes firstIndex];
 
+        isFilling = NSPointInRect(mouseLocationInContentView, grabHandleRect);
+        
 		// Edit an already selected cell if it doesn't edit on first click
-		if (selectedColumn == mouseDownColumn && selectedRow == mouseDownRow && !cellEditsOnFirstClick) {
+		if (selectedColumn == mouseDownColumn && selectedRow == mouseDownRow && !cellEditsOnFirstClick && !isFilling) {
 			
 			if ([[self tableGrid] _accessoryButtonImageForColumn:mouseDownColumn row:mouseDownRow]) {
 				NSRect cellFrame = [self frameOfCellAtColumn:mouseDownColumn row:mouseDownRow];
@@ -393,7 +406,7 @@
 			}
 			
 		// Expand a selection when the user holds the shift key
-		} else if (([theEvent modifierFlags] & NSShiftKeyMask) && [self tableGrid].allowsMultipleSelection) {
+		} else if (([theEvent modifierFlags] & NSShiftKeyMask) && [self tableGrid].allowsMultipleSelection && !isFilling) {
 			// If the shift key was held down, extend the selection
 			NSUInteger stickyColumn = [[self tableGrid].selectedColumnIndexes firstIndex];
 			NSUInteger stickyRow = [[self tableGrid].selectedRowIndexes firstIndex];
@@ -469,7 +482,7 @@
 		MBTableGridEdge rowEdge = MBTableGridTopEdge;
 		
 		// Select the appropriate number of columns
-		if(column != NSNotFound) {
+		if(column != NSNotFound && !isFilling) {
 			NSInteger firstColumnToSelect = mouseDownColumn;
 			NSInteger numberOfColumnsToSelect = column-mouseDownColumn+1;
 			if(column < mouseDownColumn) {
@@ -513,6 +526,16 @@
 {
 	[autoscrollTimer invalidate];
 	autoscrollTimer = nil;
+	
+	if (isFilling) {
+		id value = [[self tableGrid] _objectValueForColumn:mouseDownColumn row:mouseDownRow];
+		
+		[[self tableGrid].selectedRowIndexes enumerateIndexesUsingBlock:^(NSUInteger idx, BOOL *stop) {
+			[[self tableGrid] _setObjectValue:[value copy] forColumn:mouseDownColumn row:idx];
+		}];
+		
+		isFilling = NO;
+	}
 	
 	mouseDownColumn = NSNotFound;
 	mouseDownRow = NSNotFound;
@@ -941,6 +964,36 @@
 	NSRectFill(horizontalInner);
 	NSRectFill(verticalInner);
 	
+	[image unlockFocus];
+	
+	return image;
+}
+
+- (NSImage *)_grabHandleImage;
+{
+	NSImage *image = [[NSImage alloc] initWithSize:NSMakeSize(kGRAB_HANDLE_SIDE_LENGTH, kGRAB_HANDLE_SIDE_LENGTH)];
+	[image lockFocusFlipped:YES];
+	
+	NSGraphicsContext *gc = [NSGraphicsContext currentContext];
+	
+	// Save the current graphics context
+	[gc saveGraphicsState];
+	
+	// Set the color in the current graphics context
+	[[NSColor darkGrayColor] setStroke];
+	[[NSColor colorWithCalibratedRed:0.996 green:0.827 blue:0.176 alpha:1.000] setFill];
+	
+	// Create our circle path
+	NSRect rect = NSMakeRect(0.0, 0.0, kGRAB_HANDLE_SIDE_LENGTH, kGRAB_HANDLE_SIDE_LENGTH);
+	NSBezierPath *circlePath = [NSBezierPath bezierPath];
+	[circlePath appendBezierPathWithOvalInRect: rect];
+	
+	// Outline and fill the path
+	[circlePath fill];
+	[circlePath stroke];
+	
+	// Restore the context
+	[gc restoreGraphicsState];
 	[image unlockFocus];
 	
 	return image;

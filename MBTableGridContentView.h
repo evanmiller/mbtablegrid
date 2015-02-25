@@ -47,6 +47,7 @@
 	
 	NSImage *cursorImage;
 	NSImage *cursorExtendSelectionImage;
+    NSImage *grabHandleImage;
     NSRect grabHandleRect;
 	
 	NSInteger dropColumn;
@@ -55,6 +56,7 @@
 	NSTimer *autoscrollTimer;
 	
 	BOOL isDraggingColumnOrRow;
+    BOOL isFilling;
 	
 	MBTableGridCell *_defaultCell;
     
