@@ -389,6 +389,10 @@
         
         if (isFilling) {
             numberOfRowsWhenStartingFilling = [self tableGrid].numberOfRows;
+            
+            if (mouseDownRow == selectedRow + 1) {
+                mouseDownRow = selectedRow;
+            }
         }
         
 		// Edit an already selected cell if it doesn't edit on first click
