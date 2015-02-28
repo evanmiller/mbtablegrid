@@ -766,6 +766,8 @@ typedef enum {
  * @{
  */
 
+#pragma mark Header
+
 @optional
 
 /**
@@ -797,6 +799,51 @@ typedef enum {
 /**
  * @}
  */
+
+#pragma mark Footer
+
+@optional
+
+/**
+ *  @brief      Returns the cell for the footer of the specified column.
+ *
+ * @details		Optional; if not implemented, or returns nil, an empty footer is
+ *				displayed for this column.
+ *
+ *  @param      aTableGrid  The table grid that sent the message.
+ *  @param      columnIndex A column in \c aTableGrid.
+ *
+ *  @return     The cell for the specified column footer.
+ */
+- (NSCell *)tableGrid:(MBTableGrid *)aTableGrid footerCellForColumn:(NSUInteger)columnIndex;
+
+/**
+ * @brief		Returns the data object for the footer of the specified column.
+ *
+ * @details		Optional; if not implemented, or returns nil, an empty footer is
+ *				displayed for this column.
+ *
+ * @param		aTableGrid		The table grid that sent the message.
+ * @param		columnIndex		A column in \c aTableGrid.
+ *
+ * @return		The object for the specified footer of the view.
+ *
+ * @see			tableGrid:setFooterValue:forColumn:
+ */
+- (id)tableGrid:(MBTableGrid *)aTableGrid footerValueForColumn:(NSUInteger)columnIndex;
+
+/**
+ * @brief		Sets the data object for the footer of the specified column.
+ *
+ * @details		Optional, but should be implemented for popup-based footer cells.
+ *
+ * @param		aTableGrid		The table grid that sent the message.
+ * @param		anObject		The new value for the item.
+ * @param		columnIndex		A column in \c aTableGrid.
+ *
+ * @see			tableGrid:footerValueForColumn:
+ */
+- (void)tableGrid:(MBTableGrid *)aTableGrid setFooterValue:(id)anObject forColumn:(NSUInteger)columnIndex;
 
 #pragma mark -
 #pragma mark Dragging

@@ -67,6 +67,9 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
 - (id)_backgroundColorForColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 - (BOOL)_canEditCellAtColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 - (void)_userDidEnterInvalidStringInColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex errorDescription:(NSString *)errorDescription;
+- (NSCell *)_footerCellForColumn:(NSUInteger)columnIndex;
+- (id)_footerValueForColumn:(NSUInteger)columnIndex;
+- (void)_setFooterValue:(id)value forColumn:(NSUInteger)columnIndex;
 @end
 
 @interface MBTableGrid (DragAndDrop)
@@ -1568,6 +1571,29 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
 	if ([[self delegate] respondsToSelector:@selector(tableGrid:accessoryButtonClicked:row:)]) {
 		[[self delegate] tableGrid:self accessoryButtonClicked:columnIndex row:rowIndex];
 	}
+}
+
+#pragma mark Footer
+
+- (NSCell *)_footerCellForColumn:(NSUInteger)columnIndex {
+    if ([[self dataSource] respondsToSelector:@selector(tableGrid:footerCellForColumn:)]) {
+        return [[self dataSource] tableGrid:self footerCellForColumn:columnIndex];
+    }
+    return nil;
+}
+
+- (id)_footerValueForColumn:(NSUInteger)columnIndex {
+    if ([[self dataSource] respondsToSelector:@selector(tableGrid:footerValueForColumn:)]) {
+        id value = [[self dataSource] tableGrid:self footerValueForColumn:columnIndex];
+        return value;
+    }
+    return nil;
+}
+
+- (void)_setFooterValue:(id)value forColumn:(NSUInteger)columnIndex {
+    if ([[self dataSource] respondsToSelector:@selector(tableGrid:setFooterValue:forColumn:)]) {
+        [[self dataSource] tableGrid:self setFooterValue:value forColumn:columnIndex];
+    }
 }
 
 @end

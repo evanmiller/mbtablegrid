@@ -29,6 +29,8 @@
 #import "MBButtonCell.h"
 #import "MBImageCell.h"
 #import "MBLevelIndicatorCell.h"
+#import "MBFooterTextCell.h"
+#import "MBFooterPopupButtonCell.h"
 
 NSString* kAutosavedColumnWidthKey = @"AutosavedColumnWidth";
 NSString* kAutosavedColumnIndexKey = @"AutosavedColumnIndex";
@@ -44,6 +46,8 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 @property (nonatomic, strong) MBButtonCell *checkboxCell;
 @property (nonatomic, strong) MBImageCell *imageCell;
 @property (nonatomic, strong) MBLevelIndicatorCell *ratingCell;
+@property (nonatomic, strong) MBFooterTextCell *footerTextCell;
+@property (nonatomic, strong) MBFooterPopupButtonCell *footerPopupCell;
 @property (nonatomic, strong) NSDictionary *columnWidths;
 @end
 
@@ -100,6 +104,7 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 	self.popupCell.font = [NSFont systemFontOfSize:[NSFont systemFontSizeForControlSize:NSSmallControlSize]];
 	NSArray *availableObjectValues = @[ @"Action & Adventure", @"Comedy", @"Romance", @"Thriller" ];
 	NSMenu *menu = [[NSMenu alloc] init];
+    menu.font = self.popupCell.font;
 	for (NSString *objectValue in availableObjectValues) {
 		NSMenuItem *item = [menu addItemWithTitle:objectValue action:@selector(cellPopupMenuItemSelected:) keyEquivalent:@""];
 		[item setTarget:self];
@@ -118,6 +123,17 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 	self.ratingCell = [[MBLevelIndicatorCell alloc] initWithLevelIndicatorStyle:NSRatingLevelIndicatorStyle];
 	self.ratingCell.editable = YES;
 	
+    self.footerTextCell = [[MBFooterTextCell alloc] initTextCell:@""];
+    
+    self.footerPopupCell = [[MBFooterPopupButtonCell alloc] initTextCell:@""];
+    self.footerPopupCell.bordered = NO;
+    self.footerPopupCell.controlSize = NSSmallControlSize;
+    self.footerPopupCell.font = [NSFont systemFontOfSize:[NSFont systemFontSizeForControlSize:NSSmallControlSize]];
+    
+    menu = [NSMenu new];
+    menu.font = self.footerPopupCell.font;
+    [menu addItemWithTitle:@"No Options" action:nil keyEquivalent:@""];
+    self.footerPopupCell.menu = menu;
 }
 
 -(NSString *) genRandStringLength: (int) len
@@ -294,6 +310,118 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
         return [NSColor colorWithDeviceWhite:0.950 alpha:1.000];
     else
         return nil;
+}
+
+#pragma mark Footer
+
+- (void)addItemToMenu:(NSMenu *)menu withTitle:(NSString *)title;
+{
+    [menu addItemWithTitle:title action:@selector(cellPopupMenuItemSelected:) keyEquivalent:@""];
+}
+
+- (NSString *)formattedPrefix:(NSString *)prefix value:(id)value forTableGrid:(MBTableGrid *)aTableGrid column:(NSUInteger)columnIndex;
+{
+    NSFormatter *formatter = [self tableGrid:aTableGrid formatterForColumn:columnIndex];
+    
+    if (formatter) {
+        value = [formatter stringForObjectValue:value];
+    } else {
+        value = [NSString stringWithFormat:@"%.0f", [value floatValue]];
+    }
+    
+    return [NSString stringWithFormat:@"%@: %@", prefix, value];
+}
+
+- (NSString *)footerDefaultsKeyForColumn:(NSUInteger)columnIndex;
+{
+    return [NSString stringWithFormat:@"TableGrid-Footer-%ld", columnIndex];
+}
+
+- (NSCell *)tableGrid:(MBTableGrid *)aTableGrid footerCellForColumn:(NSUInteger)columnIndex;
+{
+    NSCell *cell = nil;
+    
+    if (columnIndex >= 1 && columnIndex <= 3) {
+        // Date, popup & checkbox: just showing the count
+        cell = self.footerTextCell;
+    } else if (columnIndex == 6) {
+        // Image: nothing to show
+        cell = nil;
+    } else if (columnIndex == 8) {
+        // Rating: average as a rating
+        cell = self.ratingCell;
+    } else if (columnIndex >= [columns count]) {
+        // Invalid column
+        return nil;
+    } else {
+        // All others: a popup of Total, Average, etc
+        cell = self.footerPopupCell;
+        
+        NSPredicate *predicate = [NSPredicate predicateWithFormat:@"self != ''"];
+        NSArray *column = [columns[columnIndex] filteredArrayUsingPredicate:predicate];
+        
+        // Rebuild the menu with dynamic values
+        [cell.menu removeAllItems];
+        
+        [self addItemToMenu:cell.menu withTitle:[self formattedPrefix:@"Total" value:[column valueForKeyPath:@"@sum.floatValue"] forTableGrid:aTableGrid column:columnIndex]];
+        [self addItemToMenu:cell.menu withTitle:[self formattedPrefix:@"Minimum" value:[column valueForKeyPath:@"@min.floatValue"] forTableGrid:aTableGrid column:columnIndex]];
+        [self addItemToMenu:cell.menu withTitle:[self formattedPrefix:@"Maximum" value:[column valueForKeyPath:@"@max.floatValue"] forTableGrid:aTableGrid column:columnIndex]];
+        [self addItemToMenu:cell.menu withTitle:[self formattedPrefix:@"Average" value:[column valueForKeyPath:@"@avg.floatValue"] forTableGrid:aTableGrid column:columnIndex]];
+        [self addItemToMenu:cell.menu withTitle:[NSString stringWithFormat:@"Count: %li", [[column valueForKeyPath:@"@count"] integerValue]]];
+    }
+    
+    return cell;
+}
+
+- (id)tableGrid:(MBTableGrid *)aTableGrid footerValueForColumn:(NSUInteger)columnIndex;
+{
+    if (columnIndex >= [columns count]) {
+        return nil;
+    }
+    
+    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"self != ''"];
+    NSArray *column = [columns[columnIndex] filteredArrayUsingPredicate:predicate];
+    
+    id value = nil;
+    
+    if (columnIndex >= 1 && columnIndex <= 3) {
+        // Checkbox: just showing the count
+        value = [NSString stringWithFormat:@"Count: %li", [[column valueForKeyPath:@"@count"] integerValue]];
+    } else if (columnIndex == 6) {
+        // Image: nothing to show
+        value = nil;
+    } else if (columnIndex == 8) {
+        // Rating: average as a rating
+        value = [column valueForKeyPath:@"@avg.floatValue"];
+    } else {
+        // All others: a popup of Total, Average, etc
+        NSCell *cell = [self tableGrid:aTableGrid footerCellForColumn:columnIndex];
+        NSUInteger itemIndex = [[NSUserDefaults standardUserDefaults] integerForKey:[self footerDefaultsKeyForColumn:columnIndex]];
+        
+        value = [cell.menu itemAtIndex:itemIndex].title;
+        
+        if (!value) {
+            value = [cell.menu itemAtIndex:0].title;
+        }
+    }
+    
+    return value;
+}
+
+- (void)tableGrid:(MBTableGrid *)aTableGrid setFooterValue:(id)anObject forColumn:(NSUInteger)columnIndex;
+{
+    if ((columnIndex >= 1 && columnIndex <= 3) || columnIndex == 6 || columnIndex == 8 || columnIndex >= [columns count]) {
+        return;
+    }
+    
+    NSCell *cell = [self tableGrid:aTableGrid footerCellForColumn:columnIndex];
+    NSInteger itemIndex = [cell.menu indexOfItemWithTitle:anObject];
+    
+//    NSLog(@"set footer value: %@ (%@); for column: %@", anObject, @(itemIndex), @(columnIndex));  // log
+    
+    if (itemIndex >= 0) {
+        [[NSUserDefaults standardUserDefaults] setInteger:itemIndex forKey:[self footerDefaultsKeyForColumn:columnIndex]];
+    }
 }
 
 #pragma mark Dragging

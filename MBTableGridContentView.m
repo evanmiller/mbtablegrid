@@ -50,6 +50,9 @@
 - (MBTableGridEdge)_stickyColumn;
 - (MBTableGridEdge)_stickyRow;
 - (void)_userDidEnterInvalidStringInColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex errorDescription:(NSString *)errorDescription;
+- (NSCell *)_footerCellForColumn:(NSUInteger)columnIndex;
+- (id)_footerValueForColumn:(NSUInteger)columnIndex;
+- (void)_setFooterValue:(id)value forColumn:(NSUInteger)columnIndex;
 @end
 
 @interface MBTableGridContentView (Cursors)
@@ -576,6 +579,8 @@
         }
         
 		isFilling = NO;
+        
+        [[self tableGrid] setNeedsDisplay:YES];
 	}
 	
 	mouseDownColumn = NSNotFound;
@@ -800,7 +805,7 @@
 			}
 		}
 
-		[selectedCell.menu popUpMenuPositioningItem:nil atLocation:cellFrame.origin inView:self];
+		[selectedCell.menu popUpMenuPositioningItem:popupCell.selectedItem atLocation:cellFrame.origin inView:self];
 		
 	} else {
 		NSText *editor = [[self window] fieldEditor:YES forObject:self];

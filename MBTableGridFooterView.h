@@ -24,15 +24,18 @@
  */
 
 #import <Cocoa/Cocoa.h>
-#import "MBTableGridFooterCell.h"
+#import "MBFooterPopupButtonCell.h"
 
-@class MBTableGrid;
+@class MBTableGrid, MBFooterTextCell;
 
 /**
  * @brief		\c MBTableGridHeaderView deals with the
  *				display and interaction with grid headers.
  */
 @interface MBTableGridFooterView : NSView {
+    MBFooterTextCell *_defaultCell;
+    MBFooterPopupButtonCell *editedPopupCell;
+    NSInteger editedColumn;
 }
 
 /**
@@ -79,7 +82,7 @@
  *				To change the appearance of the headers, you can
  *				use your own \c MBTableGridHeaderCell subclass.
  */
-@property(strong) MBTableGridFooterCell *footerCell;
+@property(strong) MBFooterPopupButtonCell *footerCell;
 
 /**
  * @}
@@ -103,7 +106,7 @@
  *				receiver.
  * @see			headerRectOfRow:
  */
-- (NSRect)headerRectOfColumn:(NSUInteger)columnIndex;
+//- (NSRect)headerRectOfColumn:(NSUInteger)columnIndex;
 
 /**
  * @}

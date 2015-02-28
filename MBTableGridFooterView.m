@@ -26,44 +26,99 @@
 #import "MBTableGridFooterView.h"
 #import "MBTableGrid.h"
 #import "MBTableGridContentView.h"
+#import "MBFooterTextCell.h"
+#import "MBLevelIndicatorCell.h"
 
-@interface MBTableGrid (Private)
-- (NSString *)_headerStringForColumn:(NSUInteger)columnIndex;
+@interface MBTableGrid ()
 - (MBTableGridContentView *)_contentView;
+- (NSCell *)_footerCellForColumn:(NSUInteger)columnIndex;
+- (id)_footerValueForColumn:(NSUInteger)columnIndex;
+- (void)_setFooterValue:(id)value forColumn:(NSUInteger)columnIndex;
 @end
 
 @implementation MBTableGridFooterView
 
 - (id)initWithFrame:(NSRect)frameRect
 {
-	if(self = [super initWithFrame:frameRect]) {
-		// Setup the header cell
-		_footerCell = [[MBTableGridFooterCell alloc] init];
-	}
-	return self;
+    if(self = [super initWithFrame:frameRect]) {
+        _defaultCell = [[MBFooterTextCell alloc] initTextCell:@""];
+        [_defaultCell setBordered:YES];
+    }
+    return self;
 }
 
 - (void)drawRect:(NSRect)rect {
 	
-	// Draw the column headers
+	// Draw the column footers
 	NSUInteger numberOfColumns = [self tableGrid].numberOfColumns;
 	NSUInteger column = 0;
+    NSColor *backgroundColor = [NSColor colorWithCalibratedWhite:0.91 alpha:1.0];
+    
 	while (column < numberOfColumns) {
-		NSRect headerRect = [self headerRectOfColumn:column];
+		NSRect cellFrame = [self footerRectOfColumn:column];
 		
 		// Only draw the header if we need to
-		if ([self needsToDrawRect:headerRect]) {
-//			// Check if any part of the selection is in this column
-//			NSIndexSet *selectedColumns = [[self tableGrid] selectedColumnIndexes];
-//			if ([selectedColumns containsIndex:column]) {
-//				[headerCell setState:NSOnState];
-//			} else {
-//				[headerCell setState:NSOffState];
-//			}
-			
-			[_footerCell setStringValue:[[self tableGrid] _headerStringForColumn:column]];
-			[_footerCell drawWithFrame:headerRect inView:self];
-			
+		if ([self needsToDrawRect:cellFrame]) {
+            NSCell *_cell = [[self tableGrid] _footerCellForColumn:column];
+            
+            if (!_cell) {
+                _cell = _defaultCell;
+            }
+            
+            id objectValue = [[self tableGrid] _footerValueForColumn:column];
+            
+            if ([_cell isKindOfClass:[MBFooterPopupButtonCell class]]) {
+                MBFooterPopupButtonCell *cell = (MBFooterPopupButtonCell *)_cell;
+                NSInteger index = [cell indexOfItemWithTitle:objectValue];
+                [_cell setObjectValue:@(index)];
+            } else {
+                [_cell setObjectValue:objectValue];
+            }
+            
+            if ([_cell isKindOfClass:[MBFooterPopupButtonCell class]]) {
+                
+                MBFooterPopupButtonCell *cell = (MBFooterPopupButtonCell *)_cell;
+                [cell drawWithFrame:cellFrame inView:self withBackgroundColor:backgroundColor];// Draw background color
+                
+            } else if ([_cell isKindOfClass:[MBLevelIndicatorCell class]]) {
+                
+                MBLevelIndicatorCell *cell = (MBLevelIndicatorCell *)_cell;
+                
+                cell.target = self;
+                cell.action = @selector(updateLevelIndicator:);
+                
+                [cell drawWithFrame:cellFrame inView:[self tableGrid] withBackgroundColor:backgroundColor];// Draw background color
+                
+            } else {
+                
+                MBTableGridCell *cell = (MBTableGridCell *)_cell;
+                
+                [cell drawWithFrame:cellFrame inView:self withBackgroundColor:backgroundColor];// Draw background color
+                
+            }
+            
+            NSColor *sideColor = [NSColor colorWithDeviceWhite:1.0 alpha:0.4];
+            NSColor *borderColor = [NSColor colorWithDeviceWhite:0.8 alpha:1.0];
+            
+            // Draw the side bevels
+            NSRect sideLine = NSMakeRect(NSMinX(cellFrame), NSMinY(cellFrame), 1.0, NSHeight(cellFrame));
+            [sideColor set];
+            [[NSBezierPath bezierPathWithRect:sideLine] fill];
+            sideLine.origin.x = NSMaxX(cellFrame)-2.0;
+            [[NSBezierPath bezierPathWithRect:sideLine] fill];
+            
+            // Draw the right border
+            NSRect borderLine = NSMakeRect(NSMaxX(cellFrame)-1, NSMinY(cellFrame), 1.0, NSHeight(cellFrame));
+            [borderColor set];
+            NSRectFill(borderLine);
+            
+            // Draw the bottom border
+            NSRect bottomLine = NSMakeRect(NSMinX(cellFrame), NSMaxY(cellFrame)-1.0, NSWidth(cellFrame), 1.0);
+            NSRectFill(bottomLine);
+            
+            // Draw the top border
+            NSRect topLine = NSMakeRect(NSMinX(cellFrame), 0, NSWidth(cellFrame), 1.0);
+            NSRectFill(topLine);
 		}
 		
 		column++;
@@ -71,9 +126,78 @@
 	
 }
 
+- (void)updateLevelIndicator:(NSNumber *)value {
+    NSInteger selectedColumn = [[self tableGrid].selectedColumnIndexes firstIndex];
+    // sanity check to make sure we have an NSNumber.
+    // I've observed that when the user lets go of the mouse,
+    // the value parameter becomes the MBTableGridContentView
+    // object for some reason.
+    if ([value isKindOfClass:[NSNumber class]]) {
+        [[self tableGrid] _setFooterValue:value forColumn:selectedColumn];
+        NSRect cellFrame = [self footerRectOfColumn:selectedColumn];
+        [[self tableGrid] setNeedsDisplayInRect:cellFrame];
+    }
+}
+
 - (BOOL)isFlipped
 {
 	return YES;
+}
+
+- (void)mouseDown:(NSEvent *)theEvent
+{
+    NSPoint mouseLocationInContentView = [self convertPoint:[theEvent locationInWindow] fromView:nil];
+    NSInteger mouseDownColumn = [self footerColumnAtPoint:mouseLocationInContentView];
+    
+    if (theEvent.clickCount == 1) {
+        // Pass the event back to the MBTableGrid (Used to give First Responder status)
+        [[self tableGrid] mouseDown:theEvent];
+        
+        editedColumn = mouseDownColumn;
+        
+        NSCell *cell = [[self tableGrid] _footerCellForColumn:mouseDownColumn];
+        id currentValue = [[self tableGrid] _footerValueForColumn:editedColumn];
+        
+        if ([cell isKindOfClass:[MBFooterPopupButtonCell class]]) {
+            editedPopupCell = [cell copy];
+            NSRect cellFrame = [self footerRectOfColumn:editedColumn];
+            
+            editedPopupCell.menu.font = cell.menu.font;
+            editedPopupCell.editable = YES;
+            editedPopupCell.selectable = YES;
+            
+            NSMenu *menu = editedPopupCell.menu;
+            
+            for (NSMenuItem *item in menu.itemArray) {
+                item.action = @selector(cellPopupMenuItemSelected:);
+                item.target = self;
+                
+                if ([item.title isEqualToString:currentValue])
+                {
+                    [editedPopupCell selectItem:item];
+                }
+            }
+            
+            [editedPopupCell.menu popUpMenuPositioningItem:editedPopupCell.selectedItem atLocation:cellFrame.origin inView:self];
+            
+        }
+    }
+    
+    [self setNeedsDisplay:YES];
+}
+
+- (void)cellPopupMenuItemSelected:(NSMenuItem *)menuItem {
+//    MBFooterPopupButtonCell *cell = (MBFooterPopupButtonCell *)[[self tableGrid] _footerCellForColumn:editedColumn];
+    [editedPopupCell selectItemWithTitle:menuItem.title];
+    [editedPopupCell synchronizeTitleAndSelectedItem];
+    
+    [[self tableGrid] _setFooterValue:menuItem.title forColumn:editedColumn];
+    
+    NSRect cellFrame = [self footerRectOfColumn:editedColumn];
+    [[self tableGrid] setNeedsDisplayInRect:cellFrame];
+    
+    editedColumn = NSNotFound;
+    editedPopupCell = nil;
 }
 
 #pragma mark -
@@ -86,12 +210,17 @@
 
 #pragma mark Layout Support
 
-- (NSRect)headerRectOfColumn:(NSUInteger)columnIndex
+- (NSRect)footerRectOfColumn:(NSUInteger)columnIndex
 {
 	NSRect rect = [[[self tableGrid] _contentView] rectOfColumn:columnIndex];
 	rect.size.height = MBTableGridColumnHeaderHeight;
 	
 	return rect;
+}
+
+- (NSInteger)footerColumnAtPoint:(NSPoint)aPoint
+{
+    return [[[self tableGrid] _contentView] columnAtPoint:aPoint];
 }
 
 @end
