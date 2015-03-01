@@ -38,7 +38,7 @@
 NSString *MBTableGridDidChangeSelectionNotification     = @"MBTableGridDidChangeSelectionNotification";
 NSString *MBTableGridDidMoveColumnsNotification         = @"MBTableGridDidMoveColumnsNotification";
 NSString *MBTableGridDidMoveRowsNotification            = @"MBTableGridDidMoveRowsNotification";
-CGFloat MBTableHeaderMinimumColumnWidth = 20.0f;
+CGFloat MBTableHeaderMinimumColumnWidth = 30.0f;
 
 #pragma mark -
 #pragma mark Drag Types
