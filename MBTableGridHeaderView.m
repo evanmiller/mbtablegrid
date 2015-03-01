@@ -297,23 +297,24 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 {	
 	// Get the location of the mouse
 	NSPoint loc = [self convertPoint:[theEvent locationInWindow] fromView:nil];
-	float deltaX = abs(loc.x - mouseDownLocation.x);
-	float deltaY = abs(loc.y - mouseDownLocation.y);
+	CGFloat deltaX = abs(loc.x - mouseDownLocation.x);
+	CGFloat deltaY = abs(loc.y - mouseDownLocation.y);
 	    
     if (canResize) {
         
         // Set drag distance
-        float dragDistance = loc.x - lastMouseDraggingLocation.x;
+        CGFloat dragDistance = loc.x - lastMouseDraggingLocation.x;
+        
         lastMouseDraggingLocation = loc;
         
         // Resize column and resize views
 		
-        [self.tableGrid resizeColumnWithIndex:draggingColumnIndex withDistance:dragDistance location:loc];
+        lastMouseDraggingLocation.x += [self.tableGrid resizeColumnWithIndex:draggingColumnIndex withDistance:dragDistance location:loc];
                
     } else {
     
         // Drag operation doesn't start until the mouse has moved more than 5 points
-        float dragThreshold = 5.0;
+        CGFloat dragThreshold = 5.0;
         
         // If we've met the conditions for a drag operation,
         if (shouldDragItems && mouseDownItem >= 0 && (deltaX >= dragThreshold || deltaY >= dragThreshold)) {

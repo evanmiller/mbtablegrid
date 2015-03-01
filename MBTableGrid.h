@@ -193,8 +193,10 @@ typedef enum {
  *
  * @details		This method resizes the column and updates the views
  *
+ * @return		The amount that the distance is beyond the minimum size
+ *
  */
-- (void) resizeColumnWithIndex:(NSUInteger)columnIndex withDistance:(float)distance location:(NSPoint)location;
+- (CGFloat)resizeColumnWithIndex:(NSUInteger)columnIndex withDistance:(float)distance location:(NSPoint)location;
 
 /**
  * @brief		Cache of column rects

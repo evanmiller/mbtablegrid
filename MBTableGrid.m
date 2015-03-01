@@ -287,7 +287,7 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
 
 #pragma mark Resize scrollview content size
 
-- (void)resizeColumnWithIndex:(NSUInteger)columnIndex withDistance:(float)distance location:(NSPoint)location {
+- (CGFloat)resizeColumnWithIndex:(NSUInteger)columnIndex withDistance:(float)distance location:(NSPoint)location {
 	// Get column key
 	NSString *columnKey = nil;
 	if ([columnIndexNames count] > columnIndex) {
@@ -307,42 +307,42 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
 
 	// Set new width of column
 	CGFloat currentWidth = [columnWidths[columnKey] floatValue];
+    CGFloat offset = 0.0;
 	
-	if (location.x > columnRect.origin.x) {
-
-		currentWidth += distance;
-		
-		CGFloat minColumnWidth = MBTableHeaderMinimumColumnWidth;
-		
-		if (columnHeaderView.indicatorImage && [columnHeaderView.indicatorImageColumns containsObject:[NSNumber numberWithInteger:columnIndex]]) {
-			minColumnWidth += columnHeaderView.indicatorImage.size.width + 2.0f;
-		}
-		
-		if (currentWidth < minColumnWidth) {
-			currentWidth = minColumnWidth;
-		}
-		
-	} else {
-		currentWidth = MBTableHeaderMinimumColumnWidth;
-	}
+    currentWidth += distance;
+    
+    CGFloat minColumnWidth = MBTableHeaderMinimumColumnWidth;
+    
+    if (columnHeaderView.indicatorImage && [columnHeaderView.indicatorImageColumns containsObject:[NSNumber numberWithInteger:columnIndex]]) {
+        minColumnWidth += columnHeaderView.indicatorImage.size.width + 2.0f;
+    }
+    
+    if (currentWidth < minColumnWidth) {
+        currentWidth = minColumnWidth;
+    }
 	
-	if (currentWidth > MBTableHeaderMinimumColumnWidth) {
-		columnWidths[columnKey] = @(currentWidth);
-		
-		// Update views with new sizes
-		[contentView setFrameSize:NSMakeSize(NSWidth(contentView.frame) + distance, NSHeight(contentView.frame))];
-		[columnHeaderView setFrameSize:NSMakeSize(NSWidth(columnHeaderView.frame) + distance, NSHeight(columnHeaderView.frame))];
-		[columnFooterView setFrameSize:NSMakeSize(NSWidth(columnFooterView.frame) + distance, NSHeight(columnFooterView.frame))];
-		
-		NSRect rectOfResizedAndVisibleRightwardColumns = NSMakeRect(columnRect.origin.x - rowHeaderView.bounds.size.width, 0, contentView.bounds.size.width - columnRect.origin.x, NSHeight(contentView.frame));
-		[contentView setNeedsDisplayInRect:rectOfResizedAndVisibleRightwardColumns];
-		
-		NSRect rectOfResizedAndVisibleRightwardHeaders = NSMakeRect(columnRect.origin.x - rowHeaderView.bounds.size.width, 0, contentView.bounds.size.width - columnRect.origin.x, NSHeight(columnHeaderView.frame));
-		[columnHeaderView setNeedsDisplayInRect:rectOfResizedAndVisibleRightwardHeaders];
-		
-		NSRect rectOfResizedAndVisibleRightwardFooters = NSMakeRect(columnRect.origin.x - rowHeaderView.bounds.size.width, 0, contentView.bounds.size.width - columnRect.origin.x, NSHeight(columnFooterView.frame));
-		[columnFooterView setNeedsDisplayInRect:rectOfResizedAndVisibleRightwardFooters];
-	}
+    columnWidths[columnKey] = @(currentWidth);
+    
+    if (currentWidth == minColumnWidth) {
+        offset = columnRect.origin.x - location.x - minColumnWidth;
+        distance += offset;
+    }
+    
+    // Update views with new sizes
+    [contentView setFrameSize:NSMakeSize(NSWidth(contentView.frame) + distance, NSHeight(contentView.frame))];
+    [columnHeaderView setFrameSize:NSMakeSize(NSWidth(columnHeaderView.frame) + distance, NSHeight(columnHeaderView.frame))];
+    [columnFooterView setFrameSize:NSMakeSize(NSWidth(columnFooterView.frame) + distance, NSHeight(columnFooterView.frame))];
+    
+    NSRect rectOfResizedAndVisibleRightwardColumns = NSMakeRect(columnRect.origin.x - rowHeaderView.bounds.size.width, 0, contentView.bounds.size.width - columnRect.origin.x, NSHeight(contentView.frame));
+    [contentView setNeedsDisplayInRect:rectOfResizedAndVisibleRightwardColumns];
+    
+    NSRect rectOfResizedAndVisibleRightwardHeaders = NSMakeRect(columnRect.origin.x - rowHeaderView.bounds.size.width, 0, contentView.bounds.size.width - columnRect.origin.x, NSHeight(columnHeaderView.frame));
+    [columnHeaderView setNeedsDisplayInRect:rectOfResizedAndVisibleRightwardHeaders];
+    
+    NSRect rectOfResizedAndVisibleRightwardFooters = NSMakeRect(columnRect.origin.x - rowHeaderView.bounds.size.width, 0, contentView.bounds.size.width - columnRect.origin.x, NSHeight(columnFooterView.frame));
+    [columnFooterView setNeedsDisplayInRect:rectOfResizedAndVisibleRightwardFooters];
+    
+    return offset;
 }
 
 - (void)registerForDraggedTypes:(NSArray *)pboardTypes {
