@@ -430,6 +430,16 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
     
 }
 
+- (NSRect)adjustScroll:(NSRect)proposedVisibleRect
+{
+    NSRect modifiedRect = proposedVisibleRect;
+    
+    if (self.orientation == MBTableHeaderHorizontalOrientation) {
+        modifiedRect.origin.y = 0.0;
+    }
+    
+    return modifiedRect;
+}
 
 - (void)autoSaveColumnProperties {
 	if (!columnAutoSaveProperties) {

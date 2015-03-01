@@ -186,6 +186,15 @@
     [self setNeedsDisplay:YES];
 }
 
+- (NSRect)adjustScroll:(NSRect)proposedVisibleRect
+{
+    NSRect modifiedRect = proposedVisibleRect;
+    
+    modifiedRect.origin.y = 0.0;
+    
+    return modifiedRect;
+}
+
 - (void)cellPopupMenuItemSelected:(NSMenuItem *)menuItem {
 //    MBFooterPopupButtonCell *cell = (MBFooterPopupButtonCell *)[[self tableGrid] _footerCellForColumn:editedColumn];
     [editedPopupCell selectItemWithTitle:menuItem.title];

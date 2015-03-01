@@ -146,9 +146,7 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
 		[rowHeaderScrollView setDrawsBackground:NO];
 		[self addSubview:rowHeaderScrollView];
 		
-		
 		// Setup the footer view
-		
 		NSRect columnFooterFrame = NSMakeRect(MBTableGridRowHeaderWidth, frameRect.size.height - MBTableGridColumnHeaderHeight, frameRect.size.width - MBTableGridRowHeaderWidth, MBTableGridColumnHeaderHeight);
 		
 		columnFooterScrollView = [[NSScrollView alloc] initWithFrame:columnFooterFrame];
@@ -158,7 +156,6 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
 		[columnFooterScrollView setAutoresizingMask:(NSViewWidthSizable | NSViewMinYMargin)];
 		[columnFooterScrollView setDrawsBackground:NO];
 		[self addSubview:columnFooterScrollView];
-
 
 		// Setup the content view
 		NSRect contentFrame = NSMakeRect(MBTableGridRowHeaderWidth, MBTableGridColumnHeaderHeight, [self frame].size.width - MBTableGridRowHeaderWidth, [self frame].size.height - MBTableGridColumnHeaderHeight - MBTableGridColumnHeaderHeight);
@@ -172,8 +169,12 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
 		[self addSubview:contentScrollView];
 
 		// We want to synchronize the scroll views
-		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(contentViewDidScroll:) name:NSViewBoundsDidChangeNotification object:[contentScrollView contentView]];
-
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(columnHeaderViewDidScroll:) name:NSViewBoundsDidChangeNotification object:[columnHeaderScrollView contentView]];
+        
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(rowHeaderViewDidScroll:) name:NSViewBoundsDidChangeNotification object:[rowHeaderScrollView contentView]];
+        
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(contentViewDidScroll:) name:NSViewBoundsDidChangeNotification object:[contentScrollView contentView]];
+        
 		// Set the default selection
 		self.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:0];
 		self.selectedRowIndexes = [NSIndexSet indexSetWithIndex:0];
@@ -822,69 +823,56 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
 	//[self reloadData];
 }
 
-- (void)contentViewDidScroll:(NSNotification *)aNotification {
-	NSView *changedView = [aNotification object];
+- (void)syncronizeScrollView:(NSScrollView *)scrollView withChangedBoundsOrigin:(NSPoint)changedBoundsOrigin horizontal:(BOOL)horizontal {
+    
+    // Get the current origin
+    NSPoint curOffset = [[scrollView contentView] bounds].origin;
+    NSPoint newOffset = curOffset;
+    
+    if (horizontal) {
+        newOffset.x = changedBoundsOrigin.x;
+    } else {
+        newOffset.y = changedBoundsOrigin.y;
+    }
+    
+    // If the synced position is different from our current position, reposition the view
+    if (!NSEqualPoints(curOffset, changedBoundsOrigin)) {
+        [[scrollView contentView] scrollToPoint:newOffset];
+        // We have to tell the NSScrollView to update its scrollers
+        [scrollView reflectScrolledClipView:[scrollView contentView]];
+    }
+    
+}
 
-	// Get the origin of the NSClipView
+- (void)columnHeaderViewDidScroll:(NSNotification *)aNotification {
+    
+	NSView *changedView = [aNotification object];
 	NSPoint changedBoundsOrigin = [changedView bounds].origin;
 
-	/*
-	 * Column Header Synchronization
-	 */
+    [self syncronizeScrollView:contentScrollView withChangedBoundsOrigin:changedBoundsOrigin horizontal:YES];
+    [self syncronizeScrollView:rowHeaderScrollView withChangedBoundsOrigin:changedBoundsOrigin horizontal:NO];
+    [self syncronizeScrollView:columnFooterScrollView withChangedBoundsOrigin:changedBoundsOrigin horizontal:YES];
+    
+}
 
-	// Get the column headers' current origin
-	NSPoint curColumnOffset = [[columnHeaderScrollView contentView] bounds].origin;
-	NSPoint newColumnOffset = curColumnOffset;
+- (void)rowHeaderViewDidScroll:(NSNotification *)aNotification {
+    
+    NSView *changedView = [aNotification object];
+    NSPoint changedBoundsOrigin = [changedView bounds].origin;
+    
+    [self syncronizeScrollView:contentScrollView withChangedBoundsOrigin:changedBoundsOrigin horizontal:NO];
+    
+}
 
-	// Column headers are synchronized in the horizontal plane
-	newColumnOffset.x = changedBoundsOrigin.x;
-
-	// If the synced position is different from our current position, reposition the headers view
-	if (!NSEqualPoints(curColumnOffset, changedBoundsOrigin)) {
-		[[columnHeaderScrollView contentView] scrollToPoint:newColumnOffset];
-		// we have to tell the NSScrollView to update its
-		// scrollers
-		[columnHeaderScrollView reflectScrolledClipView:[columnHeaderScrollView contentView]];
-	}
-
-	/*
-	 * Row Header Synchronization
-	 */
-
-	// Get the row headers' current origin
-	NSPoint curRowOffset = [[rowHeaderScrollView contentView] bounds].origin;
-	NSPoint newRowOffset = curRowOffset;
-
-	// Row headers are synchronized in the vertical plane
-	newRowOffset.y = changedBoundsOrigin.y;
-
-	// If the synced position is different from our current position, reposition the headers view
-	if (!NSEqualPoints(curRowOffset, changedBoundsOrigin)) {
-		[[rowHeaderScrollView contentView] scrollToPoint:newRowOffset];
-		// we have to tell the NSScrollView to update its
-		// scrollers
-		[rowHeaderScrollView reflectScrolledClipView:[rowHeaderScrollView contentView]];
-	}
-	
-	/*
-	 * Column Footer Synchronization
-	 */
-	
-	// Get the column headers' current origin
-	NSPoint curColumnFooterOffset = [[columnFooterScrollView contentView] bounds].origin;
-	NSPoint newColumnFooterOffset = curColumnFooterOffset;
-	
-	// Column headers are synchronized in the horizontal plane
-	newColumnFooterOffset.x = changedBoundsOrigin.x;
-	
-	// If the synced position is different from our current position, reposition the headers view
-	if (!NSEqualPoints(curColumnFooterOffset, changedBoundsOrigin)) {
-		[[columnFooterScrollView contentView] scrollToPoint:newColumnFooterOffset];
-		// we have to tell the NSScrollView to update its
-		// scrollers
-		[columnFooterScrollView reflectScrolledClipView:[columnFooterScrollView contentView]];
-	}
-
+- (void)contentViewDidScroll:(NSNotification *)aNotification {
+    
+    NSView *changedView = [aNotification object];
+    NSPoint changedBoundsOrigin = [changedView bounds].origin;
+    
+    [self syncronizeScrollView:columnHeaderScrollView withChangedBoundsOrigin:changedBoundsOrigin horizontal:YES];
+    [self syncronizeScrollView:rowHeaderScrollView withChangedBoundsOrigin:changedBoundsOrigin horizontal:NO];
+    [self syncronizeScrollView:columnFooterScrollView withChangedBoundsOrigin:changedBoundsOrigin horizontal:YES];
+    
 }
 
 #pragma mark -
