@@ -173,6 +173,8 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
         
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(rowHeaderViewDidScroll:) name:NSViewBoundsDidChangeNotification object:[rowHeaderScrollView contentView]];
         
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(columnFooterViewDidScroll:) name:NSViewBoundsDidChangeNotification object:[columnFooterScrollView contentView]];
+        
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(contentViewDidScroll:) name:NSViewBoundsDidChangeNotification object:[contentScrollView contentView]];
         
 		// Set the default selection
@@ -861,6 +863,17 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
     NSPoint changedBoundsOrigin = [changedView bounds].origin;
     
     [self syncronizeScrollView:contentScrollView withChangedBoundsOrigin:changedBoundsOrigin horizontal:NO];
+    
+}
+
+- (void)columnFooterViewDidScroll:(NSNotification *)aNotification {
+    
+    NSView *changedView = [aNotification object];
+    NSPoint changedBoundsOrigin = [changedView bounds].origin;
+    
+    [self syncronizeScrollView:contentScrollView withChangedBoundsOrigin:changedBoundsOrigin horizontal:YES];
+    [self syncronizeScrollView:columnHeaderScrollView withChangedBoundsOrigin:changedBoundsOrigin horizontal:YES];
+    [self syncronizeScrollView:rowHeaderScrollView withChangedBoundsOrigin:changedBoundsOrigin horizontal:NO];
     
 }
 
