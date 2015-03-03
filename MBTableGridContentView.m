@@ -811,6 +811,13 @@
 		NSText *editor = [[self window] fieldEditor:YES forObject:self];
 		editor.delegate = self;
 		[selectedCell editWithFrame:cellFrame inView:self editor:editor delegate:self event:nil];
+        
+        NSFormatter *formatter = [[self tableGrid] _formatterForColumn:selectedColumn];
+        
+        if (formatter && ![currentValue isEqual:@""]) {
+            currentValue = [formatter stringForObjectValue:currentValue];
+        }
+        
 		editor.string = currentValue;
 	}
 }
