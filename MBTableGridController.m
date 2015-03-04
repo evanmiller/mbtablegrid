@@ -36,6 +36,17 @@ NSString* kAutosavedColumnWidthKey = @"AutosavedColumnWidth";
 NSString* kAutosavedColumnIndexKey = @"AutosavedColumnIndex";
 NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 
+NSString * const ColumnCurrency = @"currency";
+NSString * const ColumnDate = @"date";
+NSString * const ColumnPopup = @"popup";
+NSString * const ColumnCheckbox = @"checkbox";
+NSString * const ColumnText1 = @"text1";
+NSString * const ColumnText2 = @"text2";
+NSString * const ColumnImage = @"image";
+NSString * const ColumnText3 = @"text3";
+NSString * const ColumnRating = @"rating";
+NSString * const ColumnText4 = @"text4";
+
 @interface NSMutableArray (SwappingAdditions)
 - (void)moveObjectsAtIndexes:(NSIndexSet *)indexes toIndex:(NSUInteger)index;
 @end
@@ -49,6 +60,7 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 @property (nonatomic, strong) MBFooterTextCell *footerTextCell;
 @property (nonatomic, strong) MBFooterPopupButtonCell *footerPopupCell;
 @property (nonatomic, strong) NSDictionary *columnWidths;
+@property (nonatomic, strong) NSMutableArray *columnIdentifiers;
 @end
 
 @implementation MBTableGridController
@@ -60,7 +72,9 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
     columnSampleWidths = @[@40, @50, @60, @70, @80, @90, @100, @110, @120, @130];
     
 	columns = [[NSMutableArray alloc] initWithCapacity:10];
-
+    
+    self.columnIdentifiers = [@[ColumnCurrency, ColumnDate, ColumnPopup, ColumnCheckbox, ColumnText1, ColumnText2, ColumnImage, ColumnText3, ColumnRating, ColumnText4] mutableCopy];
+    
 	NSDictionary *infoDict = [[NSBundle mainBundle] infoDictionary];
 	NSString *gridComponentID = [infoDict objectForKey:@"GridComponentID"];
 
@@ -75,8 +89,8 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 	NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
 	dateFormatter.dateStyle = NSDateFormatterShortStyle;
 	dateFormatter.timeStyle = NSDateFormatterNoStyle;
-	formatters = @[decimalFormatter, dateFormatter];
-
+    formatters = @{ColumnCurrency : decimalFormatter, ColumnDate : dateFormatter};
+    
 	// Add 10 columns
 	int i = 0;
 	while (i < 10) {
@@ -194,7 +208,9 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 	
 	id value = nil;
 	
-	if (columnIndex == 6) {
+    NSString *columnIdentifier = self.columnIdentifiers[columnIndex];
+    
+	if (columnIdentifier == ColumnImage) {
 		value = [NSImage imageNamed:@"rose.jpg"];
 	} else {
 		value = column[rowIndex];
@@ -218,23 +234,23 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 
 - (NSFormatter *)tableGrid:(MBTableGrid *)aTableGrid formatterForColumn:(NSUInteger)columnIndex
 {
-	if (columnIndex == 0 || columnIndex == 1) {
-		return formatters[columnIndex % [formatters count]];
-	}
-
-	return nil;
+    NSString *columnIdentifier = self.columnIdentifiers[columnIndex];
+    
+	return formatters[columnIdentifier];
 }
 
 - (NSCell *)tableGrid:(MBTableGrid *)aTableGrid cellForColumn:(NSUInteger)columnIndex {
 	NSCell *cell = nil;
-
-	if (columnIndex == 2) {
+    
+    NSString *columnIdentifier = self.columnIdentifiers[columnIndex];
+    
+    if (columnIdentifier == ColumnPopup) {
 		cell = self.popupCell;
-	} else if (columnIndex == 3) {
+	} else if (columnIdentifier == ColumnCheckbox) {
 		cell = self.checkboxCell;
-	} else if (columnIndex == 6) {
+	} else if (columnIdentifier == ColumnImage) {
 		cell = self.imageCell;
-	} else if (columnIndex == 8) {
+	} else if (columnIdentifier == ColumnRating) {
 		cell = self.ratingCell;
 	} else {
 		cell = self.textCell;
@@ -245,7 +261,9 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 
 - (NSImage *)tableGrid:(MBTableGrid *)aTableGrid accessoryButtonImageForColumn:(NSUInteger)columnIndex row:(NSUInteger)row {
 	
-	if (columnIndex == 8 || columnIndex == 2) {
+    NSString *columnIdentifier = self.columnIdentifiers[columnIndex];
+    
+	if (columnIdentifier == ColumnRating || columnIdentifier == ColumnPopup) {
 		return nil;
 	}
 	
@@ -260,7 +278,10 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 }
 
 - (NSArray *)tableGrid:(MBTableGrid *)aTableGrid availableObjectValuesForColumn:(NSUInteger)columnIndex {
-	if (columnIndex == 2) {
+    
+    NSString *columnIdentifier = self.columnIdentifiers[columnIndex];
+    
+	if (columnIdentifier == ColumnPopup) {
 		return @[ @"Action & Adventure", @"Comedy", @"Romance", @"Thriller" ];
 	}
 	return nil;
@@ -340,14 +361,15 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 - (NSCell *)tableGrid:(MBTableGrid *)aTableGrid footerCellForColumn:(NSUInteger)columnIndex;
 {
     NSCell *cell = nil;
+    NSString *columnIdentifier = self.columnIdentifiers[columnIndex];
     
-    if (columnIndex >= 1 && columnIndex <= 3) {
+    if (columnIdentifier == ColumnDate || columnIdentifier == ColumnPopup || columnIdentifier == ColumnCheckbox) {
         // Date, popup & checkbox: just showing the count
         cell = self.footerTextCell;
-    } else if (columnIndex == 6) {
+    } else if (columnIdentifier == ColumnImage) {
         // Image: nothing to show
         cell = nil;
-    } else if (columnIndex == 8) {
+    } else if (columnIdentifier == ColumnRating) {
         // Rating: average as a rating
         cell = self.ratingCell;
     } else if (columnIndex >= [columns count]) {
@@ -383,14 +405,15 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
     NSArray *column = [columns[columnIndex] filteredArrayUsingPredicate:predicate];
     
     id value = nil;
+    NSString *columnIdentifier = self.columnIdentifiers[columnIndex];
     
-    if (columnIndex >= 1 && columnIndex <= 3) {
-        // Checkbox: just showing the count
+    if (columnIdentifier == ColumnDate || columnIdentifier == ColumnPopup || columnIdentifier == ColumnCheckbox) {
+        // Date, popup & checkbox: just showing the count
         value = [NSString stringWithFormat:@"Count: %li", [[column valueForKeyPath:@"@count"] integerValue]];
-    } else if (columnIndex == 6) {
+    } else if (columnIdentifier == ColumnImage) {
         // Image: nothing to show
         value = nil;
-    } else if (columnIndex == 8) {
+    } else if (columnIdentifier == ColumnRating) {
         // Rating: average as a rating
         value = [column valueForKeyPath:@"@avg.floatValue"];
     } else {
@@ -410,7 +433,9 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 
 - (void)tableGrid:(MBTableGrid *)aTableGrid setFooterValue:(id)anObject forColumn:(NSUInteger)columnIndex;
 {
-    if ((columnIndex >= 1 && columnIndex <= 3) || columnIndex == 6 || columnIndex == 8 || columnIndex >= [columns count]) {
+    NSString *columnIdentifier = self.columnIdentifiers[columnIndex];
+    
+    if (columnIdentifier == ColumnDate || columnIdentifier == ColumnPopup || columnIdentifier == ColumnCheckbox || columnIdentifier == ColumnImage || columnIdentifier == ColumnRating || columnIndex >= [columns count]) {
         return;
     }
     
@@ -440,6 +465,7 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 - (BOOL)tableGrid:(MBTableGrid *)aTableGrid moveColumns:(NSIndexSet *)columnIndexes toIndex:(NSUInteger)index
 {
 	[columns moveObjectsAtIndexes:columnIndexes toIndex:index];
+    [self.columnIdentifiers moveObjectsAtIndexes:columnIndexes toIndex:index];
 	return YES;
 }
 
@@ -549,7 +575,9 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 }
 
 - (void)tableGrid:(MBTableGrid *)aTableGrid accessoryButtonClicked:(NSUInteger)columnIndex row:(NSUInteger)rowIndex {
-	if (columnIndex == 6) {
+    NSString *columnIdentifier = self.columnIdentifiers[columnIndex];
+    
+	if (columnIdentifier == ColumnImage) {
 		[self quickLookAction:nil];
 	}
 }

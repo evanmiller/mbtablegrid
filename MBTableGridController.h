@@ -30,7 +30,7 @@
 @interface MBTableGridController : NSObject <MBTableGridDataSource, MBTableGridDelegate, QLPreviewPanelDelegate, QLPreviewPanelDataSource> {
 	IBOutlet MBTableGrid *tableGrid;
 	NSMutableArray *columns;
-	NSArray *formatters;
+	NSDictionary *formatters;
     NSArray *columnSampleWidths;
 }
 
