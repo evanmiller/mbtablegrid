@@ -105,7 +105,7 @@ typedef enum {
  *
  * @author		Matthew Ball
  */
-@interface MBTableGrid : NSControl {
+@interface MBTableGrid : NSControl <NSDraggingSource, NSDraggingDestination> {
 	/* Headers */
 	MBTableGridHeaderCell *headerCell;
 	

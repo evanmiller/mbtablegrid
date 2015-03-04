@@ -42,8 +42,8 @@ CGFloat MBTableHeaderMinimumColumnWidth = 30.0f;
 
 #pragma mark -
 #pragma mark Drag Types
-NSString *MBTableGridColumnDataType = @"MBTableGridColumnDataType";
-NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
+NSString *MBTableGridColumnDataType = @"mbtablegrid.pasteboard.column";
+NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 
 @interface MBTableGrid (Drawing)
 - (void)_drawColumnHeaderBackgroundInRect:(NSRect)aRect;
@@ -891,6 +891,22 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
 #pragma mark -
 #pragma mark Protocol Methods
 
+#pragma mark NSDraggingSource
+
+-(NSDragOperation)draggingSession:(NSDraggingSession *)session sourceOperationMaskForDraggingContext:(NSDraggingContext)context {
+    
+    switch(context) {
+        case NSDraggingContextOutsideApplication:
+            return NSDragOperationNone;
+            break;
+            
+        case NSDraggingContextWithinApplication:
+        default:
+            return NSDragOperationMove;
+            break;
+    }
+}
+
 #pragma mark NSDraggingDestination
 
 - (NSDragOperation)draggingEntered:(id <NSDraggingInfo> )sender {
@@ -1627,45 +1643,33 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
 
 	NSRect firstSelectedColumn = [self rectOfColumn:[self.selectedColumnIndexes firstIndex]];
 	NSPoint location = firstSelectedColumn.origin;
-	location.y += [dragImage size].height;
-
-	NSPasteboard *pboard = [NSPasteboard pasteboardWithName:NSDragPboard];
-	[pboard declareTypes:@[MBTableGridColumnDataType] owner:self];
-
-	BOOL shouldDrag = NO;
-	if ([[self dataSource] respondsToSelector:@selector(tableGrid:writeColumnsWithIndexes:toPasteboard:)]) {
-		shouldDrag = [[self dataSource] tableGrid:self writeColumnsWithIndexes:self.selectedColumnIndexes toPasteboard:pboard];
-	}
-
-	if (shouldDrag) {
-		// Set the column drag type
-		[pboard setData:[NSKeyedArchiver archivedDataWithRootObject:self.selectedColumnIndexes] forType:MBTableGridColumnDataType];
-
-		[self dragImage:dragImage at:location offset:NSZeroSize event:theEvent pasteboard:pboard source:self slideBack:YES];
-	}
+    
+    NSData *data = [NSKeyedArchiver archivedDataWithRootObject:self.selectedColumnIndexes];
+    NSPasteboardItem *pbItem = [[NSPasteboardItem alloc] initWithPasteboardPropertyList:data ofType:MBTableGridColumnDataType];
+    NSDraggingItem *item = [[NSDraggingItem alloc] initWithPasteboardWriter:pbItem];
+    
+    NSRect dragImageFrame = NSMakeRect(location.x, location.y, dragImage.size.width, dragImage.size.height);
+    [item setDraggingFrame:dragImageFrame contents:dragImage];
+    id source = (id <NSDraggingSource>) self;
+    
+    [self beginDraggingSessionWithItems:@[item] event:theEvent source:source];
 }
 
 - (void)_dragRowsWithEvent:(NSEvent *)theEvent {
 	NSImage *dragImage = [self _imageForSelectedRows];
-
+    
 	NSRect firstSelectedRow = [self rectOfRow:[self.selectedRowIndexes firstIndex]];
 	NSPoint location = firstSelectedRow.origin;
-	location.y += [dragImage size].height;
-
-	NSPasteboard *pboard = [NSPasteboard pasteboardWithName:NSDragPboard];
-	[pboard declareTypes:@[MBTableGridRowDataType] owner:self];
-
-	BOOL shouldDrag = NO;
-	if ([[self dataSource] respondsToSelector:@selector(tableGrid:writeRowsWithIndexes:toPasteboard:)]) {
-		shouldDrag = [[self dataSource] tableGrid:self writeRowsWithIndexes:self.selectedRowIndexes toPasteboard:pboard];
-	}
-
-	if (shouldDrag) {
-		// Set the column drag type
-		[pboard setData:[NSKeyedArchiver archivedDataWithRootObject:self.selectedRowIndexes] forType:MBTableGridRowDataType];
-
-		[self dragImage:dragImage at:location offset:NSZeroSize event:theEvent pasteboard:pboard source:self slideBack:YES];
-	}
+    
+    NSData *data = [NSKeyedArchiver archivedDataWithRootObject:self.selectedRowIndexes];
+    NSPasteboardItem *pbItem = [[NSPasteboardItem alloc] initWithPasteboardPropertyList:data ofType:MBTableGridRowDataType];
+    NSDraggingItem *item = [[NSDraggingItem alloc] initWithPasteboardWriter:pbItem];
+    
+    NSRect dragImageFrame = NSMakeRect(location.x, location.y, dragImage.size.width, dragImage.size.height);
+    [item setDraggingFrame:dragImageFrame contents:dragImage];
+    id source = (id <NSDraggingSource>) self;
+    
+    [self beginDraggingSessionWithItems:@[item] event:theEvent source:source];
 }
 
 - (NSImage *)_imageForSelectedColumns {
