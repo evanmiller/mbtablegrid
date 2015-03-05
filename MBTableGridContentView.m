@@ -35,6 +35,8 @@
 #define kGRAB_HANDLE_HALF_SIDE_LENGTH 3.0f
 #define kGRAB_HANDLE_SIDE_LENGTH 6.0f
 
+NSString * const MBTableGridTrackingIsFillKey = @"isFill";
+
 @interface MBTableGrid (Private)
 - (id)_objectValueForColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 - (NSFormatter *)_formatterForColumn:(NSUInteger)columnIndex;
@@ -88,13 +90,15 @@
 		dropRow = NSNotFound;
         
 		grabHandleImage = [self _grabHandleImage];
-        grabHandleRect = NSRectFromCGRect(CGRectZero);
+        grabHandleRect = NSZeroRect;
 		
 		// Cache the cursor image
 		cursorImage = [self _cellSelectionCursorImage];
         cursorExtendSelectionImage = [self _cellExtendSelectionCursorImage];
 		
 		isDraggingColumnOrRow = NO;
+        shouldDrawFillGrabHandle = NO;
+        accessoryButtonRect = NSZeroRect;
 		
 		_defaultCell = [[MBTableGridCell alloc] initTextCell:@""];
         [_defaultCell setBordered:YES];
@@ -210,7 +214,12 @@
 				} else if ([_cell isKindOfClass:[MBImageCell class]]) {
 					
 					MBImageCell *cell = (MBImageCell *)_cell;
-					cell.accessoryButtonImage = [[self tableGrid] _accessoryButtonImageForColumn:column row:row];
+                    
+                    if (NSEqualRects(cellFrame, accessoryButtonRect)) {
+                        cell.accessoryButtonImage = [[self tableGrid] _accessoryButtonImageForColumn:column row:row];
+                    } else {
+                        cell.accessoryButtonImage = nil;
+                    }
 					
 					[cell drawWithFrame:cellFrame inView:self withBackgroundColor:backgroundColor];// Draw background color
 					
@@ -226,8 +235,13 @@
 				} else {
 					
 					MBTableGridCell *cell = (MBTableGridCell *)_cell;
-					cell.accessoryButtonImage = [[self tableGrid] _accessoryButtonImageForColumn:column row:row];
-					
+                    
+                    if (NSEqualRects(cellFrame, accessoryButtonRect)) {
+                        cell.accessoryButtonImage = [[self tableGrid] _accessoryButtonImageForColumn:column row:row];
+                    } else {
+                        cell.accessoryButtonImage = nil;
+                    }
+                    
 					[cell drawWithFrame:cellFrame inView:self withBackgroundColor:backgroundColor];// Draw background color
 					
 				}
@@ -273,7 +287,7 @@
 		if (disabled || [selectedColumns count] > 1) {
 			grabHandleRect = NSZeroRect;
 		}
-		else {
+		else if (shouldDrawFillGrabHandle) {
 			// Draw grab handle
 			grabHandleRect = NSMakeRect(NSMidX(selectionInsetRect) - kGRAB_HANDLE_HALF_SIDE_LENGTH - 2, NSMaxY(selectionInsetRect) - kGRAB_HANDLE_HALF_SIDE_LENGTH - 2, kGRAB_HANDLE_SIDE_LENGTH + 4, kGRAB_HANDLE_SIDE_LENGTH + 4);
 			[grabHandleImage drawInRect:grabHandleRect fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1.0];
@@ -587,6 +601,62 @@
 	mouseDownRow = NSNotFound;
 }
 
+- (void)mouseEntered:(NSEvent *)theEvent
+{
+    NSDictionary *dict = theEvent.userData;
+    BOOL isFill = [dict[MBTableGridTrackingIsFillKey] boolValue];
+    
+    if ((isFill && shouldDrawFillGrabHandle) || !isFill) {
+        return;
+    }
+    
+//    NSLog(@"entered %@", isFill ? @"fill" : @"selection");
+    
+    if (isFill) {
+        shouldDrawFillGrabHandle = YES;
+    }
+    
+    [self setNeedsDisplay:YES];
+}
+
+- (void)mouseExited:(NSEvent *)theEvent
+{
+    NSDictionary *dict = theEvent.userData;
+    BOOL isFill = [dict[MBTableGridTrackingIsFillKey] boolValue];
+    
+    if ((isFill && !shouldDrawFillGrabHandle) || (!isFill && NSIsEmptyRect(accessoryButtonRect))) {
+        return;
+    }
+    
+//    NSLog(@"exited %@", isFill ? @"fill" : @"selection");
+    
+    if (isFill) {
+        shouldDrawFillGrabHandle = NO;
+    } else {
+        accessoryButtonRect = NSZeroRect;
+    }
+    
+    [self setNeedsDisplay:YES];
+}
+
+- (void)mouseMoved:(NSEvent *)theEvent
+{
+    NSPoint mouseLocationInContentView = [self convertPoint:theEvent.locationInWindow fromView:nil];
+    NSInteger column = [self columnAtPoint:mouseLocationInContentView];
+    NSInteger row = [self rowAtPoint:mouseLocationInContentView];
+    NSRect rect = [self frameOfCellAtColumn:column row:row];
+    
+    if (NSEqualRects(rect, accessoryButtonRect)) {
+        return;
+    }
+    
+//    NSLog(@"moved");  // log
+    
+    accessoryButtonRect = rect;
+    
+    [self setNeedsDisplay:YES];
+}
+
 #pragma mark Cursor Rects
 
 - (void)resetCursorRects
@@ -609,6 +679,20 @@
 
 	[self addCursorRect:[self visibleRect] cursor:[self _cellSelectionCursor]];
     [self addCursorRect:grabHandleRect cursor:[self _cellExtendSelectionCursor]];
+    
+    // Update tracking areas here, to leverage the selection variables
+    for (NSTrackingArea *trackingArea in self.trackingAreas) {
+        [self removeTrackingArea:trackingArea];
+    }
+    
+    if (selectedColumns.count == 1) {
+        NSRect fillTrackingRect = [self rectOfColumn:[selectedColumns firstIndex]];
+        fillTrackingRect.size.height = self.frame.size.height;
+        
+        [self addTrackingArea:[[NSTrackingArea alloc] initWithRect:fillTrackingRect options:NSTrackingMouseEnteredAndExited | NSTrackingActiveInKeyWindow owner:self userInfo:@{MBTableGridTrackingIsFillKey : @YES}]];
+    }
+    
+    [self addTrackingArea:[[NSTrackingArea alloc] initWithRect:selectionRect options:NSTrackingMouseEnteredAndExited | NSTrackingMouseMoved | NSTrackingActiveInKeyWindow owner:self userInfo:@{MBTableGridTrackingIsFillKey : @NO}]];
 }
 
 #pragma mark -

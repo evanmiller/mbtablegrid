@@ -58,6 +58,8 @@
 	BOOL isDraggingColumnOrRow;
     BOOL isFilling;
     NSInteger numberOfRowsWhenStartingFilling;
+    BOOL shouldDrawFillGrabHandle;
+    NSRect accessoryButtonRect;
 	
 	MBTableGridCell *_defaultCell;
     
