@@ -35,7 +35,7 @@
 #define kGRAB_HANDLE_HALF_SIDE_LENGTH 3.0f
 #define kGRAB_HANDLE_SIDE_LENGTH 6.0f
 
-NSString * const MBTableGridTrackingIsFillKey = @"isFill";
+NSString * const MBTableGridTrackingPartKey = @"part";
 
 @interface MBTableGrid (Private)
 - (id)_objectValueForColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
@@ -97,7 +97,7 @@ NSString * const MBTableGridTrackingIsFillKey = @"isFill";
         cursorExtendSelectionImage = [self _cellExtendSelectionCursorImage];
 		
 		isDraggingColumnOrRow = NO;
-        shouldDrawFillGrabHandle = NO;
+        shouldDrawFillPart = MBTableGridTrackingPartNone;
         accessoryButtonRect = NSZeroRect;
 		
 		_defaultCell = [[MBTableGridCell alloc] initTextCell:@""];
@@ -275,7 +275,9 @@ NSString * const MBTableGridTrackingIsFillKey = @"isFill";
 		
 		if (disabled) {
 			selectionColor = [[selectionColor colorUsingColorSpaceName:NSDeviceWhiteColorSpace] colorUsingColorSpaceName:NSDeviceRGBColorSpace];
-		}
+        } else if (isFilling) {
+            selectionColor = [NSColor colorWithCalibratedRed:0.996 green:0.827 blue:0.176 alpha:1.000];
+        }
 		
 		[selectionColor set];
 		[selectionPath setLineWidth: 1.0];
@@ -287,11 +289,11 @@ NSString * const MBTableGridTrackingIsFillKey = @"isFill";
 		if (disabled || [selectedColumns count] > 1) {
 			grabHandleRect = NSZeroRect;
 		}
-		else if (shouldDrawFillGrabHandle) {
-			// Draw grab handle
-			grabHandleRect = NSMakeRect(NSMidX(selectionInsetRect) - kGRAB_HANDLE_HALF_SIDE_LENGTH - 2, NSMaxY(selectionInsetRect) - kGRAB_HANDLE_HALF_SIDE_LENGTH - 2, kGRAB_HANDLE_SIDE_LENGTH + 4, kGRAB_HANDLE_SIDE_LENGTH + 4);
-			[grabHandleImage drawInRect:grabHandleRect fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1.0];
-		}
+        else if (shouldDrawFillPart != MBTableGridTrackingPartNone) {
+            // Draw grab handle
+            grabHandleRect = NSMakeRect(NSMidX(selectionInsetRect) - kGRAB_HANDLE_HALF_SIDE_LENGTH - 2, (shouldDrawFillPart == MBTableGridTrackingPartFillTop ? NSMinY(selectionInsetRect) : NSMaxY(selectionInsetRect)) - kGRAB_HANDLE_HALF_SIDE_LENGTH - 2, kGRAB_HANDLE_SIDE_LENGTH + 4, kGRAB_HANDLE_SIDE_LENGTH + 4);
+            [grabHandleImage drawInRect:grabHandleRect fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1.0];
+        }
 		
         // Inavlidate cursors so we use the correct cursor for the selection in the right place
         [[self window] invalidateCursorRectsForView:self];
@@ -407,7 +409,7 @@ NSString * const MBTableGridTrackingIsFillKey = @"isFill";
         if (isFilling) {
             numberOfRowsWhenStartingFilling = [self tableGrid].numberOfRows;
             
-            if (mouseDownRow == selectedRow + 1) {
+            if (mouseDownRow == selectedRow - 1 || mouseDownRow == selectedRow + 1) {
                 mouseDownRow = selectedRow;
             }
         }
@@ -512,6 +514,8 @@ NSString * const MBTableGridTrackingIsFillKey = @"isFill";
             if (numberOfRowsToAdd > 0 && [[self tableGrid].dataSource tableGrid:[self tableGrid] addRows:numberOfRowsToAdd]) {
                 row = [self rowAtPoint:loc];
             }
+            
+            [self resetCursorRects];
         }
         
         // While filling, if dragging upwards, remove any rows added during the fill operation
@@ -525,6 +529,8 @@ NSString * const MBTableGridTrackingIsFillKey = @"isFill";
             NSIndexSet *rowIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(firstRowToRemove, numberOfRows - firstRowToRemove)];
             
             [[self tableGrid].dataSource tableGrid:[self tableGrid] removeRows:rowIndexes];
+            
+            [self resetCursorRects];
         }
 		
 		MBTableGridEdge columnEdge = MBTableGridLeftEdge;
@@ -604,39 +610,34 @@ NSString * const MBTableGridTrackingIsFillKey = @"isFill";
 - (void)mouseEntered:(NSEvent *)theEvent
 {
     NSDictionary *dict = theEvent.userData;
-    BOOL isFill = [dict[MBTableGridTrackingIsFillKey] boolValue];
+    MBTableGridTrackingPart part = [dict[MBTableGridTrackingPartKey] integerValue];
     
-    if ((isFill && shouldDrawFillGrabHandle) || !isFill) {
-        return;
+    if (part != MBTableGridTrackingPartAccessory && shouldDrawFillPart != part) {
+//        NSLog(@"mouseEntered: %@", part == MBTableGridTrackingPartFillTop ? @"top" : @"bottom");  // log
+        
+        shouldDrawFillPart = part;
+        [self setNeedsDisplay:YES];
     }
-    
-//    NSLog(@"entered %@", isFill ? @"fill" : @"selection");
-    
-    if (isFill) {
-        shouldDrawFillGrabHandle = YES;
-    }
-    
-    [self setNeedsDisplay:YES];
 }
 
 - (void)mouseExited:(NSEvent *)theEvent
 {
     NSDictionary *dict = theEvent.userData;
-    BOOL isFill = [dict[MBTableGridTrackingIsFillKey] boolValue];
+    MBTableGridTrackingPart part = [dict[MBTableGridTrackingPartKey] integerValue];
     
-    if ((isFill && !shouldDrawFillGrabHandle) || (!isFill && NSIsEmptyRect(accessoryButtonRect))) {
-        return;
-    }
-    
-//    NSLog(@"exited %@", isFill ? @"fill" : @"selection");
-    
-    if (isFill) {
-        shouldDrawFillGrabHandle = NO;
-    } else {
+    if (part == MBTableGridTrackingPartAccessory && !NSIsEmptyRect(accessoryButtonRect)) {
+//        NSLog(@"mouseExited: accessory");  // log
+        
         accessoryButtonRect = NSZeroRect;
+        [self setNeedsDisplay:YES];
     }
     
-    [self setNeedsDisplay:YES];
+    if (part != MBTableGridTrackingPartAccessory && shouldDrawFillPart != MBTableGridTrackingPartNone) {
+//        NSLog(@"mouseExited: %@", shouldDrawFillPart == MBTableGridTrackingPartFillTop ? @"top" : @"bottom");  // log
+        
+        shouldDrawFillPart = MBTableGridTrackingPartNone;
+        [self setNeedsDisplay:YES];
+    }
 }
 
 - (void)mouseMoved:(NSEvent *)theEvent
@@ -646,15 +647,12 @@ NSString * const MBTableGridTrackingIsFillKey = @"isFill";
     NSInteger row = [self rowAtPoint:mouseLocationInContentView];
     NSRect rect = [self frameOfCellAtColumn:column row:row];
     
-    if (NSEqualRects(rect, accessoryButtonRect)) {
-        return;
+    if (!NSEqualRects(rect, accessoryButtonRect)) {
+//        NSLog(@"mouseMoved");  // log
+        
+        accessoryButtonRect = rect;
+        [self setNeedsDisplay:YES];
     }
-    
-//    NSLog(@"moved");  // log
-    
-    accessoryButtonRect = rect;
-    
-    [self setNeedsDisplay:YES];
 }
 
 #pragma mark Cursor Rects
@@ -688,11 +686,15 @@ NSString * const MBTableGridTrackingIsFillKey = @"isFill";
     if (selectedColumns.count == 1) {
         NSRect fillTrackingRect = [self rectOfColumn:[selectedColumns firstIndex]];
         fillTrackingRect.size.height = self.frame.size.height;
+        NSRect topFillTrackingRect, bottomFillTrackingRect;
         
-        [self addTrackingArea:[[NSTrackingArea alloc] initWithRect:fillTrackingRect options:NSTrackingMouseEnteredAndExited | NSTrackingActiveInKeyWindow owner:self userInfo:@{MBTableGridTrackingIsFillKey : @YES}]];
+        NSDivideRect(fillTrackingRect, &topFillTrackingRect, &bottomFillTrackingRect, selectionRect.origin.y + (selectionRect.size.height / 2.0), CGRectMinYEdge);
+        
+        [self addTrackingArea:[[NSTrackingArea alloc] initWithRect:topFillTrackingRect options:NSTrackingMouseEnteredAndExited | NSTrackingActiveInKeyWindow owner:self userInfo:@{MBTableGridTrackingPartKey : @(MBTableGridTrackingPartFillTop)}]];
+        [self addTrackingArea:[[NSTrackingArea alloc] initWithRect:bottomFillTrackingRect options:NSTrackingMouseEnteredAndExited | NSTrackingActiveInKeyWindow owner:self userInfo:@{MBTableGridTrackingPartKey : @(MBTableGridTrackingPartFillBottom)}]];
     }
     
-    [self addTrackingArea:[[NSTrackingArea alloc] initWithRect:selectionRect options:NSTrackingMouseEnteredAndExited | NSTrackingMouseMoved | NSTrackingActiveInKeyWindow owner:self userInfo:@{MBTableGridTrackingIsFillKey : @NO}]];
+    [self addTrackingArea:[[NSTrackingArea alloc] initWithRect:selectionRect options:NSTrackingMouseEnteredAndExited | NSTrackingMouseMoved | NSTrackingActiveInKeyWindow owner:self userInfo:@{MBTableGridTrackingPartKey : @(MBTableGridTrackingPartAccessory)}]];
 }
 
 #pragma mark -

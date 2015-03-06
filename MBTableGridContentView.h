@@ -31,6 +31,14 @@
 #define COLUMNFLOATSIZE(x) [NSNumber numberWithFloat:x]
 #define COLUMNKEY(idx) [NSString stringWithFormat:@"column%lu",idx]
 
+typedef NS_ENUM(NSUInteger, MBTableGridTrackingPart)
+{
+    MBTableGridTrackingPartNone = 0,
+    MBTableGridTrackingPartFillTop,
+    MBTableGridTrackingPartFillBottom,
+    MBTableGridTrackingPartAccessory
+};
+
 @class MBTableGrid, MBTableGridCell;
 
 /**
@@ -58,7 +66,7 @@
 	BOOL isDraggingColumnOrRow;
     BOOL isFilling;
     NSInteger numberOfRowsWhenStartingFilling;
-    BOOL shouldDrawFillGrabHandle;
+    MBTableGridTrackingPart shouldDrawFillPart;
     NSRect accessoryButtonRect;
 	
 	MBTableGridCell *_defaultCell;
