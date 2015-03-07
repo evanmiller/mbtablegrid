@@ -267,7 +267,7 @@ NSString * const ColumnText4 = @"text4";
 		return nil;
 	}
 	
-	if ([tableGrid.selectedRowIndexes containsIndex:row] && [tableGrid.selectedColumnIndexes containsIndex:columnIndex]) {
+	if (tableGrid.selectedRowIndexes.count == 1 && [tableGrid.selectedRowIndexes containsIndex:row]) {
 		NSImage *buttonImage = [NSImage imageNamed:@"acc-quicklook"];
 		
 		return buttonImage;

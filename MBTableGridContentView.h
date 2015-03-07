@@ -35,8 +35,7 @@ typedef NS_ENUM(NSUInteger, MBTableGridTrackingPart)
 {
     MBTableGridTrackingPartNone = 0,
     MBTableGridTrackingPartFillTop,
-    MBTableGridTrackingPartFillBottom,
-    MBTableGridTrackingPartAccessory
+    MBTableGridTrackingPartFillBottom
 };
 
 @class MBTableGrid, MBTableGridCell;
@@ -67,7 +66,6 @@ typedef NS_ENUM(NSUInteger, MBTableGridTrackingPart)
     BOOL isFilling;
     NSInteger numberOfRowsWhenStartingFilling;
     MBTableGridTrackingPart shouldDrawFillPart;
-    NSRect accessoryButtonRect;
 	
 	MBTableGridCell *_defaultCell;
     

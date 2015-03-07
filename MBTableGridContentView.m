@@ -98,7 +98,6 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 		
 		isDraggingColumnOrRow = NO;
         shouldDrawFillPart = MBTableGridTrackingPartNone;
-        accessoryButtonRect = NSZeroRect;
 		
 		_defaultCell = [[MBTableGridCell alloc] initTextCell:@""];
         [_defaultCell setBordered:YES];
@@ -215,11 +214,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 					
 					MBImageCell *cell = (MBImageCell *)_cell;
                     
-                    if (NSEqualRects(cellFrame, accessoryButtonRect)) {
-                        cell.accessoryButtonImage = [[self tableGrid] _accessoryButtonImageForColumn:column row:row];
-                    } else {
-                        cell.accessoryButtonImage = nil;
-                    }
+                    cell.accessoryButtonImage = [[self tableGrid] _accessoryButtonImageForColumn:column row:row];
 					
 					[cell drawWithFrame:cellFrame inView:self withBackgroundColor:backgroundColor];// Draw background color
 					
@@ -236,11 +231,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 					
 					MBTableGridCell *cell = (MBTableGridCell *)_cell;
                     
-                    if (NSEqualRects(cellFrame, accessoryButtonRect)) {
-                        cell.accessoryButtonImage = [[self tableGrid] _accessoryButtonImageForColumn:column row:row];
-                    } else {
-                        cell.accessoryButtonImage = nil;
-                    }
+                    cell.accessoryButtonImage = [[self tableGrid] _accessoryButtonImageForColumn:column row:row];
                     
 					[cell drawWithFrame:cellFrame inView:self withBackgroundColor:backgroundColor];// Draw background color
 					
@@ -612,7 +603,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
     NSDictionary *dict = theEvent.userData;
     MBTableGridTrackingPart part = [dict[MBTableGridTrackingPartKey] integerValue];
     
-    if (part != MBTableGridTrackingPartAccessory && shouldDrawFillPart != part) {
+    if (shouldDrawFillPart != part) {
 //        NSLog(@"mouseEntered: %@", part == MBTableGridTrackingPartFillTop ? @"top" : @"bottom");  // log
         
         shouldDrawFillPart = part;
@@ -622,35 +613,10 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 
 - (void)mouseExited:(NSEvent *)theEvent
 {
-    NSDictionary *dict = theEvent.userData;
-    MBTableGridTrackingPart part = [dict[MBTableGridTrackingPartKey] integerValue];
-    
-    if (part == MBTableGridTrackingPartAccessory && !NSIsEmptyRect(accessoryButtonRect)) {
-//        NSLog(@"mouseExited: accessory");  // log
-        
-        accessoryButtonRect = NSZeroRect;
-        [self setNeedsDisplay:YES];
-    }
-    
-    if (part != MBTableGridTrackingPartAccessory && shouldDrawFillPart != MBTableGridTrackingPartNone) {
+    if (shouldDrawFillPart != MBTableGridTrackingPartNone) {
 //        NSLog(@"mouseExited: %@", shouldDrawFillPart == MBTableGridTrackingPartFillTop ? @"top" : @"bottom");  // log
         
         shouldDrawFillPart = MBTableGridTrackingPartNone;
-        [self setNeedsDisplay:YES];
-    }
-}
-
-- (void)mouseMoved:(NSEvent *)theEvent
-{
-    NSPoint mouseLocationInContentView = [self convertPoint:theEvent.locationInWindow fromView:nil];
-    NSInteger column = [self columnAtPoint:mouseLocationInContentView];
-    NSInteger row = [self rowAtPoint:mouseLocationInContentView];
-    NSRect rect = [self frameOfCellAtColumn:column row:row];
-    
-    if (!NSEqualRects(rect, accessoryButtonRect)) {
-//        NSLog(@"mouseMoved");  // log
-        
-        accessoryButtonRect = rect;
         [self setNeedsDisplay:YES];
     }
 }
@@ -693,8 +659,6 @@ NSString * const MBTableGridTrackingPartKey = @"part";
         [self addTrackingArea:[[NSTrackingArea alloc] initWithRect:topFillTrackingRect options:NSTrackingMouseEnteredAndExited | NSTrackingActiveInKeyWindow owner:self userInfo:@{MBTableGridTrackingPartKey : @(MBTableGridTrackingPartFillTop)}]];
         [self addTrackingArea:[[NSTrackingArea alloc] initWithRect:bottomFillTrackingRect options:NSTrackingMouseEnteredAndExited | NSTrackingActiveInKeyWindow owner:self userInfo:@{MBTableGridTrackingPartKey : @(MBTableGridTrackingPartFillBottom)}]];
     }
-    
-    [self addTrackingArea:[[NSTrackingArea alloc] initWithRect:selectionRect options:NSTrackingMouseEnteredAndExited | NSTrackingMouseMoved | NSTrackingActiveInKeyWindow owner:self userInfo:@{MBTableGridTrackingPartKey : @(MBTableGridTrackingPartAccessory)}]];
 }
 
 #pragma mark -
