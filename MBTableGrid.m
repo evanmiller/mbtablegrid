@@ -61,6 +61,7 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 - (NSImage *)_accessoryButtonImageForColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 - (void)_accessoryButtonClicked:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 - (NSArray *)_availableObjectValuesForColumn:(NSUInteger)columnIndex;
+- (NSArray *)_autocompleteValuesForEditString:(NSString *)editString column:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 - (void)_setObjectValue:(id)value forColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 - (float)_widthForColumn:(NSUInteger)columnIndex;
 - (float)_setWidthForColumn:(NSUInteger)columnIndex;
@@ -800,6 +801,9 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 			NSText *fieldEditor = [[self window] fieldEditor:YES forObject:contentView];
 			fieldEditor.delegate = contentView;
 			[fieldEditor setString:aString];
+            
+            // The textDidBeginEditing notification isn't sent yet, so invoke a custom method
+            [contentView textDidBeginEditingWithEditor:fieldEditort];
 		}
 		
 	} else {
@@ -1513,6 +1517,13 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 	return nil;
 }
 
+- (NSArray *)_autocompleteValuesForEditString:(NSString *)editString column:(NSUInteger)columnIndex row:(NSUInteger)rowIndex {
+    if ([[self dataSource] respondsToSelector:@selector(tableGrid:autocompleteValuesForEditString:column:row:)]) {
+        return [[self dataSource] tableGrid:self autocompleteValuesForEditString:editString column:columnIndex row:rowIndex];
+    }
+    return nil;
+}
+
 - (id)_backgroundColorForColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex {
 	if ([[self dataSource] respondsToSelector:@selector(tableGrid:backgroundColorForColumn:row:)]) {
 		return [[self dataSource] tableGrid:self backgroundColorForColumn:columnIndex row:rowIndex];
@@ -1579,9 +1590,9 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 }
 
 - (void)_userDidEnterInvalidStringInColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex errorDescription:(NSString *)errorDescription {
-	if ([[self delegate] respondsToSelector:@selector(tableGrid:userDidEnterInvalidStringInColumn:row:errorDescription:)]) {
-		[[self delegate] tableGrid:self userDidEnterInvalidStringInColumn:columnIndex row:rowIndex errorDescription:errorDescription];
-	}
+    if ([[self delegate] respondsToSelector:@selector(tableGrid:userDidEnterInvalidStringInColumn:row:errorDescription:)]) {
+        [[self delegate] tableGrid:self userDidEnterInvalidStringInColumn:columnIndex row:rowIndex errorDescription:errorDescription];
+    }
 }
 
 - (void)_accessoryButtonClicked:(NSUInteger)columnIndex row:(NSUInteger)rowIndex {

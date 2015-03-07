@@ -176,6 +176,8 @@ typedef NS_ENUM(NSUInteger, MBTableGridTrackingPart)
  */
 - (NSInteger)rowAtPoint:(NSPoint)aPoint;
 
+- (void)textDidBeginEditingWithEditor:(NSText *)editor;
+
 /**
  * @}
  */

@@ -706,6 +706,20 @@ typedef enum {
 @optional
 
 /**
+ *  @brief      Offer auto-completion strings based on the user input.
+ *
+ *  @param      aTableGrid      The table grid that sent the message.
+ *  @param      value           The text the user entered in the cell editor.
+ *  @param      columnIndex     A column in \c aTableGrid.
+ *  @param		rowIndex		A row in \c aTableGrid.
+ *
+ *  @return An array of strings to offer as auto-completion matches for the user-entered text for a given column and row. The returned strings should generally be based on the other values in the column that have the same prefix as the given text. Return nil or an empty array if no auto-completion strings should be offered.
+ */
+- (NSArray *)tableGrid:(MBTableGrid *)aTableGrid autocompleteValuesForEditString:(NSString *)editString column:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
+
+@optional
+
+/**
  * @brief		Returns the background color for the specified column and row.
  *
  * @param		aTableGrid		The table grid that sent the message.

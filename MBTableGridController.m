@@ -287,6 +287,26 @@ NSString * const ColumnText4 = @"text4";
 	return nil;
 }
 
+- (NSArray *)tableGrid:(MBTableGrid *)aTableGrid autocompleteValuesForEditString:(NSString *)editString column:(NSUInteger)columnIndex row:(NSUInteger)rowIndex {
+    
+    NSString *columnIdentifier = self.columnIdentifiers[columnIndex];
+    
+    if (columnIdentifier == ColumnCurrency || columnIdentifier == ColumnDate || columnIdentifier == ColumnPopup || columnIdentifier == ColumnCheckbox || columnIdentifier == ColumnImage || columnIdentifier == ColumnRating || columnIndex >= [columns count]) {
+        return nil;
+    }
+    
+    NSMutableArray *completions = [NSMutableArray array];
+    NSMutableArray *column = columns[columnIndex];
+    
+    for (NSString *value in column) {
+        if ([[editString lowercaseString] hasPrefix:[value lowercaseString]]) {
+            [completions addObject:value];
+        }
+    }
+    
+    return completions;
+}
+
 - (void)tableGrid:(MBTableGrid *)aTableGrid setObjectValue:(id)anObject forColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex {
 	if (columnIndex >= [columns count]) {
 		return;

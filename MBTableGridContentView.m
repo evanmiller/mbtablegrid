@@ -702,6 +702,22 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 
 #pragma mark Field Editor
 
+- (void)textDidBeginEditingWithEditor:(NSText *)editor
+{
+    NSLog(@"manual begin: %@", editor);  // log
+}
+
+- (void)textDidBeginEditing:(NSNotification *)notification
+{
+    NSLog(@"begin: %@", notification);  // log
+    
+}
+
+- (void)textDidChange:(NSNotification *)notification
+{
+    NSLog(@"typed: %@", notification);  // log
+}
+
 - (void)textDidEndEditing:(NSNotification *)aNotification
 {	
 	// Give focus back to the table grid (the field editor took it)
