@@ -803,7 +803,7 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 			[fieldEditor setString:aString];
             
             // The textDidBeginEditing notification isn't sent yet, so invoke a custom method
-            [contentView textDidBeginEditingWithEditor:fieldEditort];
+            [contentView textDidBeginEditingWithEditor:fieldEditor];
 		}
 		
 	} else {
