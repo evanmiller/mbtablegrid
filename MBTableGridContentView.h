@@ -45,7 +45,7 @@ typedef NS_ENUM(NSUInteger, MBTableGridTrackingPart)
  *				and editing capabilities of MBTableGrid. It is designed
  *				to be placed inside a scroll view.
  */
-@interface MBTableGridContentView : NSView <NSTextDelegate, NSMenuDelegate> {
+@interface MBTableGridContentView : NSView <NSTextDelegate, NSTextViewDelegate, NSMenuDelegate> {
 	NSInteger mouseDownColumn;
 	NSInteger mouseDownRow;
 	
@@ -62,6 +62,8 @@ typedef NS_ENUM(NSUInteger, MBTableGridTrackingPart)
 	
 	NSTimer *autoscrollTimer;
 	
+    BOOL isAutoEditing;
+    BOOL isCompleting;
 	BOOL isDraggingColumnOrRow;
     BOOL isFilling;
     NSInteger numberOfRowsWhenStartingFilling;

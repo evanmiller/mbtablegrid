@@ -44,6 +44,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 - (NSImage *)_accessoryButtonImageForColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 - (void)_accessoryButtonClicked:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 - (NSArray *)_availableObjectValuesForColumn:(NSUInteger)columnIndex;
+- (NSArray *)_autocompleteValuesForEditString:(NSString *)editString column:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 - (void)_setObjectValue:(id)value forColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 - (BOOL)_canEditCellAtColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 - (void)_setStickyColumn:(MBTableGridEdge)stickyColumn row:(MBTableGridEdge)stickyRow;
@@ -96,6 +97,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 		cursorImage = [self _cellSelectionCursorImage];
         cursorExtendSelectionImage = [self _cellExtendSelectionCursorImage];
 		
+        isCompleting = NO;
 		isDraggingColumnOrRow = NO;
         shouldDrawFillPart = MBTableGridTrackingPartNone;
 		
@@ -668,22 +670,29 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 
 - (void)textDidBeginEditingWithEditor:(NSText *)editor
 {
-    NSLog(@"manual begin: %@", editor);  // log
+    isAutoEditing = YES;
+    [self showCompletionsForTextView:(NSTextView *)editor];
 }
 
 - (void)textDidBeginEditing:(NSNotification *)notification
 {
-    NSLog(@"begin: %@", notification);  // log
+    if (!isAutoEditing) {
+        [self showCompletionsForTextView:notification.object];
+    }
     
+    isAutoEditing = NO;
 }
 
 - (void)textDidChange:(NSNotification *)notification
 {
-    NSLog(@"typed: %@", notification);  // log
+    isAutoEditing = NO;
+    [self showCompletionsForTextView:notification.object];
 }
 
 - (void)textDidEndEditing:(NSNotification *)aNotification
-{	
+{
+    isAutoEditing = NO;
+    
 	// Give focus back to the table grid (the field editor took it)
 	[[self window] makeFirstResponder:[self tableGrid]];
 	
@@ -719,6 +728,29 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 		default:
 			break;
 	}
+}
+
+- (void)showCompletionsForTextView:(NSTextView *)textView;
+{
+    if (!isCompleting) {
+        isCompleting = YES;
+        [textView complete:nil];
+        isCompleting = NO;
+    }
+}
+
+- (NSArray *)textView:(NSTextView *)textView completions:(NSArray *)words forPartialWordRange:(NSRange)charRange indexOfSelectedItem:(NSInteger *)index
+{
+    *index = -1;
+    
+    NSString *string = textView.string;
+    NSArray *completions = [[self tableGrid] _autocompleteValuesForEditString:string column:editedColumn row:editedRow];
+    
+    if (string.length && completions.count && [string isEqualToString:[completions firstObject]]) {
+        *index = 0;
+    }
+    
+    return completions;
 }
 
 #pragma mark -

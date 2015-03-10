@@ -299,7 +299,7 @@ NSString * const ColumnText4 = @"text4";
     NSMutableArray *column = columns[columnIndex];
     
     for (NSString *value in column) {
-        if ([[editString lowercaseString] hasPrefix:[value lowercaseString]]) {
+        if ([[value lowercaseString] hasPrefix:[editString lowercaseString]]) {
             [completions addObject:value];
         }
     }
