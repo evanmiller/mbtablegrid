@@ -228,6 +228,7 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
 	}
 	
 	columnWidths[columnKey] = @(currentWidth);
+	[self _setWidthForColumn:columnIndex];
 	
 	// Update views with new sizes
 	[contentView setFrameSize:NSMakeSize(currentWidth, NSHeight(contentView.frame))];
@@ -251,6 +252,7 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
 	}
 	
     columnWidths[columnKey] = @(currentWidth);
+	[self _setWidthForColumn:columnIndex];
     
     // Update views with new sizes
     [contentView setFrameSize:NSMakeSize(NSWidth(contentView.frame) + distance, NSHeight(contentView.frame))];
@@ -1208,7 +1210,6 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
 		[borderColor set];
 		NSRect rightLine = NSMakeRect(NSMaxX(aRect)-1, NSMinY(aRect), 1.0, NSHeight(aRect));
 		NSRectFill(rightLine);
-		
 	}
 }
 
@@ -1324,13 +1325,13 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
 - (float)_setWidthForColumn:(NSUInteger)columnIndex
 {
     
-    if ([[self dataSource] respondsToSelector:@selector(tableGrid:setWidthForColumn:)]) {
+	if ([[self dataSource] respondsToSelector:@selector(tableGrid:setWidth:forColumn:)]) {
         
         NSString *column = [NSString stringWithFormat:@"column%lu", columnIndex];
 
-        float width = [[self dataSource] tableGrid:self setWidthForColumn:columnIndex];
+		float width = [columnWidths[column] floatValue];
+		width = [[self dataSource] tableGrid:self setWidth:width forColumn:columnIndex];
         columnWidths[column] = COLUMNFLOATSIZE(width);
-    
         return width;
         
     } else {

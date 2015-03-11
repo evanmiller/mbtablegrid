@@ -634,7 +634,7 @@ typedef enum {
  *
  * @see			tableGrid:setWidthForColumn:
  */
-- (float)tableGrid:(MBTableGrid *)aTableGrid withForColumn:(NSUInteger)columnIndex;
+- (float)tableGrid:(MBTableGrid *)aTableGrid widthForColumn:(NSUInteger)columnIndex;
 
 @optional
 
@@ -646,7 +646,7 @@ typedef enum {
  *
   * @see			tableGrid:widthForColumn:
  */
-- (float)tableGrid:(MBTableGrid *)aTableGrid setWidthForColumn:(NSUInteger)columnIndex;
+- (float)tableGrid:(MBTableGrid *)aTableGrid setWidth:(float)width forColumn:(NSUInteger)columnIndex;
 
 /**
  * @}
