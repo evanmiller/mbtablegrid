@@ -404,13 +404,20 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 	NSIndexSet *selectedColumns = [self selectedColumnIndexes];
 	NSIndexSet *selectedRows = [self selectedRowIndexes];
 
-	if ([[self delegate] respondsToSelector:@selector(tableGrid:copiedCellsAtRows:columns:)]) {
-		[[self delegate] tableGrid:self copiedCellsAtRows:selectedRows columns:selectedColumns];
+    if ([[self delegate] respondsToSelector:@selector(tableGrid:copyCellsAtColumns:rows:)]) {
+		[[self delegate] tableGrid:self copyCellsAtColumns:selectedColumns rows:selectedRows];
 	}
 }
 
 - (void)paste:(id)sender {
 	
+    NSIndexSet *selectedColumns = [self selectedColumnIndexes];
+    NSIndexSet *selectedRows = [self selectedRowIndexes];
+    
+    if ([[self delegate] respondsToSelector:@selector(tableGrid:pasteCellsAtColumns:rows:)]) {
+        [[self delegate] tableGrid:self pasteCellsAtColumns:selectedColumns rows:selectedRows];
+        [self reloadData];
+    }
 }
 
 - (void)insertTab:(id)sender {
@@ -1129,6 +1136,15 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 
 #pragma mark Reloading the Grid
 
+- (void)populateColumnInfo {
+    if (columnIndexNames.count < _numberOfColumns) {
+        for (NSUInteger columnIndex = columnIndexNames.count; columnIndex < _numberOfColumns; columnIndex++) {
+            NSString *column = [NSString stringWithFormat:@"column%lu", columnIndex];
+            columnIndexNames[columnIndex] = column;
+        }
+    }
+}
+
 - (void)reloadData {
 	// Set number of columns
 	if ([[self dataSource] respondsToSelector:@selector(numberOfColumnsInTableGrid:)]) {
@@ -1145,6 +1161,8 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 	else {
 		_numberOfRows = 0;
 	}
+    
+    [self populateColumnInfo];
 
 	// Update the content view's size
 	NSUInteger lastColumn = _numberOfColumns - 1;
@@ -1551,7 +1569,7 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 		columnIndexNames[columnIndex] = column;
 	}
 
-	if (columnIndex < columnWidths.count) {
+	if (columnWidths[column]) {
 		return [columnWidths[column] floatValue];
 	}
 	else {

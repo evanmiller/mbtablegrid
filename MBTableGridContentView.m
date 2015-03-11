@@ -386,6 +386,14 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 	NSPoint mouseLocationInContentView = [self convertPoint:[theEvent locationInWindow] fromView:nil];
 	mouseDownColumn = [self columnAtPoint:mouseLocationInContentView];
 	mouseDownRow = [self rowAtPoint:mouseLocationInContentView];
+    
+    // If the column wasn't found, probably need to flush the cached column rects
+    if (mouseDownColumn == NSNotFound) {
+        [[self tableGrid].columnRects removeAllObjects];
+        
+        mouseDownColumn = [self columnAtPoint:mouseLocationInContentView];
+    }
+    
 	NSCell *cell = [[self tableGrid] _cellForColumn:mouseDownColumn];
 	BOOL cellEditsOnFirstClick = ([cell respondsToSelector:@selector(editOnFirstClick)] && [(id<MBTableGridEditable>)cell editOnFirstClick]);
     isFilling = NO;

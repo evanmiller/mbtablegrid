@@ -36,6 +36,8 @@ NSString* kAutosavedColumnWidthKey = @"AutosavedColumnWidth";
 NSString* kAutosavedColumnIndexKey = @"AutosavedColumnIndex";
 NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 
+NSString * const PasteboardTypeColumnClass = @"pasteboardTypeColumnClass";
+
 NSString * const ColumnCurrency = @"currency";
 NSString * const ColumnDate = @"date";
 NSString * const ColumnPopup = @"popup";
@@ -91,19 +93,9 @@ NSString * const ColumnText4 = @"text4";
 	dateFormatter.timeStyle = NSDateFormatterNoStyle;
     formatters = @{ColumnCurrency : decimalFormatter, ColumnDate : dateFormatter};
     
-	// Add 10 columns
-	int i = 0;
-	while (i < 10) {
-		[self addColumn:self];
-		i++;
-	}
-	
-	// Add 100 rows
-	int j = 0;
-	while (j < 10) {
-		[self addRow:self];
-		j++;
-	}
+	// Add 10 columns & rows
+    [self tableGrid:tableGrid addColumns:10 shouldReload:NO];
+    [self tableGrid:tableGrid addRows:10 shouldReload:NO];
 	
 	[tableGrid setIndicatorImage:[NSImage imageNamed:@"sort-asc"] reverseImage:[NSImage imageNamed:@"sort-desc"] inColumns:@[@1,@3]];
 	
@@ -523,17 +515,32 @@ NSString * const ColumnText4 = @"text4";
 	return YES;
 }
 
-- (void)tableGrid:(MBTableGrid *)aTableGrid copiedCellsAtRows:(NSIndexSet *)rowIndexes columns:(NSIndexSet *)columnIndexes {
+#pragma mark Copy & Paste
+
+- (void)tableGrid:(MBTableGrid *)aTableGrid copyCellsAtColumns:(NSIndexSet *)columnIndexes rows:(NSIndexSet *)rowIndexes
+{
+    NSMutableArray *colClasses = [NSMutableArray arrayWithCapacity:columnIndexes.count];
+    
+    [columnIndexes enumerateIndexesUsingBlock:^(NSUInteger columnIndex, BOOL *stop) {
+        [colClasses addObject:[[self tableGrid:aTableGrid cellForColumn:columnIndex] className]];
+    }];
+    
 	NSMutableArray *rowData = [NSMutableArray arrayWithCapacity:rowIndexes.count];
 	
 	[rowIndexes enumerateIndexesUsingBlock:^(NSUInteger rowIndex, BOOL *stop) {
 		
 		NSMutableArray *colData = [NSMutableArray arrayWithCapacity:columnIndexes.count];
-		
+        
 		[columnIndexes enumerateIndexesUsingBlock:^(NSUInteger columnIndex, BOOL *stop) {
 			
 			NSArray *row = columns[columnIndex];
 			id cellData = row[rowIndex];
+            NSFormatter *formatter = [self tableGrid:aTableGrid formatterForColumn:columnIndex];
+            
+            if (formatter) {
+                cellData = [formatter stringForObjectValue:cellData];
+            }
+            
 			[colData addObject:cellData];
 			
 		}];
@@ -550,15 +557,133 @@ NSString * const ColumnText4 = @"text4";
 	
 	[pasteboard clearContents];
 
-	[pasteboard declareTypes:@[NSPasteboardTypeTabularText, NSPasteboardTypeString] owner:nil];
+	[pasteboard declareTypes:@[NSPasteboardTypeTabularText, NSPasteboardTypeString, PasteboardTypeColumnClass] owner:nil];
 	[pasteboard setString:tsvString forType:NSPasteboardTypeTabularText];
 	[pasteboard setString:tsvString forType:NSPasteboardTypeString];
+    [pasteboard setPropertyList:colClasses forType:PasteboardTypeColumnClass];
 
 }
 
-#pragma mark Adding and Removing Rows
+- (void)tableGrid:(MBTableGrid *)aTableGrid pasteCellsAtColumns:(NSIndexSet *)columnIndexes rows:(NSIndexSet *)rowIndexes
+{
+    NSPasteboard *pasteboard = [NSPasteboard generalPasteboard];
+    BOOL isSingleSelection = columnIndexes.count == 1 && rowIndexes.count == 1;
+    NSString *tavString = [pasteboard stringForType:NSPasteboardTypeTabularText];
+    
+    if (!tavString.length) {
+        tavString = [pasteboard stringForType:NSPasteboardTypeString];
+    }
+    
+    if (!tavString.length) {
+        return;
+    }
+    
+    // Extract the rows and columns to a more convenient form
+    NSMutableArray *rowArray = [NSMutableArray array];
+    
+    for (NSString *rowString in [tavString componentsSeparatedByString:@"\n"]) {
+        
+        NSMutableArray *columnArray = [NSMutableArray array];
+        
+        for (NSString *columnString in [rowString componentsSeparatedByString:@"\t"]) {
+            
+            [columnArray addObject:columnString];
+        }
+        
+        [rowArray addObject:columnArray];
+    }
+    
+    NSUInteger firstSelectedColumn = [columnIndexes firstIndex];
+    NSUInteger firstSelectedRow = [rowIndexes firstIndex];
+    NSUInteger numberOfExistingColumns = [columns count];
+    NSUInteger numberOfExistingRows = [[columns firstObject] count];
+    NSUInteger numberOfPastingColumns = [[rowArray firstObject] count];
+    NSUInteger numberOfPastingRows = [rowArray count];
+    
+    // If pasting to a single cell, we want to paste all of the values, so add rows and columns if needed
+    if (isSingleSelection) {
+        NSInteger extraColumns = firstSelectedColumn + numberOfPastingColumns - numberOfExistingColumns;
+        NSInteger extraRows = firstSelectedRow + numberOfPastingRows - numberOfExistingRows;
+        
+        if (extraColumns > 0) {
+            // Add extra columns; a real controller could use the PasteboardTypeColumnClass values to add appropriate column types to the database
+            [self tableGrid:aTableGrid addColumns:extraColumns shouldReload:NO];
+        }
+        
+        if (extraRows > 0) {
+            [self tableGrid:aTableGrid addRows:extraRows shouldReload:NO];
+        }
+    } else {
+        numberOfPastingColumns = columnIndexes.count;
+        numberOfPastingRows = rowIndexes.count;
+    }
+    
+    // Insert the values
+    [rowArray enumerateObjectsUsingBlock:^(NSArray *columnArray, NSUInteger rowOffset, BOOL *stopRows) {
+        [columnArray enumerateObjectsUsingBlock:^(NSString *value, NSUInteger columnOffset, BOOL *stopColumns) {
+            
+            NSUInteger column = firstSelectedColumn + columnOffset;
+            NSUInteger row = firstSelectedRow + rowOffset;
+            
+            NSFormatter *formatter = [self tableGrid:aTableGrid formatterForColumn:column];
+            id obj = value;
+            
+            if (!formatter || [formatter getObjectValue:&obj forString:value errorDescription:nil]) {
+                [self tableGrid:aTableGrid setObjectValue:obj forColumn:column row:row];
+            }
+            
+            if (columnOffset == numberOfPastingColumns - 1) {
+                *stopColumns = YES;
+            }
+        }];
+        
+        if (rowOffset == numberOfPastingRows - 1) {
+            *stopRows = YES;
+        }
+    }];
+}
+
+#pragma mark Adding and Removing Columns & Rows
+
+- (BOOL)tableGrid:(MBTableGrid *)aTableGrid addColumns:(NSUInteger)numberOfColumns shouldReload:(BOOL)shouldReload;
+{
+    // Default number of rows
+    NSUInteger numberOfRows = 0;
+    
+    // If there are already other columns, get the number of rows from one of them
+    if ([columns count] > 0) {
+        numberOfRows = [columns[0] count];
+    }
+    
+    for (NSUInteger column = 0; column < numberOfColumns; column++) {
+        
+        NSMutableArray *newColumn = [NSMutableArray array];
+        
+        for (NSUInteger row = 0; row < numberOfRows; row++) {
+            // Insert blank items for each row
+            [newColumn addObject:@""];
+        }
+        
+        [columns addObject:newColumn];
+        
+        if (columns.count > self.columnIdentifiers.count) {
+            [self.columnIdentifiers addObject:[NSString stringWithFormat:@"extra%@", @(columns.count)]];
+        }
+    }
+    
+    if (shouldReload) {
+        [tableGrid reloadData];
+    }
+    
+    return YES;
+}
 
 - (BOOL)tableGrid:(MBTableGrid *)aTableGrid addRows:(NSUInteger)numberOfRows;
+{
+    return [self tableGrid:aTableGrid addRows:numberOfRows shouldReload:YES];
+}
+
+- (BOOL)tableGrid:(MBTableGrid *)aTableGrid addRows:(NSUInteger)numberOfRows shouldReload:(BOOL)shouldReload;
 {
     for (NSUInteger row = 0; row < numberOfRows; row++) {
         for (NSMutableArray *column in columns) {
@@ -567,7 +692,11 @@ NSString * const ColumnText4 = @"text4";
         }
     }
     
-    [aTableGrid reloadData];
+    [aTableGrid.columnRects removeAllObjects];
+    
+    if (shouldReload) {
+        [aTableGrid reloadData];
+    }
     
     return YES;
 }
@@ -684,39 +813,14 @@ NSString * const ColumnText4 = @"text4";
 #pragma mark -
 #pragma mark Subclass Methods
 
-- (IBAction)addColumn:(id)sender 
+- (IBAction)addColumn:(id)sender
 {
-	NSMutableArray *column = [[NSMutableArray alloc] init];
-	
-	// Default number of rows
-	NSUInteger numberOfRows = 0;
-	
-	// If there are already other columns, get the number of rows from one of them
-	if ([columns count] > 0) {
-		numberOfRows = [(NSMutableArray *)columns[0] count];
-	}
-	
-	NSUInteger row = 0;
-	while (row < numberOfRows) {
-		// Insert blank items for each row
-		[column addObject:@""];
-		
-		row++;
-	}
-	
-	[columns addObject:column];
-	
-	[tableGrid reloadData];
+    [self tableGrid:tableGrid addColumns:1 shouldReload:YES];
 }
 
 - (IBAction)addRow:(id)sender
 {
-	for (NSMutableArray *column in columns) {
-		// Add a blank item to each row
-		[column addObject:@""];
-	}
-	
-	[tableGrid reloadData];
+    [self tableGrid:tableGrid addRows:1 shouldReload:YES];
 }
 
 @end

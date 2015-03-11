@@ -1240,22 +1240,22 @@ typedef enum {
 - (void)tableGrid:(MBTableGrid *)aTableGrid accessoryButtonClicked:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 
 /**
- *  @brief      Informs the delegate of the cell data that has been copied to the clipboard
+ *  @brief      Informs the delegate of the cells that should be copied to the clipboard.
  *
- *  @param      aTableGrid       The table grid that contains the cell
- *  @param      columnIndex      The column of the cell
- *  @param      rowIndex         The row of the cell
+ *  @param      aTableGrid       The table grid that contains the cell.
+ *  @param      columnIndexes    Column indexes of the cells being copied.
+ *  @param      rowIndexes       Row indexes of the cells being copied.
  */
-- (void)tableGrid:(MBTableGrid *)aTableGrid copiedCellsAtRows:(NSIndexSet *)rowIndexes columns:(NSIndexSet *)columnIndexes;
+- (void)tableGrid:(MBTableGrid *)aTableGrid copyCellsAtColumns:(NSIndexSet *)columnIndexes rows:(NSIndexSet *)rowIndexes;
 
 /**
- *  @brief      Informs the delegate of the cell data that is being pasted to the clipboard
+ *  @brief      Informs the delegate of the cells that should be pasted from the clipboard.
  *
- *  @param      aTableGrid       The table grid that contains the cell
- *  @param      columnIndex      The column of the cell
- *  @param      rowIndex         The row of the cell
+ *  @param      aTableGrid       The table grid that contains the cell.
+ *  @param      columnIndexes    Column indexes of the cells being copied.
+ *  @param      rowIndexes       Row indexes of the cells being copied.
  */
-- (void)tableGrid:(MBTableGrid *)aTableGrid pastedCellsAtIndexPath:(NSIndexSet *)indexPath;
+- (void)tableGrid:(MBTableGrid *)aTableGrid pasteCellsAtColumns:(NSIndexSet *)columnIndexes rows:(NSIndexSet *)rowIndexes;
 
 /**
  * @}
