@@ -38,7 +38,7 @@
 NSString *MBTableGridDidChangeSelectionNotification     = @"MBTableGridDidChangeSelectionNotification";
 NSString *MBTableGridDidMoveColumnsNotification         = @"MBTableGridDidMoveColumnsNotification";
 NSString *MBTableGridDidMoveRowsNotification            = @"MBTableGridDidMoveRowsNotification";
-CGFloat MBTableHeaderMinimumColumnWidth = 30.0f;
+CGFloat MBTableHeaderMinimumColumnWidth = 60.0f;
 
 #pragma mark -
 #pragma mark Drag Types
@@ -338,8 +338,8 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
     columnWidths[columnKey] = @(currentWidth);
     
     if (currentWidth == minColumnWidth) {
-        offset = columnRect.origin.x - location.x - minColumnWidth;
-        distance += offset;
+        offset = columnRect.origin.x - location.x + minColumnWidth - self.rowHeaderView.frame.size.width;
+        distance = 0.0;
     }
     
     // Update views with new sizes

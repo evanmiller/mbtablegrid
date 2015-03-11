@@ -302,6 +302,9 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 	    
     if (canResize) {
         
+        [[NSCursor resizeLeftRightCursor] set];
+        [[self window] disableCursorRects];
+        
         // Set drag distance
         CGFloat dragDistance = loc.x - lastMouseDraggingLocation.x;
         
@@ -309,7 +312,14 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
         
         // Resize column and resize views
 		
-        lastMouseDraggingLocation.x += [self.tableGrid resizeColumnWithIndex:draggingColumnIndex withDistance:dragDistance location:loc];
+        CGFloat offset = [self.tableGrid resizeColumnWithIndex:draggingColumnIndex withDistance:dragDistance location:loc];
+        lastMouseDraggingLocation.x += offset;
+        
+        if (offset != 0.0) {
+            [[NSCursor resizeRightCursor] set];
+        } else {
+            [[NSCursor resizeLeftRightCursor] set];
+        }
                
     } else {
     
@@ -376,6 +386,9 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 		
         isResizing = NO;
 		
+        [[self window] enableCursorRects];
+        [[self window] resetCursorRects];
+        
 		// update cache of column rects
 		
 		[[self tableGrid].columnRects removeAllObjects];
