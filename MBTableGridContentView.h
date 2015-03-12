@@ -25,7 +25,7 @@
 
 #import <Cocoa/Cocoa.h>
 
-#define MBTableGridColumnHeaderHeight 19.0
+#define MBTableGridColumnHeaderHeight 24.0
 #define MBTableGridColumnHeaderWidth 60
 #define MBTableGridRowHeaderWidth 40.0
 #define COLUMNFLOATSIZE(x) [NSNumber numberWithFloat:x]

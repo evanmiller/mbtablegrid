@@ -185,7 +185,7 @@
 		
 		[selectionColor set];
 		[selectionPath setLineWidth: 1.0];
-		[selectionPath stroke];
+		//[selectionPath stroke];
         
         [[selectionColor colorWithAlphaComponent:0.2f] set];
         [selectionPath fill];

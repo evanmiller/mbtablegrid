@@ -83,8 +83,8 @@
 - (void)drawInteriorWithFrame:(NSRect)cellFrame inView:(NSView *)controlView
 {
     
-	NSFont *font = [NSFont labelFontOfSize:[NSFont labelFontSize]];
-	NSColor *color = [NSColor controlTextColor];
+	NSFont *font = [NSFont boldSystemFontOfSize:[NSFont systemFontSizeForControlSize:NSSmallControlSize]];
+	NSColor *color = ([self state] == NSOnState) ? [NSColor labelColor] : [NSColor secondaryLabelColor];
 	NSDictionary *attributes = @{NSFontAttributeName: font, NSForegroundColorAttributeName: color};
 	NSAttributedString *string = [[NSAttributedString alloc] initWithString:[self stringValue] attributes:attributes];
 	
