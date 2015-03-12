@@ -1094,6 +1094,7 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
 	selectedColumnIndexes = anIndexSet;
 	
 	[self setNeedsDisplay:YES];
+	[self._contentView setNeedsDisplay:YES];
 	
 	// Post the notification
 	[[NSNotificationCenter defaultCenter] postNotificationName:MBTableGridDidChangeSelectionNotification object:self];
@@ -1113,6 +1114,7 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
 	selectedRowIndexes = anIndexSet;
 	
 	[self setNeedsDisplay:YES];
+	[self._contentView setNeedsDisplay:YES];
 	
 	// Post the notification
 	[[NSNotificationCenter defaultCenter] postNotificationName:MBTableGridDidChangeSelectionNotification object:self];
