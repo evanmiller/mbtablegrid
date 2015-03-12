@@ -971,7 +971,7 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
 	NSRect columnHeaderFrame = [columnHeaderView frame];
 	columnHeaderFrame.size.width = contentRect.size.width;
 	if(![[contentScrollView verticalScroller] isHidden]) {
-		columnHeaderFrame.size.width += [NSScroller scrollerWidth];
+		columnHeaderFrame.size.width += [NSScroller scrollerWidthForControlSize:NSRegularControlSize scrollerStyle:NSScrollerStyleLegacy];
 	}
 	[columnHeaderView setFrameSize:columnHeaderFrame.size];
 	
@@ -979,7 +979,7 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
 	NSRect rowHeaderFrame = [rowHeaderView frame];
 	rowHeaderFrame.size.height = contentRect.size.height;
 	if(![[contentScrollView horizontalScroller] isHidden]) {
-		columnHeaderFrame.size.height += [NSScroller scrollerWidth];
+		columnHeaderFrame.size.height += [NSScroller scrollerWidthForControlSize:NSRegularControlSize scrollerStyle:NSScrollerStyleLegacy];
 	}
 	[rowHeaderView setFrameSize:rowHeaderFrame.size];
 	
@@ -998,7 +998,7 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
 		
 		// If the scrollbar is visible, don't include it in the rect
 		if(![[contentScrollView horizontalScroller] isHidden]) {
-			rect.size.height -= [NSScroller scrollerWidth];
+			rect.size.height -= [NSScroller scrollerWidthForControlSize:NSRegularControlSize scrollerStyle:NSScrollerStyleLegacy];
 		}
 	}
 	
@@ -1215,8 +1215,6 @@ NSString *MBTableGridRowDataType = @"MBTableGridRowDataType";
 	if ([self needsToDrawRect:aRect]) {
 		NSColor *topGradientTop = [NSColor colorWithDeviceWhite:0.91 alpha:1.0];
 		NSColor *topGradientBottom = [NSColor colorWithDeviceWhite:0.89 alpha:1.0];
-		NSColor *bottomGradientTop = [NSColor colorWithDeviceWhite:0.85 alpha:1.0];
-		NSColor *bottomGradientBottom = [NSColor colorWithDeviceWhite:0.83 alpha:1.0];
 		NSColor *topColor = [NSColor colorWithDeviceWhite:0.95 alpha:1.0];
 		NSColor *sideColor = [NSColor colorWithDeviceWhite:1.0 alpha:0.4];
 		NSColor *borderColor = [NSColor colorWithDeviceWhite:0.65 alpha:1.0];

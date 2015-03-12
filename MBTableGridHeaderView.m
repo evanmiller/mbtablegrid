@@ -205,8 +205,8 @@
 {	
 	// Get the location of the mouse
 	NSPoint loc = [self convertPoint:[theEvent locationInWindow] fromView:nil];
-	float deltaX = abs(loc.x - mouseDownLocation.x);
-	float deltaY = abs(loc.y - mouseDownLocation.y);
+	float deltaX = fabs(loc.x - mouseDownLocation.x);
+	float deltaY = fabs(loc.y - mouseDownLocation.y);
 	    
     if (canResize) {
         
