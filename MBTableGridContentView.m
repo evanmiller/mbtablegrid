@@ -180,7 +180,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 			// if you type into a text field, the text doesn't get cleared first before you
 			// start typing. So this seems to make both conditions work.
 			
-			if ([self needsToDrawRect:cellFrame] && (!(row == editedRow && column == editedColumn) || [_cell isKindOfClass:[MBPopupButtonCell class]])) {
+			if (true || [self needsToDrawRect:cellFrame] && (!(row == editedRow && column == editedColumn) || [_cell isKindOfClass:[MBPopupButtonCell class]])) {
 				
                 NSColor *backgroundColor = [[self tableGrid] _backgroundColorForColumn:column row:row] ?: [NSColor whiteColor];
 				

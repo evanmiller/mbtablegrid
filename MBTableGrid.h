@@ -140,9 +140,8 @@ typedef enum {
 	/* Sticky Edges (for Shift+Arrow expansions) */
 	MBTableGridEdge stickyColumnEdge;
 	MBTableGridEdge stickyRowEdge;
-    
-    NSMutableDictionary *columnWidths;
 	NSMutableArray *columnIndexNames;
+	NSMutableDictionary* _columnWidths;
 	
 }
 
@@ -749,17 +748,6 @@ typedef enum {
  */
 - (void)tableGrid:(MBTableGrid *)aTableGrid setObjectValue:(id)anObject forColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 
-@optional
-
-/**
- * @brief		Returnd the width of given column.
- *
- * @param		aTableGrid		The table grid that sent the message.
- * @param		columnIndex		A column in \c aTableGrid.
- *
- * @see			tableGrid:setWidthForColumn:
- */
-- (float)tableGrid:(MBTableGrid *)aTableGrid widthForColumn:(NSUInteger)columnIndex;
 
 @optional
 
@@ -771,7 +759,7 @@ typedef enum {
  *
   * @see			tableGrid:widthForColumn:
  */
-- (float)tableGrid:(MBTableGrid *)aTableGrid setWidth:(float)width forColumn:(NSUInteger)columnIndex;
+- (void) tableGrid:(MBTableGrid *)aTableGrid setWidth:(float)width forColumn:(NSUInteger)columnIndex;
 
 /**
  * @}

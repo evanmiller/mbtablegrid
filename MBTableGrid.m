@@ -64,7 +64,7 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 - (NSArray *)_autocompleteValuesForEditString:(NSString *)editString column:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 - (void)_setObjectValue:(id)value forColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 - (float)_widthForColumn:(NSUInteger)columnIndex;
-- (float)_setWidthForColumn:(NSUInteger)columnIndex;
+- (void)_setWidth:(float) width forColumn:(NSUInteger)columnIndex;
 - (id)_backgroundColorForColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 - (BOOL)_canEditCellAtColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 - (void)_userDidEnterInvalidStringInColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex errorDescription:(NSString *)errorDescription;
@@ -110,8 +110,8 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 
 - (id)initWithFrame:(NSRect)frameRect {
 	if (self = [super initWithFrame:frameRect]) {
-		columnWidths = [NSMutableDictionary dictionary];
 		columnIndexNames = [NSMutableArray array];
+		_columnWidths = [NSMutableDictionary dictionary];
 
 		// Post frame changed notifications
 		[self setPostsFrameChangedNotifications:YES];
@@ -291,24 +291,23 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 #pragma mark Resize scrollview content size
 
 - (void) resizeColumnWithIndex:(NSUInteger)columnIndex width:(float)w {
-	// Get column key
-	NSString *columnKey = [NSString stringWithFormat:@"column%lu", columnIndex];
-	
 	// Set new width of column
 	float currentWidth = w;
 	
+	[self.columnRects removeAllObjects];
 	if (currentWidth < MBTableHeaderMinimumColumnWidth) {
 		currentWidth = MBTableHeaderMinimumColumnWidth;
 	}
-	
-	columnWidths[columnKey] = @(currentWidth);
-	[self _setWidthForColumn:columnIndex];
+	[self _setWidth:currentWidth forColumn:columnIndex];
 	
 	// Update views with new sizes
-	[contentView setFrameSize:NSMakeSize(currentWidth, NSHeight(contentView.frame))];
-	[columnHeaderView setFrameSize:NSMakeSize(currentWidth, NSHeight(columnHeaderView.frame))];
+	//[contentView setFrameSize:NSMakeSize(currentWidth, NSHeight(contentView.frame))];
+	//[columnHeaderView setFrameSize:NSMakeSize(currentWidth, NSHeight(columnHeaderView.frame))];
 	[contentView setNeedsDisplay:YES];
+	[columnHeaderView setNeedsDisplay:YES];
+	[self setNeedsDisplay:YES];
 	[columnHeaderView setNeedsDisplayInRect:columnHeaderView.frame];
+	[columnFooterView setNeedsDisplay:YES];
 }
 
 - (void)setNeedsDisplay:(BOOL)needsDisplay {
@@ -323,16 +322,6 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 #pragma mark Resize scrollview content size
 
 - (CGFloat)resizeColumnWithIndex:(NSUInteger)columnIndex withDistance:(float)distance location:(NSPoint)location {
-	// Get column key
-	NSString *columnKey = nil;
-	if ([columnIndexNames count] > columnIndex) {
-		columnKey = columnIndexNames[columnIndex];
-	}
-	
-	if (!columnKey) {
-		columnKey = [NSString stringWithFormat:@"column%lu", columnIndex];
-	}
-
 	// Note that we only need this rect for its origin, which won't be changing, otherwise we'd need to flush the column rect cache first
 	NSRect columnRect = [self rectOfColumn:columnIndex];
 
@@ -341,7 +330,7 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 	[self.columnRects removeAllObjects];
 
 	// Set new width of column
-	CGFloat currentWidth = [columnWidths[columnKey] floatValue];
+	CGFloat currentWidth = [self _widthForColumn:columnIndex];
     CGFloat offset = 0.0;
 	
     currentWidth += distance;
@@ -356,8 +345,7 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
         currentWidth = minColumnWidth;
     }
 	
-    columnWidths[columnKey] = @(currentWidth);
-	[self _setWidthForColumn:columnIndex];
+	[self _setWidth:currentWidth forColumn:columnIndex];
     
     if (currentWidth == minColumnWidth) {
         offset = columnRect.origin.x - location.x + minColumnWidth - self.rowHeaderView.frame.size.width;
@@ -1219,6 +1207,9 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 	[columnFooterView setFrameSize:columnHeaderFrame.size];
     
 	[self setNeedsDisplay:YES];
+	[self._contentView setNeedsDisplay:YES];
+	[self.columnHeaderView setNeedsDisplay:YES];
+	[self.rowHeaderView setNeedsDisplay:YES];
 }
 
 #pragma mark Layout Support
@@ -1602,28 +1593,16 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 		columnIndexNames[columnIndex] = column;
 	}
 
-	if (columnWidths[column]) {
-		return [columnWidths[column] floatValue];
-	}
-	else {
-		return [self _setWidthForColumn:columnIndex];
-	}
+	NSNumber* width = [_columnWidths objectForKey:@(columnIndex)];
+	return width == nil ? MBTableHeaderMinimumColumnWidth : width.floatValue;
 }
 
-- (float)_setWidthForColumn:(NSUInteger)columnIndex
+- (void) _setWidth:(float)width forColumn:(NSUInteger)columnIndex
 {
-    
+	[_columnWidths setObject:@(width) forKey:@(columnIndex)];
+	
 	if ([[self dataSource] respondsToSelector:@selector(tableGrid:setWidth:forColumn:)]) {
-        
-        NSString *column = [NSString stringWithFormat:@"column%lu", columnIndex];
-
-		float width = [columnWidths[column] floatValue];
-		width = [[self dataSource] tableGrid:self setWidth:width forColumn:columnIndex];
-        columnWidths[column] = COLUMNFLOATSIZE(width);
-        return width;
-        
-    } else {
-        return MBTableGridColumnHeaderWidth;
+		[[self dataSource] tableGrid:self setWidth:width forColumn:columnIndex];
     }
 }
 
