@@ -48,6 +48,15 @@ typedef enum _MBTableGridHeaderOrientation {
  */
 @property(assign) MBTableGridHeaderOrientation orientation;
 
+/**
+ * @brief		The sort indicator image
+ * @details		Use this property to set the sort indicator
+ *				image.
+ */
+
+@property (nonatomic, strong) NSImage *sortIndicatorImage;
+
 @property (nonatomic, strong) NSTrackingArea *resizeTrackingArea;
+
 
 @end

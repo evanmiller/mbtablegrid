@@ -24,19 +24,14 @@
  */
 
 #import <Cocoa/Cocoa.h>
+#import "MBPopupButtonCell.h"
 
 /**
- * @brief		\c MBTableGridCell is responsible for
- *				the drawing and editing of \c MBTableGrid's
- *				cells.
+ * @brief		\c MBTableGridFooterCell is solely
+ *				responsible for drawing column footer
  */
-@interface MBTableGridCell : NSTextFieldCell {
-    
+@interface MBTableGridFooterCell : MBPopupButtonCell {
 }
 
-@property (nonatomic, strong) NSImage *accessoryButtonImage;
-@property(nonatomic, assign) BOOL editWithPopupMenu;
-
-- (void)drawWithFrame:(NSRect)cellFrame inView:(NSView *)controlView withBackgroundColor:(NSColor *)backgroundColor;
 
 @end

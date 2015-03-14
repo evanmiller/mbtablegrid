@@ -27,6 +27,12 @@
 #import "MBTableGrid.h"
 #import "MBTableGridContentView.h"
 
+NSString* kAutosavedColumnWidthKey = @"AutosavedColumnWidth";
+NSString* kAutosavedColumnIndexKey = @"AutosavedColumnIndex";
+NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
+
+#define kSortIndicatorXInset		4.0  	/* Number of pixels to inset the drawing of the indicator from the right edge */
+
 @interface MBTableGrid (Private)
 - (NSString *)_headerStringForColumn:(NSUInteger)columnIndex;
 - (NSString *)_headerStringForRow:(NSUInteger)rowIndex;
@@ -56,9 +62,86 @@
         // No resize at start
         canResize = NO;
         isResizing = NO;
-        
 	}
 	return self;
+}
+
+- (void)placeSortButtons
+{
+	NSMutableArray *capturingButtons = [NSMutableArray arrayWithCapacity:0];
+
+	NSButton *sortButton;
+
+	MBTableGrid *tableGrid = [self tableGrid];
+
+	for (NSNumber *cellNumber in self.indicatorImageColumns)
+	{
+		sortButton = [[NSButton alloc] init];
+		[sortButton setImage:self.indicatorImage];
+		[sortButton setAlternateImage:self.indicatorReverseImage];
+		[sortButton setBordered:NO];
+		[sortButton setState:NSOnState];
+		sortButton.tag = [cellNumber integerValue];
+		[sortButton setTarget:tableGrid];
+		[sortButton setAction:@selector(sortButtonClicked:)];
+
+		[self addSubview:sortButton];
+		
+		[sortButton setNextState];
+		
+		[capturingButtons addObject:sortButton];
+	}
+
+
+	tableGrid.sortButtons = [[NSArray alloc] initWithArray:capturingButtons];
+}
+
+- (void)toggleSortButtonIcon:(NSButton*)btn
+{
+	if ([[btn image] isEqualTo:self.indicatorImage])
+	{
+		[btn setImage:self.indicatorReverseImage];
+	}
+	else
+	{
+		[btn setImage:self.indicatorImage];
+	}
+}
+
+- (void)layoutSortButtonWithRect:(NSRect)rect forColumn:(NSInteger)column
+{
+	// Set the frames of the sort buttons here
+	NSRect indicatorRect = NSZeroRect;
+	NSSize sortImageSize = [self.indicatorImage size];
+	indicatorRect.size = sortImageSize;
+	indicatorRect.origin.x = NSMaxX(rect) - (sortImageSize.width + kSortIndicatorXInset);
+	indicatorRect.origin.y = NSMinY(rect) + roundf((NSHeight(rect) - sortImageSize.height) / 2.0);
+
+	MBTableGrid *tableGrid = [self tableGrid];
+	
+	for (NSButton *button in tableGrid.sortButtons)
+	{
+		if (button.tag == column)
+		{
+			[button setFrame:indicatorRect];
+		}
+	}
+}
+
+- (void)viewWillDraw
+{
+	[super viewWillDraw];
+
+	
+	for (NSNumber *columnNumber in self.indicatorImageColumns)
+	{
+		NSInteger column = [columnNumber integerValue];
+
+		NSRect headerRect = [self headerRectOfColumn:column];
+
+
+		[self layoutSortButtonWithRect:headerRect forColumn:column];
+	}
 }
 
 - (void)drawRect:(NSRect)rect
@@ -97,18 +180,25 @@
 					[headerCell setState:NSOffState];
 				}
 				
+				if ([self.indicatorImageColumns containsObject:[NSNumber numberWithInteger:column]]) {
+					[headerCell setSortIndicatorImage:self.indicatorImage];
+				} else {
+					[headerCell setSortIndicatorImage:nil];
+				}
+				
 				[headerCell setStringValue:[[self tableGrid] _headerStringForColumn:column]];
 				[headerCell drawWithFrame:headerRect inView:self];
                 
-                // Create new tracking area for resizing columns
-                NSRect resizeRect = NSMakeRect(NSMinX(headerRect) + NSWidth(headerRect) - 2, NSMinY(headerRect), 5, NSHeight(headerRect));
-                NSTrackingArea *resizeTrackingArea = [[NSTrackingArea alloc] initWithRect:resizeRect options:(NSTrackingMouseEnteredAndExited | NSTrackingActiveAlways) owner:self userInfo:nil];
-                
-                // keep track of tracking areas and add tracking to view
-                [trackingAreas addObject:resizeTrackingArea];
-                [self addTrackingArea:resizeTrackingArea];
-                
 			}
+			
+			// Create new tracking area for resizing columns
+			NSRect resizeRect = NSMakeRect(NSMinX(headerRect) + NSWidth(headerRect) - 2, NSMinY(headerRect), 5, NSHeight(headerRect));
+			NSTrackingArea *resizeTrackingArea = [[NSTrackingArea alloc] initWithRect:resizeRect options:(NSTrackingMouseEnteredAndExited | NSTrackingActiveAlways) owner:self userInfo:nil];
+			
+			// keep track of tracking areas and add tracking to view
+			[trackingAreas addObject:resizeTrackingArea];
+			[self addTrackingArea:resizeTrackingArea];
+			
 			column++;
 		}
         
@@ -193,7 +283,9 @@
                     }
                 }
             }
-        }
+        } else if ([theEvent clickCount] == 2) {
+			
+		}
         
         // Pass the event back to the MBTableGrid (Used to give First Responder status)
         [[self tableGrid] mouseDown:theEvent];
@@ -205,22 +297,34 @@
 {	
 	// Get the location of the mouse
 	NSPoint loc = [self convertPoint:[theEvent locationInWindow] fromView:nil];
-	float deltaX = fabs(loc.x - mouseDownLocation.x);
-	float deltaY = fabs(loc.y - mouseDownLocation.y);
+	CGFloat deltaX = fabs(loc.x - mouseDownLocation.x);
+	CGFloat deltaY = fabs(loc.y - mouseDownLocation.y);
 	    
     if (canResize) {
         
+        [[NSCursor resizeLeftRightCursor] set];
+        [[self window] disableCursorRects];
+        
         // Set drag distance
-        float dragDistance = loc.x - lastMouseDraggingLocation.x;
+        CGFloat dragDistance = loc.x - lastMouseDraggingLocation.x;
+        
         lastMouseDraggingLocation = loc;
         
         // Resize column and resize views
-        [self.tableGrid resizeColumnWithIndex:draggingColumnIndex withDistance:dragDistance];
+		
+        CGFloat offset = [self.tableGrid resizeColumnWithIndex:draggingColumnIndex withDistance:dragDistance location:loc];
+        lastMouseDraggingLocation.x += offset;
+        
+        if (offset != 0.0) {
+            [[NSCursor resizeRightCursor] set];
+        } else {
+            [[NSCursor resizeLeftRightCursor] set];
+        }
                
     } else {
     
         // Drag operation doesn't start until the mouse has moved more than 5 points
-        float dragThreshold = 5.0;
+        CGFloat dragThreshold = 5.0;
         
         // If we've met the conditions for a drag operation,
         if (shouldDragItems && mouseDownItem >= 0 && (deltaX >= dragThreshold || deltaY >= dragThreshold)) {
@@ -273,9 +377,22 @@
 {
     
     if (canResize) {
-        
+		
+		// if we have an autosaveName, store a dictionary of column widths.
+		
+		if (self.autosaveName) {
+			[self autoSaveColumnProperties];
+		}
+		
         isResizing = NO;
+		
+        [[self window] enableCursorRects];
+        [[self window] resetCursorRects];
         
+		// update cache of column rects
+		
+		[[self tableGrid].columnRects removeAllObjects];
+		
     } else {
         
         // If we only clicked on a header that was part of a bigger selection, select it
@@ -326,6 +443,33 @@
     
 }
 
+- (NSRect)adjustScroll:(NSRect)proposedVisibleRect
+{
+    NSRect modifiedRect = proposedVisibleRect;
+    
+    if (self.orientation == MBTableHeaderHorizontalOrientation) {
+        modifiedRect.origin.y = 0.0;
+    }
+    
+    return modifiedRect;
+}
+
+- (void)autoSaveColumnProperties {
+	if (!columnAutoSaveProperties) {
+		columnAutoSaveProperties = [NSMutableDictionary dictionary];
+	}
+	
+	[self.tableGrid.columnRects enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop) {
+		NSValue *rectValue = obj;
+		NSRect rect = [rectValue rectValue];
+		NSDictionary *columnDict = @{kAutosavedColumnWidthKey : @(rect.size.width),
+									 kAutosavedColumnHiddenKey : @NO};
+		columnAutoSaveProperties[[NSString stringWithFormat:@"C-%@", key]] = columnDict;
+	}];
+	
+	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+	[defaults setObject:columnAutoSaveProperties forKey:self.autosaveName];
+}
 
 #pragma mark -
 #pragma mark Subclass Methods

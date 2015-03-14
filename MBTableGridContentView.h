@@ -31,6 +31,13 @@
 #define COLUMNFLOATSIZE(x) [NSNumber numberWithFloat:x]
 #define COLUMNKEY(idx) [NSString stringWithFormat:@"column%lu",idx]
 
+typedef NS_ENUM(NSUInteger, MBTableGridTrackingPart)
+{
+    MBTableGridTrackingPartNone = 0,
+    MBTableGridTrackingPartFillTop,
+    MBTableGridTrackingPartFillBottom
+};
+
 @class MBTableGrid, MBTableGridCell;
 
 /**
@@ -38,7 +45,7 @@
  *				and editing capabilities of MBTableGrid. It is designed
  *				to be placed inside a scroll view.
  */
-@interface MBTableGridContentView : NSView {
+@interface MBTableGridContentView : NSView <NSTextDelegate, NSTextViewDelegate, NSMenuDelegate> {
 	NSInteger mouseDownColumn;
 	NSInteger mouseDownRow;
 	
@@ -47,6 +54,7 @@
 	
 	NSImage *cursorImage;
 	NSImage *cursorExtendSelectionImage;
+    NSImage *grabHandleImage;
     NSRect grabHandleRect;
 	
 	NSInteger dropColumn;
@@ -54,9 +62,14 @@
 	
 	NSTimer *autoscrollTimer;
 	
+    BOOL isAutoEditing;
+    BOOL isCompleting;
 	BOOL isDraggingColumnOrRow;
+    BOOL isFilling;
+    NSInteger numberOfRowsWhenStartingFilling;
+    MBTableGridTrackingPart shouldDrawFillPart;
 	
-	MBTableGridCell *_cell;
+	MBTableGridCell *_defaultCell;
     
     NSMutableArray *columnWidths;
     
@@ -92,7 +105,7 @@
  *				selects the top-left one and begins
  *				editing its value.
  */
-- (void)editSelectedCell:(id)sender;
+- (void)editSelectedCell:(id)sender text:(NSString *)aString;
 
 /**
  * @}
@@ -162,6 +175,8 @@
  * @see			columnAtPoint:
  */
 - (NSInteger)rowAtPoint:(NSPoint)aPoint;
+
+- (void)textDidBeginEditingWithEditor:(NSText *)editor;
 
 /**
  * @}

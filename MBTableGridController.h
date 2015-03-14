@@ -25,11 +25,12 @@
 
 #import <Cocoa/Cocoa.h>
 #import <MBTableGrid/MBTableGrid.h>
+#import <Quartz/Quartz.h>
 
-@interface MBTableGridController : NSObject <MBTableGridDataSource> {
+@interface MBTableGridController : NSObject <MBTableGridDataSource, MBTableGridDelegate, QLPreviewPanelDelegate, QLPreviewPanelDataSource> {
 	IBOutlet MBTableGrid *tableGrid;
-	
 	NSMutableArray *columns;
+	NSDictionary *formatters;
     NSArray *columnSampleWidths;
 }
 

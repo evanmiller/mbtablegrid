@@ -24,8 +24,9 @@
  */
 
 #import <Cocoa/Cocoa.h>
+#import <QuartzCore/QuartzCore.h>
 
-@class MBTableGridHeaderView, MBTableGridHeaderCell, MBTableGridContentView;
+@class MBTableGridHeaderView, MBTableGridFooterView, MBTableGridHeaderCell, MBTableGridContentView;
 @protocol MBTableGridDelegate, MBTableGridDataSource;
 
 /* Notifications */
@@ -104,7 +105,7 @@ typedef enum {
  *
  * @author		Matthew Ball
  */
-@interface MBTableGrid : NSControl {
+@interface MBTableGrid : NSControl <NSDraggingSource, NSDraggingDestination> {
 	/* Headers */
 	MBTableGridHeaderCell *headerCell;
 	
@@ -119,6 +120,10 @@ typedef enum {
 	MBTableGridHeaderView *columnHeaderView;
 	NSScrollView *rowHeaderScrollView;
 	MBTableGridHeaderView *rowHeaderView;
+	
+	/* Footer */
+	NSScrollView *columnFooterScrollView;
+	MBTableGridFooterView *columnFooterView;
 	
 	/* Content */
 	NSScrollView *contentScrollView;
@@ -137,7 +142,8 @@ typedef enum {
 	MBTableGridEdge stickyRowEdge;
     
     NSMutableDictionary *columnWidths;
-        
+	NSMutableArray *columnIndexNames;
+	
 }
 
 #pragma mark -
@@ -187,8 +193,20 @@ typedef enum {
  *
  * @details		This method resizes the column and updates the views
  *
+ * @return		The amount that the distance is beyond the minimum size
+ *
  */
-- (void) resizeColumnWithIndex:(NSUInteger)columnIndex withDistance:(float)distance;
+- (CGFloat)resizeColumnWithIndex:(NSUInteger)columnIndex withDistance:(float)distance location:(NSPoint)location;
+
+/**
+ * @brief		Cache of column rects
+ *
+ * @return		A mutable dictionary containing the records for all the rows keyed by column index number
+ *
+ */
+
+@property (nonatomic, strong) NSMutableDictionary *columnRects;
+
 
 - (void) resizeColumnWithIndex:(NSUInteger)columnIndex width:(float)w;
 
@@ -264,6 +282,41 @@ typedef enum {
 
 @property (nonatomic, assign) NSUInteger numberOfColumns;
 
+#pragma mar -
+#pragma mark Sort Indicators
+
+/**
+ * @brief		An array that holds the sort buttons that sort the colums.
+ *
+ * @return		A NSArray for use with the sort indicator.
+ */
+
+@property (nonatomic, strong) NSArray *sortButtons;
+
+/**
+ * @brief		Sets the indicator image for the specified column.
+ *				This is used for indicating which direction the
+ *				column is being sorted by.
+ *
+ * @param		anImage			The sort indicator image.
+ * @param		reverseImage	The reversed sort indicator image.
+ * @param		inColumns		Array of columns.
+ *
+ * @return		The header value for the row.
+ */
+- (void)setIndicatorImage:(NSImage *)anImage reverseImage:(NSImage*)reverseImg inColumns:(NSArray*)columns;
+
+/**
+ * @brief		Returns the sort indicator image
+ *				for the specified column.
+ *
+ * @param		columnIndex		The index of the column.
+ *
+ * @return		The sort indicator image for the column.
+ */
+- (NSImage *)indicatorImageInColumn:(NSUInteger)columnIndex;
+
+
 /**
  * @}
  */
@@ -291,6 +344,15 @@ typedef enum {
  *				Otherwise, \c NO.
  */
 @property(assign) BOOL allowsMultipleSelection;
+
+
+/**
+ * @brief		The autosave name for this grid
+ */
+@property (nonatomic) NSString *autosaveName;
+
+- (void)copy:(id)sender;
+
 
 /**
  * @}
@@ -597,6 +659,69 @@ typedef enum {
 @optional
 
 /**
+ *  @brief      Returns the formatter associated with the specified column.
+ *
+ *  @param      aTableGrid  The table grid that sent the message.
+ *  @param      columnIndex A column in \c aTableGrid.
+ *
+ *  @return     The formatter for the specified column to use when displaying cell values
+ */
+- (NSFormatter *)tableGrid:(MBTableGrid *)aTableGrid formatterForColumn:(NSUInteger)columnIndex;
+
+@optional
+
+/**
+ *  @brief      Returns the cell associated with the specified column.
+ *
+ *  @param      aTableGrid  The table grid that sent the message.
+ *  @param      columnIndex A column in \c aTableGrid.
+ *
+ *  @return     The cell for the specified column
+ */
+- (NSCell *)tableGrid:(MBTableGrid *)aTableGrid cellForColumn:(NSUInteger)columnIndex;
+
+@optional
+
+/**
+ *  @brief      Returns the cell's accessory button with the specified column and row
+ *
+ *  @param      aTableGrid  The table grid that sent the message.
+ *  @param      columnIndex A column in \c aTableGrid.
+ *  @
+ *
+ *  @return     The cell for the specified column
+ */
+- (NSImage *)tableGrid:(MBTableGrid *)aTableGrid accessoryButtonImageForColumn:(NSUInteger)columnIndex row:(NSUInteger)row;
+
+@optional
+
+/**
+ *  @brief
+ *
+ *  @param aTableGrid  The table grid that sent the message.
+ *  @param columnIndex A column in \c aTableGrid.
+ *
+ *  @return An array of possible object values to represent in a popup button for a given column. Return nil if the cells in the column should not be edited with a popup button of available values, but should instead allow freeform string input. The count of the returned array should match that returned in tableGrid:availableUserStringsForColumn:.
+ */
+- (NSArray *)tableGrid:(MBTableGrid *)aTableGrid availableObjectValuesForColumn:(NSUInteger)columnIndex;
+
+@optional
+
+/**
+ *  @brief      Offer auto-completion strings based on the user input.
+ *
+ *  @param      aTableGrid      The table grid that sent the message.
+ *  @param      value           The text the user entered in the cell editor.
+ *  @param      columnIndex     A column in \c aTableGrid.
+ *  @param		rowIndex		A row in \c aTableGrid.
+ *
+ *  @return An array of strings to offer as auto-completion matches for the user-entered text for a given column and row. The returned strings should generally be based on the other values in the column that have the same prefix as the given text. Return nil or an empty array if no auto-completion strings should be offered.
+ */
+- (NSArray *)tableGrid:(MBTableGrid *)aTableGrid autocompleteValuesForEditString:(NSString *)editString column:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
+
+@optional
+
+/**
  * @brief		Returns the background color for the specified column and row.
  *
  * @param		aTableGrid		The table grid that sent the message.
@@ -659,6 +784,8 @@ typedef enum {
  * @{
  */
 
+#pragma mark Header
+
 @optional
 
 /**
@@ -690,6 +817,51 @@ typedef enum {
 /**
  * @}
  */
+
+#pragma mark Footer
+
+@optional
+
+/**
+ *  @brief      Returns the cell for the footer of the specified column.
+ *
+ * @details		Optional; if not implemented, or returns nil, an empty footer is
+ *				displayed for this column.
+ *
+ *  @param      aTableGrid  The table grid that sent the message.
+ *  @param      columnIndex A column in \c aTableGrid.
+ *
+ *  @return     The cell for the specified column footer.
+ */
+- (NSCell *)tableGrid:(MBTableGrid *)aTableGrid footerCellForColumn:(NSUInteger)columnIndex;
+
+/**
+ * @brief		Returns the data object for the footer of the specified column.
+ *
+ * @details		Optional; if not implemented, or returns nil, an empty footer is
+ *				displayed for this column.
+ *
+ * @param		aTableGrid		The table grid that sent the message.
+ * @param		columnIndex		A column in \c aTableGrid.
+ *
+ * @return		The object for the specified footer of the view.
+ *
+ * @see			tableGrid:setFooterValue:forColumn:
+ */
+- (id)tableGrid:(MBTableGrid *)aTableGrid footerValueForColumn:(NSUInteger)columnIndex;
+
+/**
+ * @brief		Sets the data object for the footer of the specified column.
+ *
+ * @details		Optional, but should be implemented for popup-based footer cells.
+ *
+ * @param		aTableGrid		The table grid that sent the message.
+ * @param		anObject		The new value for the item.
+ * @param		columnIndex		A column in \c aTableGrid.
+ *
+ * @see			tableGrid:footerValueForColumn:
+ */
+- (void)tableGrid:(MBTableGrid *)aTableGrid setFooterValue:(id)anObject forColumn:(NSUInteger)columnIndex;
 
 #pragma mark -
 #pragma mark Dragging
@@ -871,6 +1043,43 @@ typedef enum {
  */
 - (BOOL)tableGrid:(MBTableGrid *)aTableGrid acceptDrop:(id <NSDraggingInfo>)info column:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 
+#pragma mark -
+#pragma mark Adding and Removing Rows
+
+@optional
+
+/**
+ * @brief		Returns a Boolean value indicating whether the rows
+ *				were successfully added.
+ *
+ * @details		The data source should take care of modifiying the data model to
+ *				add the rows.
+ *
+ * @param		aTableGrid		The table grid that sent the message.
+ * @param		numberOfRows	The number of rows to add.
+ *
+ * @return		\c YES if the add was successful, otherwise \c NO.
+ *
+ * @see			tableGrid:removeRows:
+ */
+- (BOOL)tableGrid:(MBTableGrid *)aTableGrid addRows:(NSUInteger)numberOfRows;
+
+/**
+ * @brief		Returns a Boolean value indicating whether the specified rows
+ *				were removed.
+ *
+ * @details		The data source should take care of modifiying the data model to
+ *				reflect the removed rows.
+ *
+ * @param		aTableGrid		The table grid that sent the message.
+ * @param		rowIndexes		An index set describing the rows to remove.
+ *
+ * @return		\c YES if the removal was successful, otherwise \c NO.
+ *
+ * @see			tableGrid:addRows:
+ */
+- (BOOL)tableGrid:(MBTableGrid *)aTableGrid removeRows:(NSIndexSet *)rowIndexes;
+
 /**
  * @}
  */
@@ -939,6 +1148,19 @@ typedef enum {
 - (void)tableGridDidChangeSelection:(NSNotification *)aNotification;
 
 /**
+ * @brief		Tells the delegate that the specified column header was double-clicked
+ *
+ * @param		aTableGrid		The table grid object informing the delegate
+ *								about the double-click event
+ * @param		columnIndex		The selected column in \c aTableGrid.
+ *
+ *
+ * @see			tableGrid:willSelectColumnsAtIndexPath:
+ */
+- (void)tableGrid:(MBTableGrid *)aTableGrid didDoubleClickColumn:(NSUInteger)columnIndex;
+
+
+/**
  * @}
  */
 
@@ -1001,7 +1223,55 @@ typedef enum {
 - (BOOL)tableGrid:(MBTableGrid *)aTableGrid shouldEditColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 
 /**
+ *  @brief      Informs the delegate that an invalid string was entered in a cell
+ *
+ *  @param      aTableGrid       The table grid that contains the cell
+ *  @param      columnIndex      The column of the cell
+ *  @param      rowIndex         The row of the cell
+ *  @param      errorDescription The error description of why the string was invalid
+ */
+- (void)tableGrid:(MBTableGrid *)aTableGrid userDidEnterInvalidStringInColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex errorDescription:(NSString *)errorDescription;
+
+/**
+ *  @brief      Informs the delegate that an accessory button was clicked
+ *
+ *  @param      aTableGrid       The table grid that contains the cell
+ *  @param      columnIndex      The column of the cell
+ *  @param      rowIndex         The row of the cell
+ */
+- (void)tableGrid:(MBTableGrid *)aTableGrid accessoryButtonClicked:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
+
+/**
+ *  @brief      Informs the delegate of the cells that should be copied to the clipboard.
+ *
+ *  @param      aTableGrid       The table grid that contains the cell.
+ *  @param      columnIndexes    Column indexes of the cells being copied.
+ *  @param      rowIndexes       Row indexes of the cells being copied.
+ */
+- (void)tableGrid:(MBTableGrid *)aTableGrid copyCellsAtColumns:(NSIndexSet *)columnIndexes rows:(NSIndexSet *)rowIndexes;
+
+/**
+ *  @brief      Informs the delegate of the cells that should be pasted from the clipboard.
+ *
+ *  @param      aTableGrid       The table grid that contains the cell.
+ *  @param      columnIndexes    Column indexes of the cells being copied.
+ *  @param      rowIndexes       Row indexes of the cells being copied.
+ */
+- (void)tableGrid:(MBTableGrid *)aTableGrid pasteCellsAtColumns:(NSIndexSet *)columnIndexes rows:(NSIndexSet *)rowIndexes;
+
+/**
  * @}
  */
+
+#pragma mark Adding Rows
+
+/**
+ * @brief		Tells the delegate that the specified rows were added.
+ *
+ * @param		aTableGrid		The table grid object informing the delegate
+ *								about the added rows.
+ * @param		rowIndexes		An index set describing the rows that were added.
+ */
+- (void)tableGrid:(MBTableGrid *)aTableGrid didAddRows:(NSIndexSet *)rowIndexes;
 
 @end

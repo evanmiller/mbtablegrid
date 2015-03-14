@@ -24,33 +24,18 @@
  */
 
 #import <Cocoa/Cocoa.h>
-#import "MBTableGridHeaderCell.h"
+#import "MBFooterPopupButtonCell.h"
 
-@class MBTableGrid;
+@class MBTableGrid, MBFooterTextCell;
 
 /**
  * @brief		\c MBTableGridHeaderView deals with the
  *				display and interaction with grid headers.
  */
-@interface MBTableGridHeaderView : NSView {
-	MBTableGridHeaderCell *headerCell;
-	MBTableGridHeaderOrientation orientation;
-	
-	/* Dragging */
-	NSInteger mouseDownItem;
-	NSPoint mouseDownLocation;
-    NSPoint lastMouseDraggingLocation;
-	BOOL shouldDragItems;
-	BOOL isInDrag;
-    
-    /* Resizing */
-    NSMutableArray *trackingAreas;
-    BOOL canResize;
-    BOOL isResizing;
-    NSUInteger draggingColumnIndex;
-	
-	NSMutableDictionary *columnAutoSaveProperties;
-	
+@interface MBTableGridFooterView : NSView {
+    MBFooterTextCell *_defaultCell;
+    MBFooterPopupButtonCell *editedPopupCell;
+    NSInteger editedColumn;
 }
 
 /**
@@ -78,32 +63,6 @@
  */
 
 /**
- * @brief		The orientation of the receiver.
- */
-@property MBTableGridHeaderOrientation orientation;
-
-/**
- * @brief		The indicator image for the header cell
- */
-@property (nonatomic, strong) NSImage *indicatorImage;
-
-/**
- * @brief		The reverse indicator image for the header cell
- */
-@property (nonatomic, strong) NSImage *indicatorReverseImage;
-
-/**
- * @brief		The column to set the indicator image on
- */
-@property (nonatomic, strong) NSArray *indicatorImageColumns;
-
-/**
- * @brief		The autosave name for this grid
- */
-@property (nonatomic) NSString *autosaveName;
-
-
-/**
  * @}
  */
 
@@ -123,7 +82,7 @@
  *				To change the appearance of the headers, you can
  *				use your own \c MBTableGridHeaderCell subclass.
  */
-@property(strong) MBTableGridHeaderCell *headerCell;
+@property(strong) MBFooterPopupButtonCell *footerCell;
 
 /**
  * @}
@@ -147,35 +106,7 @@
  *				receiver.
  * @see			headerRectOfRow:
  */
-- (NSRect)headerRectOfColumn:(NSUInteger)columnIndex;
-
-/**
- * @brief		Returns the rectangle containing the header tile for
- *				the row at \c rowIndex.
- * @param		rowIndex	The index of the row containing the
- *							header whose rectangle you want.
- * @return		A rectangle locating the header for the row at
- *				\c rowIndex. Returns \c NSZeroRect if \c rowIndex 
- *				lies outside the range of valid column indices for the 
- *				receiver.
- * @see			headerRectOfColumn:
- */
-- (NSRect)headerRectOfRow:(NSUInteger)rowIndex;
-
-/**
- * @brief
- *
- * @param
- *
- * @return
- *
- *
- *
- * @see
- */
-- (void)placeSortButtons;
-
-- (void)toggleSortButtonIcon:(NSButton*)btn;
+//- (NSRect)headerRectOfColumn:(NSUInteger)columnIndex;
 
 /**
  * @}

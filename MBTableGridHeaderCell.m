@@ -31,53 +31,60 @@
 
 - (void)drawWithFrame:(NSRect)cellFrame inView:(NSView *)controlView
 {
-    
-    
 	NSColor *topColor = [NSColor controlHighlightColor];
 	NSColor *sideColor = [NSColor controlColor];
 	NSColor *borderColor = [NSColor gridColor];
+	NSRect cellFrameRect = cellFrame;
 		
 	if(self.orientation == MBTableHeaderHorizontalOrientation) {
 		// Draw the side bevels
-		NSRect sideLine = NSMakeRect(NSMinX(cellFrame), NSMinY(cellFrame), 1.0, NSHeight(cellFrame));
+		NSRect sideLine = NSMakeRect(NSMinX(cellFrameRect), NSMinY(cellFrameRect), 1.0, NSHeight(cellFrameRect));
 		[sideColor set];
 		[[NSBezierPath bezierPathWithRect:sideLine] fill];
-		sideLine.origin.x = NSMaxX(cellFrame)-2.0;
+		sideLine.origin.x = NSMaxX(cellFrameRect)-2.0;
 		[[NSBezierPath bezierPathWithRect:sideLine] fill];
 		        
 		// Draw the right border
-		NSRect borderLine = NSMakeRect(NSMaxX(cellFrame)-1, NSMinY(cellFrame), 1.0, NSHeight(cellFrame));
+		NSRect borderLine = NSMakeRect(NSMaxX(cellFrameRect)-1, NSMinY(cellFrameRect), 1.0, NSHeight(cellFrameRect));
 		[borderColor set];
 		NSRectFill(borderLine);
 		
 		// Draw the bottom border
-		NSRect bottomLine = NSMakeRect(NSMinX(cellFrame), NSMaxY(cellFrame)-1.0, NSWidth(cellFrame), 1.0);
+		NSRect bottomLine = NSMakeRect(NSMinX(cellFrameRect), NSMaxY(cellFrameRect)-1.0, NSWidth(cellFrameRect), 1.0);
 		NSRectFill(bottomLine);
+		
 	} else if(self.orientation == MBTableHeaderVerticalOrientation) {
 		// Draw the top bevel line
-		NSRect topLine = NSMakeRect(NSMinX(cellFrame), NSMinY(cellFrame), NSWidth(cellFrame), 1.0);
+		NSRect topLine = NSMakeRect(NSMinX(cellFrameRect), NSMinY(cellFrameRect), NSWidth(cellFrameRect), 1.0);
 		[topColor set];
 		NSRectFill(topLine);
 		
 		// Draw the right border
 		[borderColor set];
-		NSRect borderLine = NSMakeRect(NSMaxX(cellFrame)-1, NSMinY(cellFrame), 1.0, NSHeight(cellFrame));
+		NSRect borderLine = NSMakeRect(NSMaxX(cellFrameRect)-1, NSMinY(cellFrameRect), 1.0, NSHeight(cellFrameRect));
 		NSRectFill(borderLine);
 		
 		// Draw the bottom border
-		NSRect bottomLine = NSMakeRect(NSMinX(cellFrame), NSMaxY(cellFrame)-1.0, NSWidth(cellFrame), 1.0);
+		NSRect bottomLine = NSMakeRect(NSMinX(cellFrameRect), NSMaxY(cellFrameRect)-1.0, NSWidth(cellFrameRect), 1.0);
 		NSRectFill(bottomLine);
 	}
 	
 	if([self state] == NSOnState) {
-		NSBezierPath *path = [NSBezierPath bezierPathWithRect:cellFrame];
+		NSBezierPath *path = [NSBezierPath bezierPathWithRect:cellFrameRect];
 		NSColor *overlayColor = [[NSColor alternateSelectedControlColor] colorWithAlphaComponent:0.2];
 		[overlayColor set];
 		[path fill];
 	}
 	
 	// Draw the text
-	[self drawInteriorWithFrame:cellFrame inView:controlView];
+	[self drawInteriorWithFrame:cellFrameRect inView:controlView];
+}
+
+- (NSAttributedString *)attributedStringValue {
+	NSFont *font = [NSFont labelFontOfSize:[NSFont labelFontSize]];
+	NSColor *color = [NSColor controlTextColor];
+	NSDictionary *attributes = @{ NSFontAttributeName: font, NSForegroundColorAttributeName: color };
+	return [[NSAttributedString alloc] initWithString:[self stringValue] attributes:attributes];
 }
 
 - (void)drawInteriorWithFrame:(NSRect)cellFrame inView:(NSView *)controlView
@@ -87,29 +94,28 @@
 	NSColor *color = ([self state] == NSOnState) ? [NSColor labelColor] : [NSColor secondaryLabelColor];
 	NSDictionary *attributes = @{NSFontAttributeName: font, NSForegroundColorAttributeName: color};
 	NSAttributedString *string = [[NSAttributedString alloc] initWithString:[self stringValue] attributes:attributes];
-	
+	NSRect cellFrameRect = cellFrame;
+
 	static CGFloat TEXT_PADDING = 6;
-
 	NSRect textFrame;
-
+	CGSize stringSize = self.attributedStringValue.size;
 	if (self.orientation == MBTableHeaderHorizontalOrientation) {
-		textFrame = NSMakeRect(cellFrame.origin.x + TEXT_PADDING, cellFrame.origin.y + (cellFrame.size.height - [string size].height)/2, cellFrame.size.width - TEXT_PADDING, [string size].height);
+		textFrame = NSMakeRect(cellFrameRect.origin.x + TEXT_PADDING, cellFrameRect.origin.y + (cellFrameRect.size.height - stringSize.height)/2, cellFrameRect.size.width - TEXT_PADDING, stringSize.height);
 	} else {
-		textFrame = NSMakeRect(cellFrame.origin.x + (cellFrame.size.width-[string size].width)/2, cellFrame.origin.y + (cellFrame.size.height - [string size].height)/2, [string size].width, [string size].height);
+		textFrame = NSMakeRect(cellFrameRect.origin.x + (cellFrameRect.size.width - stringSize.width)/2, cellFrameRect.origin.y + (cellFrameRect.size.height - stringSize.height)/2, stringSize.width, stringSize.height);
 	}
-	
+
 	[[NSGraphicsContext currentContext] saveGraphicsState];
+
 	NSShadow *textShadow = [[NSShadow alloc] init];
 	[textShadow setShadowOffset:NSMakeSize(0,-1)];
 	[textShadow setShadowBlurRadius:0.0];
 	[textShadow setShadowColor:[NSColor controlHighlightColor]];
 	[textShadow set];
-	
-//	[string drawInRect:textFrame];
-	[string drawWithRect:textFrame options:NSStringDrawingTruncatesLastVisibleLine | NSStringDrawingUsesLineFragmentOrigin];
+
+	[self.attributedStringValue drawWithRect:textFrame options:NSStringDrawingTruncatesLastVisibleLine | NSStringDrawingUsesLineFragmentOrigin];
 	
 	[[NSGraphicsContext currentContext] restoreGraphicsState];
-	
 }
 
 @end
