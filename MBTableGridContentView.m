@@ -297,8 +297,12 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 		NSRect columnBorder;
 		if(dropColumn < [self tableGrid].numberOfColumns) {
 			columnBorder = [self rectOfColumn:dropColumn];
-		} else {
+		}
+		else if(dropColumn == [self tableGrid].numberOfColumns && dropColumn>0) {
 			columnBorder = [self rectOfColumn:dropColumn-1];
+		}
+		else {
+			columnBorder = [self rectOfColumn:0];
 			columnBorder.origin.x += columnBorder.size.width;
 		}
 		columnBorder.origin.x = NSMinX(columnBorder)-2.0;

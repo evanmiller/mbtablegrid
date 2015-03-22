@@ -1583,18 +1583,12 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 }
 
 - (float)_widthForColumn:(NSUInteger)columnIndex {
-	NSString *column = nil;
 	if ([columnIndexNames count] > columnIndex) {
-		column = columnIndexNames[columnIndex];
+		NSNumber* width = [_columnWidths objectForKey:@(columnIndex)];
+		return width == nil ? MBTableHeaderMinimumColumnWidth : width.floatValue;
 	}
-
-	if (!column) {
-		column = [NSString stringWithFormat:@"column%lu", columnIndex];
-		columnIndexNames[columnIndex] = column;
-	}
-
-	NSNumber* width = [_columnWidths objectForKey:@(columnIndex)];
-	return width == nil ? MBTableHeaderMinimumColumnWidth : width.floatValue;
+	
+	return 0.0f;
 }
 
 - (void) _setWidth:(float)width forColumn:(NSUInteger)columnIndex
