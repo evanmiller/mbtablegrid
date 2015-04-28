@@ -645,34 +645,36 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 	NSIndexSet *selectedColumns = [self tableGrid].selectedColumnIndexes;
 	NSIndexSet *selectedRows = [self tableGrid].selectedRowIndexes;
 
-	NSRect selectionTopLeft = [self frameOfCellAtColumn:[selectedColumns firstIndex] row:[selectedRows firstIndex]];
-	NSRect selectionBottomRight = [self frameOfCellAtColumn:[selectedColumns lastIndex] row:[selectedRows lastIndex]];
-	
-	NSRect selectionRect;
-	selectionRect.origin = selectionTopLeft.origin;
-	selectionRect.size.width = NSMaxX(selectionBottomRight)-selectionTopLeft.origin.x;
-	selectionRect.size.height = NSMaxY(selectionBottomRight)-selectionTopLeft.origin.y;
+	if([selectedColumns count]>0 && [selectedRows count]>0) {
+		NSRect selectionTopLeft = [self frameOfCellAtColumn:[selectedColumns firstIndex] row:[selectedRows firstIndex]];
+		NSRect selectionBottomRight = [self frameOfCellAtColumn:[selectedColumns lastIndex] row:[selectedRows lastIndex]];
+		
+		NSRect selectionRect;
+		selectionRect.origin = selectionTopLeft.origin;
+		selectionRect.size.width = NSMaxX(selectionBottomRight)-selectionTopLeft.origin.x;
+		selectionRect.size.height = NSMaxY(selectionBottomRight)-selectionTopLeft.origin.y;
 
-	[self addCursorRect:selectionRect cursor:[NSCursor arrowCursor]];
+		[self addCursorRect:selectionRect cursor:[NSCursor arrowCursor]];
 
-	[self addCursorRect:[self visibleRect] cursor:[self _cellSelectionCursor]];
-    [self addCursorRect:grabHandleRect cursor:[self _cellExtendSelectionCursor]];
-    
-    // Update tracking areas here, to leverage the selection variables
-    for (NSTrackingArea *trackingArea in self.trackingAreas) {
-        [self removeTrackingArea:trackingArea];
-    }
-    
-    if (selectedColumns.count == 1) {
-        NSRect fillTrackingRect = [self rectOfColumn:[selectedColumns firstIndex]];
-        fillTrackingRect.size.height = self.frame.size.height;
-        NSRect topFillTrackingRect, bottomFillTrackingRect;
-        
-        NSDivideRect(fillTrackingRect, &topFillTrackingRect, &bottomFillTrackingRect, selectionRect.origin.y + (selectionRect.size.height / 2.0), CGRectMinYEdge);
-        
-        [self addTrackingArea:[[NSTrackingArea alloc] initWithRect:topFillTrackingRect options:NSTrackingMouseEnteredAndExited | NSTrackingActiveInKeyWindow owner:self userInfo:@{MBTableGridTrackingPartKey : @(MBTableGridTrackingPartFillTop)}]];
-        [self addTrackingArea:[[NSTrackingArea alloc] initWithRect:bottomFillTrackingRect options:NSTrackingMouseEnteredAndExited | NSTrackingActiveInKeyWindow owner:self userInfo:@{MBTableGridTrackingPartKey : @(MBTableGridTrackingPartFillBottom)}]];
-    }
+		[self addCursorRect:[self visibleRect] cursor:[self _cellSelectionCursor]];
+		[self addCursorRect:grabHandleRect cursor:[self _cellExtendSelectionCursor]];
+		
+		// Update tracking areas here, to leverage the selection variables
+		for (NSTrackingArea *trackingArea in self.trackingAreas) {
+			[self removeTrackingArea:trackingArea];
+		}
+		
+		if (selectedColumns.count == 1) {
+			NSRect fillTrackingRect = [self rectOfColumn:[selectedColumns firstIndex]];
+			fillTrackingRect.size.height = self.frame.size.height;
+			NSRect topFillTrackingRect, bottomFillTrackingRect;
+			
+			NSDivideRect(fillTrackingRect, &topFillTrackingRect, &bottomFillTrackingRect, selectionRect.origin.y + (selectionRect.size.height / 2.0), CGRectMinYEdge);
+			
+			[self addTrackingArea:[[NSTrackingArea alloc] initWithRect:topFillTrackingRect options:NSTrackingMouseEnteredAndExited | NSTrackingActiveInKeyWindow owner:self userInfo:@{MBTableGridTrackingPartKey : @(MBTableGridTrackingPartFillTop)}]];
+			[self addTrackingArea:[[NSTrackingArea alloc] initWithRect:bottomFillTrackingRect options:NSTrackingMouseEnteredAndExited | NSTrackingActiveInKeyWindow owner:self userInfo:@{MBTableGridTrackingPartKey : @(MBTableGridTrackingPartFillBottom)}]];
+		}
+	}
 }
 
 #pragma mark -
