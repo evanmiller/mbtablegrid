@@ -111,6 +111,10 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 	return self;
 }
 
+- (void) dealloc {
+	[[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
 - (void)mylistener:(id)sender
 {
 	NSInteger selectedColumn = [[self tableGrid].selectedColumnIndexes firstIndex];
