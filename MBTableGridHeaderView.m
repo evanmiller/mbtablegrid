@@ -235,7 +235,7 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 	return YES;
 }
 
-- (void)mouseDown:(NSEvent *)theEvent
+- (void) _mouseDown:(NSEvent *)theEvent right:(BOOL)rightMouse
 {
     
 	// Get the location of the click
@@ -291,6 +291,18 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
         [[self tableGrid] mouseDown:theEvent];
         
     }
+}
+
+- (void) mouseDown:(NSEvent *)theEvent {
+	[self _mouseDown:theEvent right:FALSE];
+}
+
+- (void) rightMouseDown:(NSEvent *)theEvent {
+	[self _mouseDown:theEvent right:TRUE];
+}
+
+- (void) rightMouseUp:(NSEvent *)theEvent {
+	[NSMenu popUpContextMenu:self.menu withEvent:theEvent forView:self];
 }
 
 - (void)mouseDragged:(NSEvent *)theEvent

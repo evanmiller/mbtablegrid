@@ -145,6 +145,8 @@ typedef enum {
 	
 }
 
+@property (nonatomic, readonly) MBTableGridHeaderView* columnHeaderView;
+
 #pragma mark -
 #pragma mark Reloading the Grid
 

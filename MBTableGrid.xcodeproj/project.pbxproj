@@ -33,7 +33,7 @@
 		C6AB1C2E1A16B18B0092B29C /* acc-quicklook.png in Resources */ = {isa = PBXBuildFile; fileRef = C6AB1C2C1A16B18B0092B29C /* acc-quicklook.png */; };
 		C6AB1C2F1A16B18B0092B29C /* acc-quicklook@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = C6AB1C2D1A16B18B0092B29C /* acc-quicklook@2x.png */; };
 		C6BF26871A4AC4EE008EB93F /* MBTableGridFooterView.m in Sources */ = {isa = PBXBuildFile; fileRef = C6BF26861A4AC4EE008EB93F /* MBTableGridFooterView.m */; };
-		C6BF26891A4AC502008EB93F /* MBTableGridFooterView.h in Headers */ = {isa = PBXBuildFile; fileRef = C6BF26881A4AC502008EB93F /* MBTableGridFooterView.h */; };
+		C6BF26891A4AC502008EB93F /* MBTableGridFooterView.h in Headers */ = {isa = PBXBuildFile; fileRef = C6BF26881A4AC502008EB93F /* MBTableGridFooterView.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		C6BF268B1A4AC953008EB93F /* MBFooterPopupButtonCell.h in Headers */ = {isa = PBXBuildFile; fileRef = C6BF268A1A4AC953008EB93F /* MBFooterPopupButtonCell.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		C6BF268D1A4AC967008EB93F /* MBFooterPopupButtonCell.m in Sources */ = {isa = PBXBuildFile; fileRef = C6BF268C1A4AC967008EB93F /* MBFooterPopupButtonCell.m */; };
 		C9412A5F0D8AE98C00E9E614 /* MBTableGridController.m in Sources */ = {isa = PBXBuildFile; fileRef = C9412A5E0D8AE98C00E9E614 /* MBTableGridController.m */; };
@@ -46,9 +46,9 @@
 		E2E62BBE1781C38000F36275 /* MBTableGridCell.m in Sources */ = {isa = PBXBuildFile; fileRef = C9412D7C0D8B5AB900E9E614 /* MBTableGridCell.m */; };
 		E2E62BBF1781C3FE00F36275 /* MBTableGrid.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2E62BAA1781C33400F36275 /* MBTableGrid.framework */; };
 		E2E62BF71781C53800F36275 /* MBTableGrid.h in Headers */ = {isa = PBXBuildFile; fileRef = C9412A3D0D8A061C00E9E614 /* MBTableGrid.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		E2E62BF81781C53800F36275 /* MBTableGridContentView.h in Headers */ = {isa = PBXBuildFile; fileRef = C9412B200D8B2C5E00E9E614 /* MBTableGridContentView.h */; };
-		E2E62BF91781C53800F36275 /* MBTableGridHeaderView.h in Headers */ = {isa = PBXBuildFile; fileRef = C9412B380D8B2F5400E9E614 /* MBTableGridHeaderView.h */; };
-		E2E62BFA1781C53800F36275 /* MBTableGridHeaderCell.h in Headers */ = {isa = PBXBuildFile; fileRef = C9412A490D8A294F00E9E614 /* MBTableGridHeaderCell.h */; };
+		E2E62BF81781C53800F36275 /* MBTableGridContentView.h in Headers */ = {isa = PBXBuildFile; fileRef = C9412B200D8B2C5E00E9E614 /* MBTableGridContentView.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		E2E62BF91781C53800F36275 /* MBTableGridHeaderView.h in Headers */ = {isa = PBXBuildFile; fileRef = C9412B380D8B2F5400E9E614 /* MBTableGridHeaderView.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		E2E62BFA1781C53800F36275 /* MBTableGridHeaderCell.h in Headers */ = {isa = PBXBuildFile; fileRef = C9412A490D8A294F00E9E614 /* MBTableGridHeaderCell.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E2E62BFB1781C53800F36275 /* MBTableGridCell.h in Headers */ = {isa = PBXBuildFile; fileRef = C9412D7B0D8B5AB900E9E614 /* MBTableGridCell.h */; settings = {ATTRIBUTES = (Public, ); }; };
 /* End PBXBuildFile section */
 
@@ -281,11 +281,11 @@
 				C639542C19FF3B7C0029BDF1 /* MBPopupButtonCell.h in Headers */,
 				C6AB1C261A15C3AB0092B29C /* MBImageCell.h in Headers */,
 				C63413B61A19F857001E9DF0 /* MBLevelIndicatorCell.h in Headers */,
+				E2E62BFA1781C53800F36275 /* MBTableGridHeaderCell.h in Headers */,
 				E2E62BF71781C53800F36275 /* MBTableGrid.h in Headers */,
 				E2E62BF81781C53800F36275 /* MBTableGridContentView.h in Headers */,
 				E2E62BF91781C53800F36275 /* MBTableGridHeaderView.h in Headers */,
 				C6BF26891A4AC502008EB93F /* MBTableGridFooterView.h in Headers */,
-				E2E62BFA1781C53800F36275 /* MBTableGridHeaderCell.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
