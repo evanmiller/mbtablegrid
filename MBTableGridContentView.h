@@ -56,6 +56,7 @@ typedef NS_ENUM(NSUInteger, MBTableGridTrackingPart)
 	NSImage *cursorExtendSelectionImage;
     NSImage *grabHandleImage;
     NSRect grabHandleRect;
+	BOOL showsGrabHandle;
 	
 	NSInteger dropColumn;
 	NSInteger dropRow;
@@ -74,6 +75,8 @@ typedef NS_ENUM(NSUInteger, MBTableGridTrackingPart)
     NSMutableArray *columnWidths;
     
 }
+
+@property (nonatomic, assign) BOOL showsGrabHandle;
 
 /**
  * @name		The Grid View

@@ -75,12 +75,15 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 
 @implementation MBTableGridContentView
 
+@synthesize showsGrabHandle;
+
 #pragma mark -
 #pragma mark Initialization & Superclass Overrides
 
 - (id)initWithFrame:(NSRect)frameRect
 {
 	if(self = [super initWithFrame:frameRect]) {
+		showsGrabHandle = NO;
 		mouseDownColumn = NSNotFound;
 		mouseDownRow = NSNotFound;
 		
@@ -283,7 +286,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
         [[selectionColor colorWithAlphaComponent:0.2f] set];
         [selectionPath fill];
         
-		if (disabled || [selectedColumns count] > 1) {
+		if (!showsGrabHandle || disabled || [selectedColumns count] > 1) {
 			grabHandleRect = NSZeroRect;
 		}
         else if (shouldDrawFillPart != MBTableGridTrackingPartNone) {
@@ -413,7 +416,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 		NSUInteger selectedColumn = [[self tableGrid].selectedColumnIndexes firstIndex];
 		NSUInteger selectedRow = [[self tableGrid].selectedRowIndexes firstIndex];
 
-        isFilling = NSPointInRect(mouseLocationInContentView, grabHandleRect);
+        isFilling = showsGrabHandle && NSPointInRect(mouseLocationInContentView, grabHandleRect);
         
         if (isFilling) {
             numberOfRowsWhenStartingFilling = [self tableGrid].numberOfRows;
@@ -661,7 +664,10 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 		[self addCursorRect:selectionRect cursor:[NSCursor arrowCursor]];
 
 		[self addCursorRect:[self visibleRect] cursor:[self _cellSelectionCursor]];
-		[self addCursorRect:grabHandleRect cursor:[self _cellExtendSelectionCursor]];
+		
+		if(showsGrabHandle) {
+			[self addCursorRect:grabHandleRect cursor:[self _cellExtendSelectionCursor]];
+		}
 		
 		// Update tracking areas here, to leverage the selection variables
 		for (NSTrackingArea *trackingArea in self.trackingAreas) {

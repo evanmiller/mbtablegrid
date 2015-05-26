@@ -103,7 +103,7 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 @synthesize selectedColumnIndexes;
 @synthesize selectedRowIndexes;
 @synthesize sortButtons;
-
+@synthesize showsGrabHandles;
 
 #pragma mark -
 #pragma mark Initialization & Superclass Overrides
@@ -192,6 +192,11 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 		self.columnRects = [NSMutableDictionary dictionary];
 	}
 	return self;
+}
+
+- (void) setShowsGrabHandles:(BOOL)s {
+	showsGrabHandles = s;
+	[self.contentView setShowsGrabHandle:s];
 }
 
 - (void)sortButtonClicked:(id)sender
