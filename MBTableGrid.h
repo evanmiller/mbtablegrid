@@ -106,9 +106,6 @@ typedef enum {
  * @author		Matthew Ball
  */
 @interface MBTableGrid : NSControl <NSDraggingSource, NSDraggingDestination> {
-	/* Headers */
-	MBTableGridHeaderCell *headerCell;
-	
 	/* Data Source */
 	IBOutlet id <MBTableGridDataSource> __unsafe_unretained dataSource;
 	
@@ -148,6 +145,7 @@ typedef enum {
 @property (nonatomic, assign) BOOL showsGrabHandles;
 
 @property (nonatomic, readonly) MBTableGridHeaderView* columnHeaderView;
+@property (nonatomic, readonly) MBTableGridHeaderView* rowHeaderView;
 
 #pragma mark -
 #pragma mark Reloading the Grid

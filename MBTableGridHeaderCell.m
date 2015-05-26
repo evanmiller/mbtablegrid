@@ -28,6 +28,7 @@
 @implementation MBTableGridHeaderCell
 
 @synthesize orientation;
+@synthesize labelFont;
 
 - (void)drawWithFrame:(NSRect)cellFrame inView:(NSView *)controlView
 {
@@ -81,7 +82,10 @@
 }
 
 - (NSAttributedString *)attributedStringValue {
-	NSFont *font = [NSFont labelFontOfSize:[NSFont labelFontSize]];
+	NSFont *font = labelFont;
+	if(font==nil) {
+		font = [NSFont labelFontOfSize:[NSFont labelFontSize]];
+	}
 	NSColor *color = [NSColor controlTextColor];
 	NSDictionary *attributes = @{ NSFontAttributeName: font, NSForegroundColorAttributeName: color };
 	return [[NSAttributedString alloc] initWithString:[self stringValue] attributes:attributes];
