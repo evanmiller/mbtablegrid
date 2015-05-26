@@ -1162,6 +1162,8 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 }
 
 - (void)reloadData {
+	CGRect visibleRect = [contentScrollView contentView].documentVisibleRect;
+	
 	// Set number of columns
 	if ([[self dataSource] respondsToSelector:@selector(numberOfColumnsInTableGrid:)]) {
 		_numberOfColumns =  [[self dataSource] numberOfColumnsInTableGrid:self];
@@ -1215,6 +1217,9 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 	[self._contentView setNeedsDisplay:YES];
 	[self.columnHeaderView setNeedsDisplay:YES];
 	[self.rowHeaderView setNeedsDisplay:YES];
+	
+	// Restore original visible rectangle of scroller
+	[self scrollToArea:visibleRect animate:NO];
 }
 
 #pragma mark Layout Support
