@@ -679,7 +679,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 			fillTrackingRect.size.height = self.frame.size.height;
 			NSRect topFillTrackingRect, bottomFillTrackingRect;
 			
-			NSDivideRect(fillTrackingRect, &topFillTrackingRect, &bottomFillTrackingRect, selectionRect.origin.y + (selectionRect.size.height / 2.0), CGRectMinYEdge);
+			NSDivideRect(fillTrackingRect, &topFillTrackingRect, &bottomFillTrackingRect, selectionRect.origin.y + (selectionRect.size.height / 2.0), NSRectEdgeMinY);
 			
 			[self addTrackingArea:[[NSTrackingArea alloc] initWithRect:topFillTrackingRect options:NSTrackingMouseEnteredAndExited | NSTrackingActiveInKeyWindow owner:self userInfo:@{MBTableGridTrackingPartKey : @(MBTableGridTrackingPartFillTop)}]];
 			[self addTrackingArea:[[NSTrackingArea alloc] initWithRect:bottomFillTrackingRect options:NSTrackingMouseEnteredAndExited | NSTrackingActiveInKeyWindow owner:self userInfo:@{MBTableGridTrackingPartKey : @(MBTableGridTrackingPartFillBottom)}]];
@@ -932,7 +932,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 	} else {
 		NSText *editor = [[self window] fieldEditor:YES forObject:self];
 		editor.delegate = self;
-		[selectedCell editWithFrame:cellFrame inView:self editor:editor delegate:self event:nil];
+		[selectedCell editWithFrame:cellFrame inView:self editor:editor delegate:self event:[NSApp currentEvent]];
         
         NSFormatter *formatter = [[self tableGrid] _formatterForColumn:selectedColumn];
         

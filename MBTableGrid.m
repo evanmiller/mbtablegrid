@@ -206,7 +206,7 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 
 - (void)awakeFromNib {
 //	[self reloadData];
-	[self registerForDraggedTypes:nil];
+	[self unregisterDraggedTypes];
 }
 
 - (void)dealloc {
