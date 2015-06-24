@@ -181,6 +181,9 @@
             [editedPopupCell.menu popUpMenuPositioningItem:editedPopupCell.selectedItem atLocation:cellFrame.origin inView:self];
             
         }
+		else {
+			[[self tableGrid].delegate tableGrid:[self tableGrid] footerCellClicked:cell forColumn:mouseDownColumn withEvent:theEvent];
+		}
     }
     
     [self setNeedsDisplay:YES];
