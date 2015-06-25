@@ -145,6 +145,7 @@ typedef enum {
 @property (nonatomic, assign) BOOL showsGrabHandles;
 
 @property (nonatomic, readonly) MBTableGridHeaderView* columnHeaderView;
+@property (nonatomic, readonly) MBTableGridFooterView* columnFooterView;
 @property (nonatomic, readonly) MBTableGridHeaderView* rowHeaderView;
 
 #pragma mark -

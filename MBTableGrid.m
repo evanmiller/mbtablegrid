@@ -104,6 +104,7 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 @synthesize selectedRowIndexes;
 @synthesize sortButtons;
 @synthesize showsGrabHandles;
+@synthesize columnFooterView;
 
 #pragma mark -
 #pragma mark Initialization & Superclass Overrides
