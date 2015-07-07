@@ -266,32 +266,8 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 }
 
 - (void)drawRect:(NSRect)aRect {
-	// If the view is the first responder, draw the focus ring
-	NSResponder *firstResponder = [[self window] firstResponder];
-	if (([[firstResponder class] isSubclassOfClass:[NSView class]] && [(NSView *)firstResponder isDescendantOf : self]) && [[self window] isKeyWindow]) {
-		[[NSGraphicsContext currentContext] saveGraphicsState];
-		NSSetFocusRingStyle(NSFocusRingOnly);
-
-		[[NSBezierPath bezierPathWithRect:NSMakeRect(0, 0, [self frame].size.width, [self frame].size.height)] fill];
-		[[NSGraphicsContext currentContext] restoreGraphicsState];
-		//[self setKeyboardFocusRingNeedsDisplayInRect:[self bounds]];
-	}
-
-	// Draw the corner header
-	NSRect cornerRect = [self headerRectOfCorner];
-	[self _drawCornerHeaderBackgroundInRect:cornerRect];
-
-	// Draw the column header background
-	NSRect columnHeaderRect = NSMakeRect(NSWidth(cornerRect), 0, [self frame].size.width - NSWidth(cornerRect), MBTableGridColumnHeaderHeight);
-	[self _drawColumnHeaderBackgroundInRect:columnHeaderRect];
-
-	// Draw the corner footer
-	NSRect footerRect = [self footerRectOfCorner];
-	[self _drawCornerFooterBackgroundInRect:footerRect];
-
-	// Draw the row header background
-	NSRect rowHeaderRect = NSMakeRect(0, NSMaxY(cornerRect), MBTableGridRowHeaderWidth, [self frame].size.height - MBTableGridColumnHeaderHeight * 2);
-	[self _drawRowHeaderBackgroundInRect:rowHeaderRect];
+	[[NSColor windowBackgroundColor] set];
+	NSRectFill(aRect);
 }
 
 #pragma mark Resize scrollview content size
@@ -1390,123 +1366,9 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 
 @implementation MBTableGrid (Drawing)
 
-- (void)_drawColumnHeaderBackgroundInRect:(NSRect)aRect {
-	if ([self needsToDrawRect:aRect]) {
-		NSColor *topGradientTop = [NSColor colorWithDeviceWhite:0.90 alpha:1.0];
-		NSColor *bottomGradientBottom = [NSColor colorWithDeviceWhite:0.87 alpha:1.0];
-		NSColor *topColor = [NSColor colorWithDeviceWhite:0.95 alpha:1.0];
-		NSColor *borderColor = [NSColor gridColor];
-		
-		NSGradient *topGradient = [[NSGradient alloc] initWithColors:@[topGradientTop, bottomGradientBottom]];
-		
-		NSRect topRect = NSMakeRect(NSMinX(aRect), 0, NSWidth(aRect), NSHeight(aRect));
-		
-		// Draw the gradients
-		[topGradient drawInRect:topRect angle:90.0];
-		//[bottomGradient drawInRect:bottomRect angle:90.0];
-	
-		// Draw the top bevel line
-		NSRect topLine = NSMakeRect(NSMinX(aRect), NSMinY(aRect), NSWidth(aRect), 1.0);
-		[topColor set];
-		NSRectFill(topLine);
-
-		// Draw the bottom border
-		[borderColor set];
-		NSRect bottomLine = NSMakeRect(NSMinX(aRect), NSMaxY(aRect) - 1.0, NSWidth(aRect), 1.0);
-		NSRectFill(bottomLine);
-	}
+- (BOOL) opaque {
+	return YES;
 }
-
-- (void)_drawRowHeaderBackgroundInRect:(NSRect)aRect {
-	if ([self needsToDrawRect:aRect]) {
-		NSColor *topGradientTop = [NSColor colorWithDeviceWhite:0.91 alpha:1.0];
-		NSColor *topGradientBottom = [NSColor colorWithDeviceWhite:0.89 alpha:1.0];
-		NSColor *sideColor = [NSColor colorWithDeviceWhite:1.0 alpha:0.4];
-		NSColor *borderColor = [NSColor gridColor];
-		
-		NSGradient *topGradient = [[NSGradient alloc] initWithColors:@[topGradientTop, topGradientBottom]];
-	
-		NSRect leftRect = NSMakeRect(NSMinX(aRect), NSMinY(aRect), NSWidth(aRect), NSHeight(aRect));
-		
-		// Draw the gradients
-		[topGradient drawInRect:leftRect angle:0.0];
-
-		// Draw the left bevel line
-		NSRect leftLine = NSMakeRect(NSMinX(aRect), NSMinY(aRect), 1.0, NSHeight(aRect));
-		[sideColor set];
-		[[NSBezierPath bezierPathWithRect:leftLine] fill];
-
-		// Draw the right border
-		[borderColor set];
-		NSRect rightLine = NSMakeRect(NSMaxX(aRect) - 1, NSMinY(aRect), 1.0, NSHeight(aRect));
-		NSRectFill(rightLine);
-	}
-}
-
-- (void)_drawCornerHeaderBackgroundInRect:(NSRect)aRect {
-	if ([self needsToDrawRect:aRect]) {
-		NSColor *topColor = [NSColor colorWithDeviceWhite:0.9 alpha:1.0];
-		NSColor *sideColor = [NSColor colorWithDeviceWhite:0.8 alpha:0.4];
-		NSColor *borderColor = [NSColor colorWithDeviceWhite:0.8 alpha:1.0];
-
-		// Draw the top bevel line
-		NSRect topLine = NSMakeRect(NSMinX(aRect), NSMinY(aRect), NSWidth(aRect), 1.0);
-		[topColor set];
-		NSRectFill(topLine);
-
-		// Draw the left bevel line
-		NSRect leftLine = NSMakeRect(NSMinX(aRect), NSMinY(aRect), 1.0, NSHeight(aRect));
-		[sideColor set];
-		[[NSBezierPath bezierPathWithRect:leftLine] fill];
-
-		// Draw the right border
-		[borderColor set];
-		NSRect borderLine = NSMakeRect(NSMaxX(aRect) - 1, NSMinY(aRect), 1.0, NSHeight(aRect));
-		NSRectFill(borderLine);
-
-		// Draw the bottom border
-		NSRect bottomLine = NSMakeRect(NSMinX(aRect), NSMaxY(aRect) - 1.0, NSWidth(aRect), 1.0);
-		NSRectFill(bottomLine);
-	}
-}
-
-- (void)_drawCornerFooterBackgroundInRect:(NSRect)aRect {
-	if ([self needsToDrawRect:aRect]) {
-		NSColor *topGradientTop = [NSColor colorWithDeviceWhite:0.91 alpha:1.0];
-		NSColor *topGradientBottom = [NSColor colorWithDeviceWhite:0.89 alpha:1.0];
-		NSColor *topColor = [NSColor colorWithDeviceWhite:0.95 alpha:1.0];
-		NSColor *sideColor = [NSColor colorWithDeviceWhite:1.0 alpha:0.4];
-		NSColor *borderColor = [NSColor colorWithDeviceWhite:0.65 alpha:1.0];
-		
-		NSGradient *topGradient = [[NSGradient alloc] initWithColors:@[topGradientTop, topGradientBottom]];
-		
-		// Divide the frame in two
-		NSRect mainRect = aRect;
-		
-		// Draw the gradients
-		[topGradient drawInRect:mainRect angle:90.0];
-		
-		// Draw the top bevel line
-		NSRect topLine = NSMakeRect(NSMinX(aRect), NSMinY(aRect), NSWidth(aRect), 1.0);
-		[topColor set];
-		NSRectFill(topLine);
-		
-		// Draw the left bevel line
-		NSRect leftLine = NSMakeRect(NSMinX(aRect), NSMinY(aRect), 1.0, NSHeight(aRect));
-		[sideColor set];
-		[[NSBezierPath bezierPathWithRect:leftLine] fill];
-		
-		// Draw the right border
-		[borderColor set];
-		NSRect borderLine = NSMakeRect(NSMaxX(aRect) - 1, NSMinY(aRect), 1.0, NSHeight(aRect));
-		NSRectFill(borderLine);
-		
-		// Draw the bottom border
-		NSRect bottomLine = NSMakeRect(NSMinX(aRect), NSMaxY(aRect) - 1.0, NSWidth(aRect), 1.0);
-		NSRectFill(bottomLine);
-	}
-}
-
 
 @end
 

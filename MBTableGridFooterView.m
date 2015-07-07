@@ -43,6 +43,9 @@
     if(self = [super initWithFrame:frameRect]) {
         _defaultCell = [[MBFooterTextCell alloc] initTextCell:@""];
         [_defaultCell setBordered:YES];
+		self.wantsLayer = YES;
+		self.layer.drawsAsynchronously = YES;
+		self.layerContentsRedrawPolicy = NSViewLayerContentsRedrawOnSetNeedsDisplay;
     }
     return self;
 }

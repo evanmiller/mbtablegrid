@@ -49,6 +49,10 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 - (id)initWithFrame:(NSRect)frameRect
 {
 	if(self = [super initWithFrame:frameRect]) {
+		self.wantsLayer = YES;
+		self.layer.drawsAsynchronously = YES;
+		self.layerContentsRedrawPolicy = NSViewLayerContentsRedrawOnSetNeedsDisplay;
+		
 		// Setup the header cell
 		headerCell = [[MBTableGridHeaderCell alloc] init];
 		

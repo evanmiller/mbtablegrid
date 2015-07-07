@@ -32,19 +32,13 @@
 
 - (void)drawWithFrame:(NSRect)cellFrame inView:(NSView *)controlView
 {
-	NSColor *topColor = [NSColor controlHighlightColor];
-	NSColor *sideColor = [NSColor controlColor];
 	NSColor *borderColor = [NSColor gridColor];
 	NSRect cellFrameRect = cellFrame;
+	
+	[[NSColor windowBackgroundColor] set];
+	NSRectFill(cellFrame);
 		
 	if(self.orientation == MBTableHeaderHorizontalOrientation) {
-		// Draw the side bevels
-		NSRect sideLine = NSMakeRect(NSMinX(cellFrameRect), NSMinY(cellFrameRect), 1.0, NSHeight(cellFrameRect));
-		[sideColor set];
-		[[NSBezierPath bezierPathWithRect:sideLine] fill];
-		sideLine.origin.x = NSMaxX(cellFrameRect)-2.0;
-		[[NSBezierPath bezierPathWithRect:sideLine] fill];
-		        
 		// Draw the right border
 		NSRect borderLine = NSMakeRect(NSMaxX(cellFrameRect)-1, NSMinY(cellFrameRect), 1.0, NSHeight(cellFrameRect));
 		[borderColor set];
@@ -55,14 +49,9 @@
 		NSRectFill(bottomLine);
 		
 	} else if(self.orientation == MBTableHeaderVerticalOrientation) {
-		// Draw the top bevel line
-		NSRect topLine = NSMakeRect(NSMinX(cellFrameRect), NSMinY(cellFrameRect), NSWidth(cellFrameRect), 1.0);
-		[topColor set];
-		NSRectFill(topLine);
-		
 		// Draw the right border
 		[borderColor set];
-		NSRect borderLine = NSMakeRect(NSMaxX(cellFrameRect)-1, NSMinY(cellFrameRect), 1.0, NSHeight(cellFrameRect));
+		NSRect borderLine = NSMakeRect(NSMaxX(cellFrameRect)-1, NSMinY(cellFrameRect), 1.0, NSHeight(cellFrameRect)-1);
 		NSRectFill(borderLine);
 		
 		// Draw the bottom border
