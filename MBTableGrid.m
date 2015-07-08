@@ -46,10 +46,6 @@ NSString *MBTableGridColumnDataType = @"mbtablegrid.pasteboard.column";
 NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 
 @interface MBTableGrid (Drawing)
-- (void)_drawColumnHeaderBackgroundInRect:(NSRect)aRect;
-- (void)_drawRowHeaderBackgroundInRect:(NSRect)aRect;
-- (void)_drawCornerHeaderBackgroundInRect:(NSRect)aRect;
-- (void)_drawCornerFooterBackgroundInRect:(NSRect)aRect;
 @end
 
 @interface MBTableGrid (DataAccessors)
