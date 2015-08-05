@@ -490,7 +490,8 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 		// First click on a cell without shift key modifier
 		} else {
 			// No modifier keys, so change the selection
-			[self tableGrid].selectedColumnIndexes = [NSIndexSet indexSetWithIndex:mouseDownColumn];
+			// Only notify observers once even though we change the selection twice
+			[[self tableGrid] setSelectedColumnIndexes:[NSIndexSet indexSetWithIndex:mouseDownColumn] notify: NO];
 			[self tableGrid].selectedRowIndexes = [NSIndexSet indexSetWithIndex:mouseDownRow];
 			[[self tableGrid] _setStickyColumn:MBTableGridLeftEdge row:MBTableGridTopEdge];
 		}

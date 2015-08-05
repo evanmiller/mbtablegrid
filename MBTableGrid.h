@@ -148,6 +148,9 @@ typedef enum {
 @property (nonatomic, readonly) MBTableGridFooterView* columnFooterView;
 @property (nonatomic, readonly) MBTableGridHeaderView* rowHeaderView;
 
+- (void)setSelectedRowIndexes:(NSIndexSet *)anIndexSet notify:(BOOL)notify;
+- (void)setSelectedColumnIndexes:(NSIndexSet *)anIndexSet notify:(BOOL)notify;
+
 #pragma mark -
 #pragma mark Reloading the Grid
 

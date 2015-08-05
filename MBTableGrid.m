@@ -1284,6 +1284,10 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 #pragma mark - Overridden Property Accessors
 
 - (void)setSelectedColumnIndexes:(NSIndexSet *)anIndexSet {
+	[self setSelectedColumnIndexes:anIndexSet notify:YES];
+}
+
+- (void)setSelectedColumnIndexes:(NSIndexSet *)anIndexSet notify:(BOOL)notify {
 	if (anIndexSet == selectedColumnIndexes)
 		return;
 
@@ -1309,10 +1313,16 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 	[self.rowHeaderView setNeedsDisplay:YES];
 
 	// Post the notification
-	[[NSNotificationCenter defaultCenter] postNotificationName:MBTableGridDidChangeSelectionNotification object:self];
+	if(notify) {
+		[[NSNotificationCenter defaultCenter] postNotificationName:MBTableGridDidChangeSelectionNotification object:self];
+	}
 }
 
 - (void)setSelectedRowIndexes:(NSIndexSet *)anIndexSet {
+	[self setSelectedRowIndexes:anIndexSet notify:YES];
+}
+
+- (void)setSelectedRowIndexes:(NSIndexSet *)anIndexSet notify:(BOOL)notify {
 	if (anIndexSet == selectedColumnIndexes)
 		return;
 
@@ -1330,7 +1340,9 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 	[self.rowHeaderView setNeedsDisplay:YES];
 	
 	// Post the notification
-	[[NSNotificationCenter defaultCenter] postNotificationName:MBTableGridDidChangeSelectionNotification object:self];
+	if(notify) {
+		[[NSNotificationCenter defaultCenter] postNotificationName:MBTableGridDidChangeSelectionNotification object:self];
+	}
 }
 
 - (void)setDelegate:(id <MBTableGridDelegate> )anObject {
