@@ -1190,7 +1190,12 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 	[self._contentView setNeedsDisplay:YES];
 	[self.columnHeaderView setNeedsDisplay:YES];
 	[self.rowHeaderView setNeedsDisplay:YES];
-	
+
+	if((visibleRect.size.height + visibleRect.origin.y) > contentRect.size.height) {
+		visibleRect.size.height = MIN(contentRect.size.height, visibleRect.size.height);
+		visibleRect.origin.y = MAX(0, contentRect.size.height - visibleRect.size.height);
+	}
+
 	// Restore original visible rectangle of scroller
 	[self scrollToArea:visibleRect animate:NO];
 }
