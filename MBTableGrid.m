@@ -903,9 +903,13 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 
 - (NSDragOperation)draggingEntered:(id <NSDraggingInfo> )sender {
 	NSPasteboard *pboard = [sender draggingPasteboard];
-
 	NSData *columnData = [pboard dataForType:MBTableGridColumnDataType];
 	NSData *rowData = [pboard dataForType:MBTableGridRowDataType];
+
+	// Do not accept drag if this doesn't come from us
+	if([sender draggingSource] != self) {
+		return NO;
+	}
 
 	if (columnData) {
 		return NSDragOperationMove;
@@ -1024,6 +1028,10 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 }
 
 - (BOOL)prepareForDragOperation:(id <NSDraggingInfo> )sender {
+	// Do not accept drag if this doesn't come from us
+	if([sender draggingSource] != self) {
+		return NO;
+	}
 	return YES;
 }
 
@@ -1032,6 +1040,11 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 	NSData *columnData = [pboard dataForType:MBTableGridColumnDataType];
 	NSData *rowData = [pboard dataForType:MBTableGridRowDataType];
 	NSPoint mouseLocation = [self convertPoint:[sender draggingLocation] fromView:nil];
+
+	// Do not accept drag if this doesn't come from us
+	if([sender draggingSource] != self) {
+		return NO;
+	}
 
 	if (columnData) {
 		// If we're dragging a column
@@ -1573,7 +1586,7 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
     NSRect dragImageFrame = NSMakeRect(location.x, location.y, dragImage.size.width, dragImage.size.height);
     [item setDraggingFrame:dragImageFrame contents:dragImage];
     id source = (id <NSDraggingSource>) self;
-    
+
     [self beginDraggingSessionWithItems:@[item] event:theEvent source:source];
 }
 
