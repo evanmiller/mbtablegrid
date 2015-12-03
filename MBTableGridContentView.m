@@ -936,7 +936,10 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 	} else {
 		NSText *editor = [[self window] fieldEditor:YES forObject:self];
 		editor.delegate = self;
-		[selectedCell editWithFrame:cellFrame inView:self editor:editor delegate:self event:[NSApp currentEvent]];
+		NSEvent* event = [NSApp currentEvent];
+		if(event != nil) {
+			[selectedCell editWithFrame:cellFrame inView:self editor:editor delegate:self event:[NSApp currentEvent]];
+		}
         
         NSFormatter *formatter = [[self tableGrid] _formatterForColumn:selectedColumn];
         
