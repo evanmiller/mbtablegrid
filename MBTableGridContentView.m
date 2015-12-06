@@ -937,7 +937,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 		NSText *editor = [[self window] fieldEditor:YES forObject:self];
 		editor.delegate = self;
 		NSEvent* event = [NSApp currentEvent];
-		if(event != nil) {
+		if(event != nil && event.type == NSLeftMouseDown) {
 			[selectedCell editWithFrame:cellFrame inView:self editor:editor delegate:self event:[NSApp currentEvent]];
 		}
         
