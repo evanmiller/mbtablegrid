@@ -1274,14 +1274,12 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 }
 
 - (NSInteger)rowAtPoint:(NSPoint)aPoint {
-	NSInteger row = 0;
-	while (row < _numberOfRows) {
-		NSRect rowFrame = [self rectOfRow:row];
-		if (NSPointInRect(aPoint, rowFrame)) {
-			return row;
-		}
-		row++;
+	CGFloat y = aPoint.y - self.contentView.rowHeight;
+	NSInteger row = ceil(y / self.contentView.rowHeight);
+	if(row >= 0 && row <= _numberOfRows) {
+		return row;
 	}
+
 	return NSNotFound;
 }
 
@@ -1308,15 +1306,6 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 - (void)setSelectedColumnIndexes:(NSIndexSet *)anIndexSet notify:(BOOL)notify {
 	if (anIndexSet == selectedColumnIndexes)
 		return;
-
-
-	// first, enumerate all the old inndexes, and call setNeedsdisplaayInRect on them.
-//	[selectedColumnIndexes enumerateIndexesUsingBlock: ^(NSUInteger column, BOOL *stop) {
-//	    [selectedRowIndexes enumerateIndexesUsingBlock: ^(NSUInteger row, BOOL *stop) {
-//	        NSRect oldRect = [self frameOfCellAtColumn:column row:row];
-//	        [self setNeedsDisplayInRect:oldRect];
-//		}];
-//	}];
 
 	// Allow the delegate to validate the selection
 	if ([[self delegate] respondsToSelector:@selector(tableGrid:willSelectColumnsAtIndexPath:)]) {

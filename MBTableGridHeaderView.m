@@ -210,13 +210,16 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 		// Draw the row headers
 		NSUInteger numberOfRows = [self tableGrid].numberOfRows;
 		[headerCell setOrientation:self.orientation];
-		NSUInteger row = 0;
-		while(row < numberOfRows) {
+
+		CGFloat rowHeight = [[self tableGrid] _contentView].rowHeight;
+		NSUInteger row = MAX(0, floor(rect.origin.y / rowHeight));
+		NSUInteger endRow = MIN(numberOfRows, ceil((rect.origin.y + rect.size.height) / rowHeight));
+
+		while(row < endRow) {
 			NSRect headerRect = [self headerRectOfRow:row];
 			
 			// Only draw the header if we need to
 			if ([self needsToDrawRect:headerRect]) {
-                
 				// Check if any part of the selection is in this column
 				NSIndexSet *selectedRows = [[self tableGrid] selectedRowIndexes];
 				if ([selectedRows containsIndex:row]) {
@@ -245,7 +248,7 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 	NSPoint loc = [self convertPoint:[theEvent locationInWindow] fromView:nil];
 	mouseDownLocation = loc;
 	NSInteger column = [[self tableGrid] columnAtPoint:[self convertPoint:loc toView:[self tableGrid]]];
-	NSInteger row = [[self tableGrid] rowAtPoint:[self convertPoint:loc toView:[self tableGrid]]];
+	NSInteger row = [[self tableGrid] rowAtPoint:loc];
 
 	if([theEvent clickCount] == 2) {
 		[self.tableGrid.delegate tableGrid:self.tableGrid didDoubleClickColumn:column];
@@ -366,7 +369,7 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
             if (self.orientation == MBTableHeaderHorizontalOrientation) {
                 itemUnderMouse = [[self tableGrid] columnAtPoint:[self convertPoint:loc toView:[self tableGrid]]];
             } else if(self.orientation == MBTableHeaderVerticalOrientation) {
-                itemUnderMouse = [[self tableGrid] rowAtPoint:[self convertPoint:loc toView:[self tableGrid]]];
+				itemUnderMouse = [[self tableGrid] rowAtPoint:loc];
             }
             
             // If there's nothing under the mouse, bail out (something went wrong)

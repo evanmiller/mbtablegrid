@@ -76,6 +76,8 @@ typedef NS_ENUM(NSUInteger, MBTableGridTrackingPart)
     
 }
 
+@property (nonatomic, assign) CGFloat rowHeight;
+
 @property (nonatomic, assign) BOOL showsGrabHandle;
 
 /**

@@ -76,6 +76,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 @implementation MBTableGridContentView
 
 @synthesize showsGrabHandle;
+@synthesize rowHeight = _rowHeight;
 
 #pragma mark -
 #pragma mark Initialization & Superclass Overrides
@@ -103,6 +104,8 @@ NSString * const MBTableGridTrackingPartKey = @"part";
         isCompleting = NO;
 		isDraggingColumnOrRow = NO;
         shouldDrawFillPart = MBTableGridTrackingPartNone;
+
+		_rowHeight = 20.0f;
 		
 		self.wantsLayer = true;
 		self.layerContentsRedrawPolicy = NSViewLayerContentsRedrawOnSetNeedsDisplay;
@@ -146,8 +149,8 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 	
 	NSUInteger firstColumn = NSNotFound;
     NSUInteger lastColumn = (numberOfColumns==0) ? 0 : numberOfColumns - 1;
-	NSUInteger firstRow = NSNotFound;
-    NSUInteger lastRow = (numberOfRows==0) ? 0 : numberOfRows - 1;
+	NSUInteger firstRow = MAX(0, floor(rect.origin.y / self.rowHeight));
+    NSUInteger lastRow = (numberOfRows==0) ? 0 : MIN(numberOfRows - 1, ceil((rect.origin.y + rect.size.height)/self.rowHeight));
 	
 	// Find the columns to draw
 	NSUInteger column = 0;
@@ -162,22 +165,9 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 		column++;
 	}
 	
-	// Find the rows to draw
-	NSUInteger row = 0;
-	while (row < numberOfRows) {
-		NSRect rowRect = [self rectOfRow:row];
-		if (firstRow == NSNotFound && NSMinY(rect) >= rowRect.origin.x && NSMinY(rect) <= NSMaxY(rowRect)) {
-			firstRow = row;
-		} else if (firstRow != NSNotFound && NSMaxY(rect) >= NSMinY(rowRect) && NSMaxY(rect) <= NSMaxY(rowRect)) {
-			lastRow = row;
-			break;
-		}
-		row++;
-	}	
-	
 	column = firstColumn;
 	while (column <= lastColumn) {
-		row = firstRow;
+		NSUInteger row = firstRow;
 		while (row <= lastRow) {
 			NSRect cellFrame = [self frameOfCellAtColumn:column row:row];
 			// Only draw the cell if we need to
@@ -996,19 +986,8 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 
 - (NSRect)rectOfRow:(NSUInteger)rowIndex
 {
-    
-	float heightForRow = 20.0;
-	NSRect rect = NSMakeRect(0, 0, [self frame].size.width, heightForRow);
-	
-	rect.origin.y += 20.0 * rowIndex;
-	
-	/*NSUInteger i = 0;
-	while(i < rowIndex) {
-		float rowHeight = rect.size.height;
-		rect.origin.y += rowHeight;
-		i++;
-	}*/
-	
+	NSRect rect = NSMakeRect(0, 0, [self frame].size.width, self.rowHeight);
+	rect.origin.y += self.rowHeight * rowIndex;
 	return rect;
 }
 
@@ -1034,13 +1013,9 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 
 - (NSInteger)rowAtPoint:(NSPoint)aPoint
 {
-	NSInteger row = 0;
-	while(row < [self tableGrid].numberOfRows) {
-		NSRect rowFrame = [self rectOfRow:row];
-		if(NSPointInRect(aPoint, rowFrame)) {
-			return row;
-		}
-		row++;
+	NSInteger row = aPoint.y / self.rowHeight;
+	if(row >= 0 && row < self.tableGrid.numberOfRows) {
+		return row;
 	}
 	return NSNotFound;
 }
