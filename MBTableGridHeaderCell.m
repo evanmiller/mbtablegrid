@@ -32,7 +32,7 @@
 
 - (void)drawWithFrame:(NSRect)cellFrame inView:(NSView *)controlView
 {
-	NSColor *borderColor = [NSColor gridColor];
+	NSColor *borderColor = [[NSColor gridColor] colorWithAlphaComponent:0.5];
 	NSRect cellFrameRect = cellFrame;
 	
 	[[NSColor windowBackgroundColor] set];
@@ -40,7 +40,7 @@
 		
 	if(self.orientation == MBTableHeaderHorizontalOrientation) {
 		// Draw the right border
-		NSRect borderLine = NSMakeRect(NSMaxX(cellFrameRect)-1, NSMinY(cellFrameRect), 1.0, NSHeight(cellFrameRect));
+		NSRect borderLine = NSMakeRect(NSMaxX(cellFrameRect)-1, NSMinY(cellFrameRect) + 4.0, 1.0, NSHeight(cellFrameRect) - 4.0);
 		[borderColor set];
 		NSRectFill(borderLine);
 		
@@ -55,13 +55,30 @@
 		NSRectFill(borderLine);
 		
 		// Draw the bottom border
-		NSRect bottomLine = NSMakeRect(NSMinX(cellFrameRect), NSMaxY(cellFrameRect)-1.0, NSWidth(cellFrameRect), 1.0);
+		NSRect bottomLine = NSMakeRect(NSMinX(cellFrameRect) + 4.0, NSMaxY(cellFrameRect)-1.0, NSWidth(cellFrameRect) - 4.0, 1.0);
 		NSRectFill(bottomLine);
 	}
 	
 	if([self state] == NSOnState) {
-		NSBezierPath *path = [NSBezierPath bezierPathWithRect:cellFrameRect];
-		NSColor *overlayColor = [[NSColor alternateSelectedControlColor] colorWithAlphaComponent:0.2];
+		NSRect fillRect = cellFrameRect;
+		if(self.orientation == MBTableHeaderVerticalOrientation) {
+			fillRect.origin.y -= 1.0;
+			fillRect.origin.x += 2.0;
+			fillRect.size.height += 2.0;
+			fillRect.size.width += 4.0;
+		}
+		else if(self.orientation == MBTableHeaderHorizontalOrientation) {
+			fillRect.size.height += 4.0;
+			fillRect.origin.x -= 1.0;
+			fillRect.size.width += 2.0;
+		}
+		NSBezierPath* path = [NSBezierPath bezierPathWithRoundedRect:fillRect xRadius:4.0 yRadius:4.0];
+
+		NSColor* overlayWhite = [NSColor whiteColor];
+		[overlayWhite set];
+		[path fill];
+
+		NSColor *overlayColor = [[NSColor alternateSelectedControlColor] colorWithAlphaComponent:0.26];
 		[overlayColor set];
 		[path fill];
 	}

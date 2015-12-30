@@ -254,10 +254,10 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 		selectionRect.size.width = NSMaxX(selectionBottomRight)-selectionTopLeft.origin.x;
 		selectionRect.size.height = NSMaxY(selectionBottomRight)-selectionTopLeft.origin.y;
 		
-        NSRect selectionInsetRect = NSInsetRect(selectionRect, 1, 1);
+        NSRect selectionInsetRect = NSInsetRect(selectionRect, 0, 0);
 		NSBezierPath *selectionPath = [NSBezierPath bezierPathWithRect:selectionInsetRect];
 		NSAffineTransform *translate = [NSAffineTransform transform];
-		[translate translateXBy:-0.5 yBy:-0.5];
+		//[translate translateXBy:-0.5 yBy:-0.5];
 		[selectionPath transformUsingAffineTransform:translate];
 		
 		NSColor *selectionColor = [NSColor alternateSelectedControlColor];
@@ -272,9 +272,9 @@ NSString * const MBTableGridTrackingPartKey = @"part";
             selectionColor = [NSColor colorWithCalibratedRed:0.996 green:0.827 blue:0.176 alpha:1.000];
         }
 		
-		[selectionColor set];
+		[[selectionColor colorWithAlphaComponent:0.3] set];
 		[selectionPath setLineWidth: 1.0];
-		//[selectionPath stroke];
+		[selectionPath stroke];
         
         [[selectionColor colorWithAlphaComponent:0.2f] set];
         [selectionPath fill];

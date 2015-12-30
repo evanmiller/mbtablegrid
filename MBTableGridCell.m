@@ -54,7 +54,7 @@
 - (void)drawWithFrame:(NSRect)cellFrame inView:(NSView *)controlView
 {
     
-	NSColor *borderColor = [NSColor gridColor];
+	NSColor *borderColor = [[NSColor gridColor] colorWithAlphaComponent:0.5];
 	[borderColor set];
 	
 	// Draw the right border
