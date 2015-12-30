@@ -963,24 +963,25 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 			rect = [cachedRectValue rectValue];
 			foundRect = YES;
 		}
-	}
 	
-	if (!foundRect) {
-		float width = [[self tableGrid] _widthForColumn:columnIndex];
+		if (!foundRect) {
+			float width = [[self tableGrid] _widthForColumn:columnIndex];
+			
+			rect = NSMakeRect(0, 0, width, [self frame].size.height);
+			//rect.origin.x += 60.0 * columnIndex;
+			
+			NSUInteger i = 0;
+			while(i < columnIndex) {
+				float headerWidth = [[self tableGrid] _widthForColumn:i];
+				rect.origin.x += headerWidth;
+				i++;
+			}
 		
-		rect = NSMakeRect(0, 0, width, [self frame].size.height);
-		//rect.origin.x += 60.0 * columnIndex;
-		
-		NSUInteger i = 0;
-		while(i < columnIndex) {
-			float headerWidth = [[self tableGrid] _widthForColumn:i];
-			rect.origin.x += headerWidth;
-			i++;
-		}
-	
-		[self tableGrid].columnRects[@(columnIndex)] = [NSValue valueWithRect:rect];
+			[self tableGrid].columnRects[@(columnIndex)] = [NSValue valueWithRect:rect];
 
+		}
 	}
+	
 	return rect;
 }
 
