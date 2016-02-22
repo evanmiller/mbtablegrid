@@ -710,7 +710,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 - (void)textDidEndEditing:(NSNotification *)aNotification
 {
     isAutoEditing = NO;
-    
+
 	// Give focus back to the table grid (the field editor took it)
 	[[self window] makeFirstResponder:[self tableGrid]];
 	
@@ -733,7 +733,8 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 	editedRow = NSNotFound;
 	
 	// End the editing session
-	[[[self tableGrid] cell] endEditing:[[self window] fieldEditor:NO forObject:self]];
+	NSText* fe = [[self window] fieldEditor:NO forObject:self];
+	[[[self tableGrid] cell] endEditing:fe];
 
 	NSInteger movementType = [aNotification.userInfo[@"NSTextMovement"] integerValue];
 	switch (movementType) {
@@ -922,7 +923,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 		}
 
 		[selectedCell.menu popUpMenuPositioningItem:popupCell.selectedItem atLocation:cellFrame.origin inView:self];
-		
+
 	} else {
 		NSText *editor = [[self window] fieldEditor:YES forObject:self];
 		editor.delegate = self;
@@ -1004,7 +1005,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 	NSInteger column = 0;
 	while(column < [self tableGrid].numberOfColumns) {
 		NSRect columnFrame = [self rectOfColumn:column];
-		if(NSPointInRect(aPoint, columnFrame)) {
+		if(aPoint.x > columnFrame.origin.x && aPoint.x < (columnFrame.origin.x + columnFrame.size.width)) {
 			return column;
 		}
 		column++;

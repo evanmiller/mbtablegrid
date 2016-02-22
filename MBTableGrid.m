@@ -1330,10 +1330,6 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 }
 
 - (void)setSelectedRowIndexes:(NSIndexSet *)anIndexSet notify:(BOOL)notify {
-	if (anIndexSet == selectedColumnIndexes)
-		return;
-
-
 	// Allow the delegate to validate the selection
 	if ([[self delegate] respondsToSelector:@selector(tableGrid:willSelectRowsAtIndexPath:)]) {
 		anIndexSet = [[self delegate] tableGrid:self willSelectRowsAtIndexPath:anIndexSet];
