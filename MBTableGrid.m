@@ -548,18 +548,6 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 	self.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:column];
 	self.selectedRowIndexes = [NSIndexSet indexSetWithIndex:(row + 1)];
 
-	if (row + 1 < [self numberOfRows]) {
-		NSRect cellRect = [self frameOfCellAtColumn:column row:row + 1];
-		cellRect = [self convertRect:cellRect toView:contentScrollView.contentView];
-		if (!NSContainsRect(self.contentView.visibleRect, cellRect)) {
-			cellRect.origin.y = cellRect.origin.y - self.contentView.visibleRect.size.height + cellRect.size.height;
-			cellRect.origin.x = self.contentView.visibleRect.origin.x;
-			[self scrollToArea:cellRect animate:NO];
-		}
-		else {
-            [self setNeedsDisplay:YES];
-		}
-	}
 }
 
 - (void)moveDownAndModifySelection:(id)sender {
@@ -1216,19 +1204,21 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 																  scrollerStyle:NSScrollerStyleOverlay];
 	}
 	[columnFooterView setFrameSize:columnHeaderFrame.size];
-    
-	[self setNeedsDisplay:YES];
-	[self._contentView setNeedsDisplay:YES];
-	[self.columnHeaderView setNeedsDisplay:YES];
-	[self.rowHeaderView setNeedsDisplay:YES];
 
-	if((visibleRect.size.height + visibleRect.origin.y) > contentRect.size.height) {
-		visibleRect.size.height = MIN(contentRect.size.height, visibleRect.size.height);
-		visibleRect.origin.y = MAX(0, contentRect.size.height - visibleRect.size.height);
+	if(_numberOfRows > 0) {
+		if((visibleRect.size.height + visibleRect.origin.y) > contentRect.size.height) {
+			visibleRect.size.height = MIN(contentRect.size.height, visibleRect.size.height);
+			visibleRect.origin.y = MAX(0, contentRect.size.height - visibleRect.size.height);
+		}
 	}
 
 	// Restore original visible rectangle of scroller
 	[self scrollToArea:visibleRect animate:NO];
+
+	[self setNeedsDisplay:YES];
+	[self._contentView setNeedsDisplay:YES];
+	[self.columnHeaderView setNeedsDisplay:YES];
+	[self.rowHeaderView setNeedsDisplay:YES];
 }
 
 #pragma mark Layout Support
