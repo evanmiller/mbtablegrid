@@ -413,6 +413,10 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 - (void)insertTab:(id)sender {
 	// Pressing "Tab" moves to the next column
 	[self moveRight:sender];
+
+	if(self.singleClickCellEdit) {
+		[self.contentView editSelectedCell:nil text:@""];
+	}
 }
 
 - (void)insertBacktab:(id)sender {
@@ -421,6 +425,10 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 
 	// Pressing Shift+Tab moves to the previous column
 	[self moveLeft:sender];
+
+	if(self.singleClickCellEdit) {
+		[self.contentView editSelectedCell:nil text:@""];
+	}
 }
 
 - (void)insertNewline:(id)sender {
@@ -432,6 +440,10 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 	else {
 		// Pressing Return moves to the next row
 		[self moveDown:sender];
+	}
+
+	if(self.singleClickCellEdit) {
+		[self.contentView editSelectedCell:nil text:@""];
 	}
 }
 
@@ -465,6 +477,10 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 		else {
 			[self setNeedsDisplay:YES];
 		}
+	}
+
+	if(self.singleClickCellEdit) {
+		[self.contentView editSelectedCell:nil text:@""];
 	}
 }
 

@@ -705,23 +705,26 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 - (void)textDidEndEditing:(NSNotification *)aNotification
 {
     isAutoEditing = NO;
+	NSInteger movementType = [aNotification.userInfo[@"NSTextMovement"] integerValue];
 
 	// Give focus back to the table grid (the field editor took it)
 	[[self window] makeFirstResponder:[self tableGrid]];
-	
-	NSString *stringValue = [[[aNotification object] string] copy];
-	id objectValue;
-	NSString *errorDescription;
-	NSFormatter *formatter = [[self tableGrid] _formatterForColumn:editedColumn];
-	BOOL success = [formatter getObjectValue:&objectValue forString:stringValue errorDescription:&errorDescription];
-	if (formatter && success) {
-		[[self tableGrid] _setObjectValue:objectValue forColumn:editedColumn row:editedRow];
-	}
-	else if (!formatter) {
-		[[self tableGrid] _setObjectValue:stringValue forColumn:editedColumn row:editedRow];
-	}
-	else {
-		[[self tableGrid] _userDidEnterInvalidStringInColumn:editedColumn row:editedRow errorDescription:errorDescription];
+
+	if(movementType != NSCancelTextMovement) {
+		NSString *stringValue = [[[aNotification object] string] copy];
+		id objectValue;
+		NSString *errorDescription;
+		NSFormatter *formatter = [[self tableGrid] _formatterForColumn:editedColumn];
+		BOOL success = [formatter getObjectValue:&objectValue forString:stringValue errorDescription:&errorDescription];
+		if (formatter && success) {
+			[[self tableGrid] _setObjectValue:objectValue forColumn:editedColumn row:editedRow];
+		}
+		else if (!formatter) {
+			[[self tableGrid] _setObjectValue:stringValue forColumn:editedColumn row:editedRow];
+		}
+		else {
+			[[self tableGrid] _userDidEnterInvalidStringInColumn:editedColumn row:editedRow errorDescription:errorDescription];
+		}
 	}
 
 	editedColumn = NSNotFound;
@@ -731,14 +734,29 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 	NSText* fe = [[self window] fieldEditor:NO forObject:self];
 	[[[self tableGrid] cell] endEditing:fe];
 
-	NSInteger movementType = [aNotification.userInfo[@"NSTextMovement"] integerValue];
+
 	switch (movementType) {
+		case NSBacktabTextMovement:
+			[[self tableGrid] moveLeft:self];
+			break;
+
 		case NSTabTextMovement:
 			[[self tableGrid] moveRight:self];
 			break;
+
 		case NSReturnTextMovement:
-			[[self tableGrid] moveDown:self];
+			if([NSApp currentEvent].modifierFlags & NSShiftKeyMask) {
+				[[self tableGrid] moveUp:self];
+			}
+			else {
+				[[self tableGrid] moveDown:self];
+			}
 			break;
+
+		case NSUpTextMovement:
+			[[self tableGrid] moveUp:self];
+			break;
+
 		default:
 			break;
 	}
@@ -927,11 +945,16 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 
 		NSText *editor = [[self window] fieldEditor:YES forObject:self];
 		editor.delegate = self;
+		editor.alignment = NSTextAlignmentNatural;
+		editor.font = selectedCell.font;
 		selectedCell.stringValue = currentValue;
 		editor.string = currentValue;
 		NSEvent* event = [NSApp currentEvent];
 		if(event != nil && event.type == NSLeftMouseDown) {
 			[selectedCell editWithFrame:cellFrame inView:self editor:editor delegate:self event:[NSApp currentEvent]];
+		}
+		else {
+			[selectedCell selectWithFrame:cellFrame inView:self editor:editor delegate:self start:0 length:[currentValue length]];
 		}
 	}
 }
