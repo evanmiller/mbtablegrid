@@ -351,6 +351,10 @@ typedef enum {
 @property(assign) BOOL allowsMultipleSelection;
 
 
+/** Whether cells start editing upon first click or upon double click. The default is to edit on double click for most
+cells. A cell can individually override this behavior. */
+@property (assign) BOOL singleClickCellEdit;
+
 /**
  * @brief		The autosave name for this grid
  */

@@ -101,6 +101,7 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 @synthesize sortButtons;
 @synthesize showsGrabHandles;
 @synthesize columnFooterView;
+@synthesize singleClickCellEdit;
 
 #pragma mark -
 #pragma mark Initialization & Superclass Overrides
@@ -185,6 +186,7 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 		stickyRowEdge = MBTableGridTopEdge;
 
 		shouldOverrideModifiers = NO;
+		singleClickCellEdit = NO;
 		
 		self.columnRects = [NSMutableDictionary dictionary];
 	}

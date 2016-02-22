@@ -399,7 +399,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
     }
     
 	NSCell *cell = [[self tableGrid] _cellForColumn:mouseDownColumn];
-	BOOL cellEditsOnFirstClick = ([cell respondsToSelector:@selector(editOnFirstClick)] && [(id<MBTableGridEditable>)cell editOnFirstClick]);
+	BOOL cellEditsOnFirstClick = [cell respondsToSelector:@selector(editOnFirstClick)] ? ([(id<MBTableGridEditable>)cell editOnFirstClick]==YES) : self.tableGrid.singleClickCellEdit;
     isFilling = NO;
     
 	if (theEvent.clickCount == 1) {
@@ -493,12 +493,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 
 	// Any cells that should edit on first click are handled here
 	if (cellEditsOnFirstClick) {
-		NSRect cellFrame = [[self tableGrid] frameOfCellAtColumn:mouseDownColumn row:mouseDownRow];
-		cellFrame = NSOffsetRect(cellFrame, -self.enclosingScrollView.frame.origin.x, -self.enclosingScrollView.frame.origin.y);
-		BOOL mouseEventHitButton = [cell hitTestForEvent:theEvent inRect:cellFrame ofView:self] == NSCellHitContentArea;
-		if (mouseEventHitButton) {
-			[self editSelectedCell:self text:nil];
-		}
+		[self editSelectedCell:self text:nil];
 	}
 
 	[self setNeedsDisplay:YES];
@@ -925,20 +920,19 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 		[selectedCell.menu popUpMenuPositioningItem:popupCell.selectedItem atLocation:cellFrame.origin inView:self];
 
 	} else {
+		NSFormatter *formatter = [[self tableGrid] _formatterForColumn:selectedColumn];
+		if (formatter && ![currentValue isEqual:@""]) {
+			currentValue = [formatter stringForObjectValue:currentValue];
+		}
+
 		NSText *editor = [[self window] fieldEditor:YES forObject:self];
 		editor.delegate = self;
+		selectedCell.stringValue = currentValue;
+		editor.string = currentValue;
 		NSEvent* event = [NSApp currentEvent];
 		if(event != nil && event.type == NSLeftMouseDown) {
 			[selectedCell editWithFrame:cellFrame inView:self editor:editor delegate:self event:[NSApp currentEvent]];
 		}
-        
-        NSFormatter *formatter = [[self tableGrid] _formatterForColumn:selectedColumn];
-        
-        if (formatter && ![currentValue isEqual:@""]) {
-            currentValue = [formatter stringForObjectValue:currentValue];
-        }
-        
-		editor.string = currentValue;
 	}
 }
 
