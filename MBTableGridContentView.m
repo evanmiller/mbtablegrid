@@ -945,7 +945,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 
 		NSText *editor = [[self window] fieldEditor:YES forObject:self];
 		editor.delegate = self;
-		editor.alignment = NSTextAlignmentNatural;
+		editor.alignment = selectedCell.alignment;
 		editor.font = selectedCell.font;
 		selectedCell.stringValue = currentValue;
 		editor.string = currentValue;
