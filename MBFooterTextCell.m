@@ -18,6 +18,10 @@
     return [[NSAttributedString alloc] initWithString:self.title attributes:attributes];
 }
 
+- (void) drawWithFrame:(NSRect)cellFrame inView:(NSView *)controlView withBackgroundColor:(NSColor *)backgroundColor {
+	
+}
+
 - (void)drawInteriorWithFrame:(NSRect)cellFrame inView:(NSView *)controlView
 {
     static CGFloat TEXT_PADDING = 6;

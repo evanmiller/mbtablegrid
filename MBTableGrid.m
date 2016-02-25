@@ -165,6 +165,7 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 		[contentScrollView setHasHorizontalScroller:YES];
 		[contentScrollView setHasVerticalScroller:YES];
 		[contentScrollView setAutohidesScrollers:YES];
+
 		[self addSubview:contentScrollView];
 
 		// We want to synchronize the scroll views

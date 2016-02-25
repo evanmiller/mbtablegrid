@@ -42,7 +42,7 @@
 {
     if(self = [super initWithFrame:frameRect]) {
         _defaultCell = [[MBFooterTextCell alloc] initTextCell:@""];
-        [_defaultCell setBordered:YES];
+        [_defaultCell setBordered:NO];
 		self.wantsLayer = YES;
 		self.layer.drawsAsynchronously = YES;
 		self.layerContentsRedrawPolicy = NSViewLayerContentsRedrawOnSetNeedsDisplay;
@@ -99,29 +99,6 @@
                 [cell drawWithFrame:cellFrame inView:self withBackgroundColor:backgroundColor];// Draw background color
                 
             }
-            
-            NSColor *sideColor = [NSColor colorWithDeviceWhite:1.0 alpha:0.4];
-            NSColor *borderColor = [NSColor colorWithDeviceWhite:0.8 alpha:1.0];
-            
-            // Draw the side bevels
-            NSRect sideLine = NSMakeRect(NSMinX(cellFrame), NSMinY(cellFrame), 1.0, NSHeight(cellFrame));
-            [sideColor set];
-            [[NSBezierPath bezierPathWithRect:sideLine] fill];
-            sideLine.origin.x = NSMaxX(cellFrame)-2.0;
-            [[NSBezierPath bezierPathWithRect:sideLine] fill];
-            
-            // Draw the right border
-            NSRect borderLine = NSMakeRect(NSMaxX(cellFrame)-1, NSMinY(cellFrame), 1.0, NSHeight(cellFrame));
-            [borderColor set];
-            NSRectFill(borderLine);
-            
-            // Draw the bottom border
-            NSRect bottomLine = NSMakeRect(NSMinX(cellFrame), NSMaxY(cellFrame)-1.0, NSWidth(cellFrame), 1.0);
-            NSRectFill(bottomLine);
-            
-            // Draw the top border
-            NSRect topLine = NSMakeRect(NSMinX(cellFrame), 0, NSWidth(cellFrame), 1.0);
-            NSRectFill(topLine);
 		}
 		
 		column++;
