@@ -608,6 +608,16 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 		row = [self.selectedRowIndexes lastIndex];
 	}
 
+	if(column == 0) {
+		if(row > 0) {
+			column = _numberOfColumns;
+			row = row - 1;
+		}
+		else {
+			return;
+		}
+	}
+
 	if (column > 0) {
 		NSRect cellRect = [self frameOfCellAtColumn:column - 1 row:row];
 		cellRect = [self convertRect:cellRect toView:contentScrollView.contentView];
@@ -619,10 +629,6 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
             [self setNeedsDisplay:YES];
 		}
 	}
-
-	// If we're already at the first column, do nothing
-	if (column <= 0)
-		return;
 
 	// If the Shift key was not held, move the selection
 	self.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:(column - 1)];
@@ -686,13 +692,17 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 		row = [self.selectedRowIndexes lastIndex];
 	}
 
-	// If we're already at the last column, do nothing
-	if (column >= (_numberOfColumns - 1))
-		return;
-
-	// If the Shift key was not held, move the selection
-	self.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:(column + 1)];
-	self.selectedRowIndexes = [NSIndexSet indexSetWithIndex:row];
+	// If we're already at the last column, move down and to the leftmost column
+	if (column >= (_numberOfColumns - 1)) {
+		if(row < (_numberOfRows - 1)) {
+			self.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:0];
+			self.selectedRowIndexes = [NSIndexSet indexSetWithIndex:row+1];
+		}
+	}
+	else {
+		self.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:(column + 1)];
+		self.selectedRowIndexes = [NSIndexSet indexSetWithIndex:row];
+	}
 
 	if (column + 1 < [self numberOfColumns]) {
 		NSRect cellRect = [self frameOfCellAtColumn:column + 1 row:row];
