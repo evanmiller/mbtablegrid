@@ -250,7 +250,7 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 	NSInteger column = [[self tableGrid] columnAtPoint:[self convertPoint:loc toView:[self tableGrid]]];
 	NSInteger row = [[self tableGrid] rowAtPoint:loc];
 
-	if([theEvent clickCount] == 2) {
+	if([theEvent clickCount] == 2 && !rightMouse) {
 		[self.tableGrid.delegate tableGrid:self.tableGrid didDoubleClickColumn:column];
 	}
 	else {
