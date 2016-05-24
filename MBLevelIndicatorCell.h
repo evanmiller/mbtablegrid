@@ -12,6 +12,7 @@
 @interface MBLevelIndicatorCell : NSLevelIndicatorCell<MBTableGridEditable>
 
 @property (nonatomic, strong) NSImage *accessoryButtonImage;
+@property (nonatomic, strong) NSColor *borderColor;
 
 - (void)drawWithFrame:(NSRect)cellFrame inView:(NSView *)controlView withBackgroundColor:(NSColor *)backgroundColor;
 

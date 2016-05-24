@@ -15,6 +15,7 @@
 	if (self) {
 		[self setBordered:NO];
 		[self setBezeled:NO];
+		self.borderColor = [NSColor colorWithDeviceWhite:0.83 alpha:1.0];
 //		[self setEditable:NO];
 	}
 	return self;
@@ -31,8 +32,7 @@
 
 - (void)drawWithFrame:(NSRect)cellFrame inView:(NSView *)controlView {
 	
-	NSColor *borderColor = [NSColor colorWithDeviceWhite:0.83 alpha:1.0];
-	[borderColor set];
+	[self.borderColor set];
 	
 	// Draw the right border
 	NSRect rightLine = NSMakeRect(NSMaxX(cellFrame)-1.0, NSMinY(cellFrame), 1.0, NSHeight(cellFrame));

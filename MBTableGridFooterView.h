@@ -38,6 +38,8 @@
     NSInteger editedColumn;
 }
 
+- (instancetype)initWithFrame:(NSRect)frameRect andTableGrid:(MBTableGrid *)tableGrid;
+
 /**
  * @name		The Grid View
  */
@@ -49,7 +51,8 @@
  * @brief		Returns the \c MBTableGrid the receiver 
  *				belongs to.
  */
-- (MBTableGrid *)tableGrid;
+//- (MBTableGrid *)tableGrid;
+@property (nonatomic, weak) MBTableGrid* tableGrid;
 
 /**
  * @}

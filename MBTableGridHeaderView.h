@@ -44,7 +44,7 @@
 	BOOL isInDrag;
     
     /* Resizing */
-    NSMutableArray *trackingAreas;
+    //NSMutableArray *trackingAreas;
     BOOL canResize;
     BOOL isResizing;
     NSUInteger draggingColumnIndex;
@@ -52,6 +52,8 @@
 	NSMutableDictionary *columnAutoSaveProperties;
 	
 }
+
+- (instancetype)initWithFrame:(NSRect)frameRect andTableGrid:(MBTableGrid*)tableGrid;
 
 /**
  * @name		The Grid View
@@ -64,7 +66,7 @@
  * @brief		Returns the \c MBTableGrid the receiver 
  *				belongs to.
  */
-- (MBTableGrid *)tableGrid;
+@property (nonatomic, weak) MBTableGrid *tableGrid;
 
 /**
  * @}

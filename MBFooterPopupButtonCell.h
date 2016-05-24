@@ -30,7 +30,6 @@
  * @brief		\c MBFooterPopupButtonCell is responsible
  *				for drawing popups in the column footer
  */
-@interface MBFooterPopupButtonCell : MBPopupButtonCell {
-}
+@interface MBFooterPopupButtonCell : MBPopupButtonCell
 
 @end

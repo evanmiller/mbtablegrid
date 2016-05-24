@@ -19,6 +19,7 @@
 	if (self) {
 		self.selectable = YES;
 		self.editable = YES;
+		self.borderColor = [NSColor colorWithDeviceWhite:0.83 alpha:1.0];
 	}
 	return self;
 }
@@ -43,8 +44,7 @@
 	
 	[super drawWithFrame:cellFrame inView:controlView];
 
-	NSColor *borderColor = [NSColor colorWithDeviceWhite:0.83 alpha:1.0];
-	[borderColor set];
+	[self.borderColor set];
 	
 	// Draw the right border
 	NSRect rightLine = NSMakeRect(NSMaxX(cellFrame)-1.0, NSMinY(cellFrame), 1.0, NSHeight(cellFrame));

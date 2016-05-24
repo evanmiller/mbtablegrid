@@ -25,6 +25,13 @@
 
 #import "MBTableGridCell.h"
 
+@interface MBTableGridCell ()
+
+@property (nonatomic, strong) NSColor *borderColor;
+
+@end
+
+#pragma mark -
 
 @implementation MBTableGridCell
 
@@ -34,7 +41,8 @@
     
     if (self)
     {
-        [self setBackgroundColor:[NSColor clearColor]];
+        self.backgroundColor = NSColor.clearColor;
+		self.borderColor = [NSColor.gridColor colorWithAlphaComponent:0.5];
 		self.truncatesLastVisibleLine = YES;
         return self;
     }
@@ -44,7 +52,6 @@
 
 - (void)drawWithFrame:(NSRect)cellFrame inView:(NSView *)controlView withBackgroundColor:(NSColor *)backgroundColor
 {
-
 	[backgroundColor set];
 	NSRectFill(cellFrame);
     
@@ -54,8 +61,7 @@
 - (void)drawWithFrame:(NSRect)cellFrame inView:(NSView *)controlView
 {
     
-	NSColor *borderColor = [[NSColor gridColor] colorWithAlphaComponent:0.5];
-	[borderColor set];
+	[_borderColor set];
 	
 	// Draw the right border
 	NSRect rightLine = NSMakeRect(NSMaxX(cellFrame)-1.0, NSMinY(cellFrame), 1.0, NSHeight(cellFrame));
