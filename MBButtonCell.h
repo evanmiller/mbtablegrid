@@ -16,5 +16,6 @@
 #pragma mark - MBTableGridEditable
 
 @property (nonatomic, assign, readonly) BOOL editOnFirstClick;
+@property (nonatomic, strong) NSColor *borderColor;
 
 @end

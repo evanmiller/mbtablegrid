@@ -76,6 +76,8 @@ typedef NS_ENUM(NSUInteger, MBTableGridTrackingPart)
     
 }
 
+- (instancetype)initWithFrame:(NSRect)frameRect andTableGrid:(MBTableGrid*)tableGrid;
+
 @property (nonatomic, assign) CGFloat rowHeight;
 
 @property (nonatomic, assign) BOOL showsGrabHandle;
@@ -91,7 +93,8 @@ typedef NS_ENUM(NSUInteger, MBTableGridTrackingPart)
  * @brief		Returns the \c MBTableGrid the receiver 
  *				belongs to.
  */
-- (MBTableGrid *)tableGrid;
+//- (MBTableGrid *)tableGrid;
+@property (nonatomic, weak) MBTableGrid *tableGrid;
 
 /**
  * @}

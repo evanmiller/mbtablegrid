@@ -30,9 +30,7 @@
  *				the drawing and editing of \c MBTableGrid's
  *				cells.
  */
-@interface MBTableGridCell : NSTextFieldCell {
-    
-}
+@interface MBTableGridCell : NSTextFieldCell
 
 @property (nonatomic, strong) NSImage *accessoryButtonImage;
 @property(nonatomic, assign) BOOL editWithPopupMenu;

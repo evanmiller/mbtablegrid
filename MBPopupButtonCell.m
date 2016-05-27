@@ -16,7 +16,8 @@
 	
 	if (self)
 	{
-		[self setBackgroundColor:[NSColor clearColor]];
+		self.backgroundColor = NSColor.clearColor;
+		self.borderColor = [NSColor colorWithDeviceWhite:0.83 alpha:1.0];
 		return self;
 	}
 	
@@ -37,8 +38,7 @@
 	
 	[super drawWithFrame:popupFrame inView:controlView];
 	
-	NSColor *borderColor = [NSColor colorWithDeviceWhite:0.83 alpha:1.0];
-	[borderColor set];
+	[self.borderColor set];
 	
 	// Draw the right border
 	NSRect rightLine = NSMakeRect(NSMaxX(cellFrame)-1.0, NSMinY(cellFrame), 1.0, NSHeight(cellFrame));

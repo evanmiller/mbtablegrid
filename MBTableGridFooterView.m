@@ -38,9 +38,10 @@
 
 @implementation MBTableGridFooterView
 
-- (id)initWithFrame:(NSRect)frameRect
+- (instancetype)initWithFrame:(NSRect)frameRect andTableGrid:(MBTableGrid *)tableGrid
 {
     if(self = [super initWithFrame:frameRect]) {
+		self.tableGrid = tableGrid;
         _defaultCell = [[MBFooterTextCell alloc] initTextCell:@""];
         [_defaultCell setBordered:NO];
 		self.wantsLayer = YES;
@@ -53,7 +54,7 @@
 - (void)drawRect:(NSRect)rect {
 	
 	// Draw the column footers
-	NSUInteger numberOfColumns = [self tableGrid].numberOfColumns;
+	NSUInteger numberOfColumns = self.tableGrid.numberOfColumns;
 	NSUInteger column = 0;
     NSColor *backgroundColor = [NSColor colorWithCalibratedWhite:0.91 alpha:1.0];
     
@@ -62,13 +63,13 @@
 		
 		// Only draw the header if we need to
 		if ([self needsToDrawRect:cellFrame]) {
-            NSCell *_cell = [[self tableGrid] _footerCellForColumn:column];
+            NSCell *_cell = [self.tableGrid _footerCellForColumn:column];
             
             if (!_cell) {
                 _cell = _defaultCell;
             }
             
-            id objectValue = [[self tableGrid] _footerValueForColumn:column];
+            id objectValue = [self.tableGrid _footerValueForColumn:column];
             
             if ([_cell isKindOfClass:[MBFooterPopupButtonCell class]]) {
                 MBFooterPopupButtonCell *cell = (MBFooterPopupButtonCell *)_cell;
@@ -90,7 +91,7 @@
                 cell.target = self;
                 cell.action = @selector(updateLevelIndicator:);
                 
-                [cell drawWithFrame:cellFrame inView:[self tableGrid] withBackgroundColor:backgroundColor];// Draw background color
+                [cell drawWithFrame:cellFrame inView:self.tableGrid withBackgroundColor:backgroundColor];// Draw background color
                 
             } else {
                 
@@ -107,15 +108,15 @@
 }
 
 - (void)updateLevelIndicator:(NSNumber *)value {
-    NSInteger selectedColumn = [[self tableGrid].selectedColumnIndexes firstIndex];
+    NSInteger selectedColumn = [self.tableGrid.selectedColumnIndexes firstIndex];
     // sanity check to make sure we have an NSNumber.
     // I've observed that when the user lets go of the mouse,
     // the value parameter becomes the MBTableGridContentView
     // object for some reason.
     if ([value isKindOfClass:[NSNumber class]]) {
-        [[self tableGrid] _setFooterValue:value forColumn:selectedColumn];
+        [self.tableGrid _setFooterValue:value forColumn:selectedColumn];
         NSRect cellFrame = [self footerRectOfColumn:selectedColumn];
-        [[self tableGrid] setNeedsDisplayInRect:cellFrame];
+        [self.tableGrid setNeedsDisplayInRect:cellFrame];
     }
 }
 
@@ -131,12 +132,12 @@
     
     if (theEvent.clickCount == 1) {
         // Pass the event back to the MBTableGrid (Used to give First Responder status)
-        [[self tableGrid] mouseDown:theEvent];
+        [self.tableGrid mouseDown:theEvent];
         
         editedColumn = mouseDownColumn;
         
-        NSCell *cell = [[self tableGrid] _footerCellForColumn:mouseDownColumn];
-        id currentValue = [[self tableGrid] _footerValueForColumn:editedColumn];
+        NSCell *cell = [self.tableGrid _footerCellForColumn:mouseDownColumn];
+        id currentValue = [self.tableGrid _footerValueForColumn:editedColumn];
         
         if ([cell isKindOfClass:[MBFooterPopupButtonCell class]]) {
             editedPopupCell = [cell copy];
@@ -162,7 +163,7 @@
             
         }
 		else {
-			[[self tableGrid].delegate tableGrid:[self tableGrid] footerCellClicked:cell forColumn:mouseDownColumn withEvent:theEvent];
+			[self.tableGrid.delegate tableGrid:self.tableGrid footerCellClicked:cell forColumn:mouseDownColumn withEvent:theEvent];
 		}
     }
     
@@ -179,32 +180,24 @@
 }
 
 - (void)cellPopupMenuItemSelected:(NSMenuItem *)menuItem {
-//    MBFooterPopupButtonCell *cell = (MBFooterPopupButtonCell *)[[self tableGrid] _footerCellForColumn:editedColumn];
+//    MBFooterPopupButtonCell *cell = (MBFooterPopupButtonCell *)[self.tableGrid _footerCellForColumn:editedColumn];
     [editedPopupCell selectItemWithTitle:menuItem.title];
     [editedPopupCell synchronizeTitleAndSelectedItem];
     
-    [[self tableGrid] _setFooterValue:menuItem.title forColumn:editedColumn];
+    [self.tableGrid _setFooterValue:menuItem.title forColumn:editedColumn];
     
     NSRect cellFrame = [self footerRectOfColumn:editedColumn];
-    [[self tableGrid] setNeedsDisplayInRect:cellFrame];
+    [self.tableGrid setNeedsDisplayInRect:cellFrame];
     
     editedColumn = NSNotFound;
     editedPopupCell = nil;
-}
-
-#pragma mark -
-#pragma mark Subclass Methods
-
-- (MBTableGrid *)tableGrid
-{
-	return (MBTableGrid *)[[self enclosingScrollView] superview];
 }
 
 #pragma mark Layout Support
 
 - (NSRect)footerRectOfColumn:(NSUInteger)columnIndex
 {
-	NSRect rect = [[[self tableGrid] _contentView] rectOfColumn:columnIndex];
+	NSRect rect = [[self.tableGrid _contentView] rectOfColumn:columnIndex];
 	rect.size.height = MBTableGridColumnHeaderHeight;
 	
 	return rect;
@@ -212,7 +205,7 @@
 
 - (NSInteger)footerColumnAtPoint:(NSPoint)aPoint
 {
-    return [[[self tableGrid] _contentView] columnAtPoint:aPoint];
+    return [[self.tableGrid _contentView] columnAtPoint:aPoint];
 }
 
 @end
