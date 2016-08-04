@@ -24,7 +24,6 @@
  */
 
 #import <Cocoa/Cocoa.h>
-#import "MBFooterPopupButtonCell.h"
 
 @class MBTableGrid, MBFooterTextCell;
 
@@ -34,7 +33,6 @@
  */
 @interface MBTableGridFooterView : NSView {
     MBFooterTextCell *_defaultCell;
-    MBFooterPopupButtonCell *editedPopupCell;
     NSInteger editedColumn;
 }
 
@@ -53,39 +51,6 @@
  */
 //- (MBTableGrid *)tableGrid;
 @property (nonatomic, weak) MBTableGrid* tableGrid;
-
-/**
- * @}
- */
-
-/**
- * @name		Display Properties
- */
-/**
- * @{
- */
-
-/**
- * @}
- */
-
-/**
- * @name		Accessing Cells
- */
-/**
- * @{
- */
-
-/**
- * @brief		The receiver's cell.
- *
- * @details		\c MBTableGridHeaderView uses its header cell to
- *				draw row or column headers.
- *
- *				To change the appearance of the headers, you can
- *				use your own \c MBTableGridHeaderCell subclass.
- */
-@property(strong) MBFooterPopupButtonCell *footerCell;
 
 /**
  * @}

@@ -25,12 +25,7 @@
 
 #import "MBTableGridController.h"
 #import "MBTableGridCell.h"
-#import "MBPopupButtonCell.h"
-#import "MBButtonCell.h"
-#import "MBImageCell.h"
-#import "MBLevelIndicatorCell.h"
 #import "MBFooterTextCell.h"
-#import "MBFooterPopupButtonCell.h"
 
 NSString* kAutosavedColumnWidthKey = @"AutosavedColumnWidth";
 NSString* kAutosavedColumnIndexKey = @"AutosavedColumnIndex";
@@ -38,29 +33,13 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 
 NSString * const PasteboardTypeColumnClass = @"pasteboardTypeColumnClass";
 
-NSString * const ColumnCurrency = @"currency";
-NSString * const ColumnDate = @"date";
-NSString * const ColumnPopup = @"popup";
-NSString * const ColumnCheckbox = @"checkbox";
-NSString * const ColumnText1 = @"text1";
-NSString * const ColumnText2 = @"text2";
-NSString * const ColumnImage = @"image";
-NSString * const ColumnText3 = @"text3";
-NSString * const ColumnRating = @"rating";
-NSString * const ColumnText4 = @"text4";
-
 @interface NSMutableArray (SwappingAdditions)
 - (void)moveObjectsAtIndexes:(NSIndexSet *)indexes toIndex:(NSUInteger)index;
 @end
 
 @interface MBTableGridController()
-@property (nonatomic, strong) MBPopupButtonCell *popupCell;
 @property (nonatomic, strong) MBTableGridCell *textCell;
-@property (nonatomic, strong) MBButtonCell *checkboxCell;
-@property (nonatomic, strong) MBImageCell *imageCell;
-@property (nonatomic, strong) MBLevelIndicatorCell *ratingCell;
 @property (nonatomic, strong) MBFooterTextCell *footerTextCell;
-@property (nonatomic, strong) MBFooterPopupButtonCell *footerPopupCell;
 @property (nonatomic, strong) NSDictionary *columnWidths;
 @property (nonatomic, strong) NSMutableArray *columnIdentifiers;
 @end
@@ -72,11 +51,7 @@ NSString * const ColumnText4 = @"text4";
     
     
     columnSampleWidths = @[@40, @50, @60, @70, @80, @90, @100, @110, @120, @130];
-    
-	columns = [[NSMutableArray alloc] initWithCapacity:10];
-    
-    self.columnIdentifiers = [@[ColumnCurrency, ColumnDate, ColumnPopup, ColumnCheckbox, ColumnText1, ColumnText2, ColumnImage, ColumnText3, ColumnRating, ColumnText4] mutableCopy];
-    
+
 	NSDictionary *infoDict = [[NSBundle mainBundle] infoDictionary];
 	NSString *gridComponentID = [infoDict objectForKey:@"GridComponentID"];
 
@@ -91,8 +66,7 @@ NSString * const ColumnText4 = @"text4";
 	NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
 	dateFormatter.dateStyle = NSDateFormatterShortStyle;
 	dateFormatter.timeStyle = NSDateFormatterNoStyle;
-    formatters = @{ColumnCurrency : decimalFormatter, ColumnDate : dateFormatter};
-    
+
 	// Add 10 columns & rows
     [self tableGrid:tableGrid addColumns:10 shouldReload:NO];
     [self tableGrid:tableGrid addRows:10 shouldReload:NO];
@@ -104,42 +78,9 @@ NSString * const ColumnText4 = @"text4";
 	// Register to receive text strings
 	[tableGrid registerForDraggedTypes:@[NSStringPboardType]];
 	
-	self.popupCell = [[MBPopupButtonCell alloc] initTextCell:@""];
-	self.popupCell.bordered = NO;
-	self.popupCell.controlSize = NSSmallControlSize;
-	self.popupCell.font = [NSFont systemFontOfSize:[NSFont systemFontSizeForControlSize:NSSmallControlSize]];
-	NSArray *availableObjectValues = @[ @"Action & Adventure", @"Comedy", @"Romance", @"Thriller" ];
-	NSMenu *menu = [[NSMenu alloc] init];
-    menu.font = self.popupCell.font;
-	for (NSString *objectValue in availableObjectValues) {
-		NSMenuItem *item = [menu addItemWithTitle:objectValue action:@selector(cellPopupMenuItemSelected:) keyEquivalent:@""];
-		[item setTarget:self];
-	}
-	self.popupCell.menu = menu;
-	
-	
 	self.textCell = [[MBTableGridCell alloc] initTextCell:@""];
-	
-	self.checkboxCell = [[MBButtonCell alloc] init];
-	self.checkboxCell.state = NSOffState;
-	[self.checkboxCell setButtonType:NSSwitchButton];
-	
-	self.imageCell = [[MBImageCell alloc] init];
-	
-	self.ratingCell = [[MBLevelIndicatorCell alloc] initWithLevelIndicatorStyle:NSRatingLevelIndicatorStyle];
-	self.ratingCell.editable = YES;
-	
-    self.footerTextCell = [[MBFooterTextCell alloc] initTextCell:@""];
-    
-    self.footerPopupCell = [[MBFooterPopupButtonCell alloc] initTextCell:@""];
-    self.footerPopupCell.bordered = NO;
-    self.footerPopupCell.controlSize = NSSmallControlSize;
-    self.footerPopupCell.font = [NSFont systemFontOfSize:[NSFont systemFontSizeForControlSize:NSSmallControlSize]];
-    
-    menu = [NSMenu new];
-    menu.font = self.footerPopupCell.font;
-    [menu addItemWithTitle:@"No Options" action:nil keyEquivalent:@""];
-    self.footerPopupCell.menu = menu;
+
+	self.footerTextCell = [[MBFooterTextCell alloc] initTextCell:@""];
 }
 
 -(NSString *) genRandStringLength: (int) len
@@ -170,16 +111,13 @@ NSString * const ColumnText4 = @"text4";
 - (NSUInteger)numberOfRowsInTableGrid:(MBTableGrid *)aTableGrid
 {
     
-	if ([columns count] > 0) {
-		return [columns[0] count];
-	}
-	return 0;
+	return 1000;
 }
 
 
 - (NSUInteger)numberOfColumnsInTableGrid:(MBTableGrid *)aTableGrid
 {
-	return [columns count];
+	return 10;
 }
 
 - (NSString *)tableGrid:(MBTableGrid *)aTableGrid headerStringForColumn:(NSUInteger)columnIndex {
@@ -188,115 +126,17 @@ NSString * const ColumnText4 = @"text4";
 
 - (id)tableGrid:(MBTableGrid *)aTableGrid objectValueForColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex
 {
-	if (columnIndex >= [columns count]) {
-		return nil;
-	}
-	
-	NSMutableArray *column = columns[columnIndex];
-	
-	if (rowIndex >= [column count]) {
-		return nil;
-	}
-	
-	id value = nil;
-	
-    NSString *columnIdentifier = self.columnIdentifiers[columnIndex];
-    
-	if (columnIdentifier == ColumnImage) {
-		value = [NSImage imageNamed:@"rose.jpg"];
-	} else {
-		value = column[rowIndex];
-	}
-	
-	return value;
+	return [NSString stringWithFormat:@"%lu %lu", columnIndex, (unsigned long)rowIndex];
 }
 
 - (BOOL)tableGrid:(MBTableGrid *)aTableGrid shouldEditColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex {
-	
-	// can't edit the sample image column
-	
-//	if (columnIndex == 6) {
-//		return NO;
-//	} else {
-//		return YES;
-//	}
-	
 	return YES;
 }
 
-- (NSFormatter *)tableGrid:(MBTableGrid *)aTableGrid formatterForColumn:(NSUInteger)columnIndex
-{
-    NSString *columnIdentifier = self.columnIdentifiers[columnIndex];
-    
-	return formatters[columnIdentifier];
-}
-
-- (NSCell *)tableGrid:(MBTableGrid *)aTableGrid cellForColumn:(NSUInteger)columnIndex {
-	NSCell *cell = nil;
-    
-    NSString *columnIdentifier = self.columnIdentifiers[columnIndex];
-    
-    if (columnIdentifier == ColumnPopup) {
-		cell = self.popupCell;
-	} else if (columnIdentifier == ColumnCheckbox) {
-		cell = self.checkboxCell;
-	} else if (columnIdentifier == ColumnImage) {
-		cell = self.imageCell;
-	} else if (columnIdentifier == ColumnRating) {
-		cell = self.ratingCell;
-	} else {
-		cell = self.textCell;
-	}
-	
+- (NSCell *)tableGrid:(MBTableGrid *)aTableGrid cellForColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex {
+	NSCell* cell = self.textCell;
+	cell.objectValue = [self tableGrid:aTableGrid objectValueForColumn:columnIndex row:rowIndex];
 	return cell;
-}
-
-- (NSImage *)tableGrid:(MBTableGrid *)aTableGrid accessoryButtonImageForColumn:(NSUInteger)columnIndex row:(NSUInteger)row {
-	
-    NSString *columnIdentifier = self.columnIdentifiers[columnIndex];
-    
-	if (columnIdentifier == ColumnRating || columnIdentifier == ColumnPopup) {
-		return nil;
-	}
-	
-	if (tableGrid.selectedRowIndexes.count == 1 && [tableGrid.selectedRowIndexes containsIndex:row]) {
-		NSImage *buttonImage = [NSImage imageNamed:@"acc-quicklook"];
-		
-		return buttonImage;
-	} else {
-		return nil;
-	}
-	
-}
-
-- (NSArray *)tableGrid:(MBTableGrid *)aTableGrid availableObjectValuesForColumn:(NSUInteger)columnIndex {
-    
-    NSString *columnIdentifier = self.columnIdentifiers[columnIndex];
-    
-	if (columnIdentifier == ColumnPopup) {
-		return @[ @"Action & Adventure", @"Comedy", @"Romance", @"Thriller" ];
-	}
-	return nil;
-}
-
-- (NSArray *)tableGrid:(MBTableGrid *)aTableGrid autocompleteValuesForEditString:(NSString *)editString column:(NSUInteger)columnIndex row:(NSUInteger)rowIndex {
-    
-    NSString *columnIdentifier = self.columnIdentifiers[columnIndex];
-    
-    if (columnIdentifier == ColumnCurrency || columnIdentifier == ColumnDate || columnIdentifier == ColumnPopup || columnIdentifier == ColumnCheckbox || columnIdentifier == ColumnImage || columnIdentifier == ColumnRating || columnIndex >= [columns count]) {
-        return nil;
-    }
-    
-    NSMutableArray *completions = [NSMutableArray array];
-    NSMutableArray *column = columns[columnIndex];
-    
-    for (NSString *value in column) {
-        if ([[value lowercaseString] hasPrefix:[editString lowercaseString]]) {
-            [completions addObject:value];
-        }
-    }
-    
-    return completions;
 }
 
 - (void)tableGrid:(MBTableGrid *)aTableGrid setObjectValue:(id)anObject forColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex {
@@ -338,32 +178,7 @@ NSString * const ColumnText4 = @"text4";
 	
 }
 
--(NSColor *)tableGrid:(MBTableGrid *)aTableGrid backgroundColorForColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex {
-    if (rowIndex % 2)
-        return [NSColor colorWithDeviceWhite:0.950 alpha:1.000];
-    else
-        return nil;
-}
-
 #pragma mark Footer
-
-- (void)addItemToMenu:(NSMenu *)menu withTitle:(NSString *)title;
-{
-    [menu addItemWithTitle:title action:@selector(cellPopupMenuItemSelected:) keyEquivalent:@""];
-}
-
-- (NSString *)formattedPrefix:(NSString *)prefix value:(id)value forTableGrid:(MBTableGrid *)aTableGrid column:(NSUInteger)columnIndex;
-{
-    NSFormatter *formatter = [self tableGrid:aTableGrid formatterForColumn:columnIndex];
-    
-    if (formatter) {
-        value = [formatter stringForObjectValue:value];
-    } else {
-        value = [NSString stringWithFormat:@"%.0f", [value floatValue]];
-    }
-    
-    return [NSString stringWithFormat:@"%@: %@", prefix, value];
-}
 
 - (NSString *)footerDefaultsKeyForColumn:(NSUInteger)columnIndex;
 {
@@ -372,93 +187,12 @@ NSString * const ColumnText4 = @"text4";
 
 - (NSCell *)tableGrid:(MBTableGrid *)aTableGrid footerCellForColumn:(NSUInteger)columnIndex;
 {
-    NSCell *cell = nil;
-    NSString *columnIdentifier = self.columnIdentifiers[columnIndex];
-    
-    if (columnIdentifier == ColumnDate || columnIdentifier == ColumnPopup || columnIdentifier == ColumnCheckbox) {
-        // Date, popup & checkbox: just showing the count
-        cell = self.footerTextCell;
-    } else if (columnIdentifier == ColumnImage) {
-        // Image: nothing to show
-        cell = nil;
-    } else if (columnIdentifier == ColumnRating) {
-        // Rating: average as a rating
-        cell = self.ratingCell;
-    } else if (columnIndex >= [columns count]) {
-        // Invalid column
-        return nil;
-    } else {
-        // All others: a popup of Total, Average, etc
-        cell = self.footerPopupCell;
-        
-        NSPredicate *predicate = [NSPredicate predicateWithFormat:@"self != ''"];
-        NSArray *column = [columns[columnIndex] filteredArrayUsingPredicate:predicate];
-        
-        // Rebuild the menu with dynamic values
-        [cell.menu removeAllItems];
-        
-        [self addItemToMenu:cell.menu withTitle:[self formattedPrefix:@"Total" value:[column valueForKeyPath:@"@sum.floatValue"] forTableGrid:aTableGrid column:columnIndex]];
-        [self addItemToMenu:cell.menu withTitle:[self formattedPrefix:@"Minimum" value:[column valueForKeyPath:@"@min.floatValue"] forTableGrid:aTableGrid column:columnIndex]];
-        [self addItemToMenu:cell.menu withTitle:[self formattedPrefix:@"Maximum" value:[column valueForKeyPath:@"@max.floatValue"] forTableGrid:aTableGrid column:columnIndex]];
-        [self addItemToMenu:cell.menu withTitle:[self formattedPrefix:@"Average" value:[column valueForKeyPath:@"@avg.floatValue"] forTableGrid:aTableGrid column:columnIndex]];
-        [self addItemToMenu:cell.menu withTitle:[NSString stringWithFormat:@"Count: %li", [[column valueForKeyPath:@"@count"] integerValue]]];
-    }
-    
-    return cell;
+	return self.footerTextCell;
 }
 
 - (id)tableGrid:(MBTableGrid *)aTableGrid footerValueForColumn:(NSUInteger)columnIndex;
 {
-    if (columnIndex >= [columns count]) {
-        return nil;
-    }
-    
-    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"self != ''"];
-    NSArray *column = [columns[columnIndex] filteredArrayUsingPredicate:predicate];
-    
-    id value = nil;
-    NSString *columnIdentifier = self.columnIdentifiers[columnIndex];
-    
-    if (columnIdentifier == ColumnDate || columnIdentifier == ColumnPopup || columnIdentifier == ColumnCheckbox) {
-        // Date, popup & checkbox: just showing the count
-        value = [NSString stringWithFormat:@"Count: %li", [[column valueForKeyPath:@"@count"] integerValue]];
-    } else if (columnIdentifier == ColumnImage) {
-        // Image: nothing to show
-        value = nil;
-    } else if (columnIdentifier == ColumnRating) {
-        // Rating: average as a rating
-        value = [column valueForKeyPath:@"@avg.floatValue"];
-    } else {
-        // All others: a popup of Total, Average, etc
-        NSCell *cell = [self tableGrid:aTableGrid footerCellForColumn:columnIndex];
-        NSUInteger itemIndex = [[NSUserDefaults standardUserDefaults] integerForKey:[self footerDefaultsKeyForColumn:columnIndex]];
-        
-        value = [cell.menu itemAtIndex:itemIndex].title;
-        
-        if (!value) {
-            value = [cell.menu itemAtIndex:0].title;
-        }
-    }
-    
-    return value;
-}
-
-- (void)tableGrid:(MBTableGrid *)aTableGrid setFooterValue:(id)anObject forColumn:(NSUInteger)columnIndex;
-{
-    NSString *columnIdentifier = self.columnIdentifiers[columnIndex];
-    
-    if (columnIdentifier == ColumnDate || columnIdentifier == ColumnPopup || columnIdentifier == ColumnCheckbox || columnIdentifier == ColumnImage || columnIdentifier == ColumnRating || columnIndex >= [columns count]) {
-        return;
-    }
-    
-    NSCell *cell = [self tableGrid:aTableGrid footerCellForColumn:columnIndex];
-    NSInteger itemIndex = [cell.menu indexOfItemWithTitle:anObject];
-    
-//    NSLog(@"set footer value: %@ (%@); for column: %@", anObject, @(itemIndex), @(columnIndex));  // log
-    
-    if (itemIndex >= 0) {
-        [[NSUserDefaults standardUserDefaults] setInteger:itemIndex forKey:[self footerDefaultsKeyForColumn:columnIndex]];
-    }
+	return [NSString stringWithFormat:@"Footer %lu", columnIndex];
 }
 
 #pragma mark Dragging
@@ -522,7 +256,7 @@ NSString * const ColumnText4 = @"text4";
     NSMutableArray *colClasses = [NSMutableArray arrayWithCapacity:columnIndexes.count];
     
     [columnIndexes enumerateIndexesUsingBlock:^(NSUInteger columnIndex, BOOL *stop) {
-        [colClasses addObject:[[self tableGrid:aTableGrid cellForColumn:columnIndex] className]];
+		[colClasses addObject:[[self tableGrid:aTableGrid cellForColumn:columnIndex row: 0] className]];
     }];
     
 	NSMutableArray *rowData = [NSMutableArray arrayWithCapacity:rowIndexes.count];
@@ -535,12 +269,6 @@ NSString * const ColumnText4 = @"text4";
 			
 			NSArray *row = columns[columnIndex];
 			id cellData = row[rowIndex];
-            NSFormatter *formatter = [self tableGrid:aTableGrid formatterForColumn:columnIndex];
-            
-            if (formatter) {
-                cellData = [formatter stringForObjectValue:cellData];
-            }
-            
 			[colData addObject:cellData];
 			
 		}];
@@ -624,13 +352,8 @@ NSString * const ColumnText4 = @"text4";
             
             NSUInteger column = firstSelectedColumn + columnOffset;
             NSUInteger row = firstSelectedRow + rowOffset;
-            
-            NSFormatter *formatter = [self tableGrid:aTableGrid formatterForColumn:column];
-            id obj = value;
-            
-            if (!formatter || [formatter getObjectValue:&obj forString:value errorDescription:nil]) {
-                [self tableGrid:aTableGrid setObjectValue:obj forColumn:column row:row];
-            }
+
+			[self tableGrid:aTableGrid setObjectValue:value forColumn:column row:row];
             
             if (columnOffset == numberOfPastingColumns - 1) {
                 *stopColumns = YES;
@@ -723,14 +446,6 @@ NSString * const ColumnText4 = @"text4";
 	NSLog(@"Invalid input at %lu,%lu: %@", (unsigned long)columnIndex, (unsigned long)rowIndex, errorDescription);
 }
 
-- (void)tableGrid:(MBTableGrid *)aTableGrid accessoryButtonClicked:(NSUInteger)columnIndex row:(NSUInteger)rowIndex {
-    NSString *columnIdentifier = self.columnIdentifiers[columnIndex];
-    
-	if (columnIdentifier == ColumnImage) {
-		[self quickLookAction:nil];
-	}
-}
-
 - (void)tableGrid:(MBTableGrid *)aTableGrid didAddRows:(NSIndexSet *)rowIndexes;
 {
     // Add the rows to the database, or whatever is needed
@@ -807,20 +522,6 @@ NSString * const ColumnText4 = @"text4";
 	NSRect rectInScreenCoords = [[NSApp mainWindow] convertRectToScreen:rectInWinCoords];
 	
 	return rectInScreenCoords;
-}
-
-
-#pragma mark -
-#pragma mark Subclass Methods
-
-- (IBAction)addColumn:(id)sender
-{
-    [self tableGrid:tableGrid addColumns:1 shouldReload:YES];
-}
-
-- (IBAction)addRow:(id)sender
-{
-    [self tableGrid:tableGrid addRows:1 shouldReload:YES];
 }
 
 @end

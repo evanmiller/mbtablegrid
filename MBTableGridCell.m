@@ -50,17 +50,8 @@
     return nil;
 }
 
-- (void)drawWithFrame:(NSRect)cellFrame inView:(NSView *)controlView withBackgroundColor:(NSColor *)backgroundColor
-{
-	[backgroundColor set];
-	NSRectFill(cellFrame);
-    
-    [self drawWithFrame:cellFrame inView:controlView];
-}
-
 - (void)drawWithFrame:(NSRect)cellFrame inView:(NSView *)controlView
 {
-    
 	[_borderColor set];
 	
 	// Draw the right border
@@ -70,28 +61,6 @@
 	// Draw the bottom border
 	NSRect bottomLine = NSMakeRect(NSMinX(cellFrame), NSMaxY(cellFrame)-1.0, NSWidth(cellFrame), 1.0);
 	NSRectFill(bottomLine);
-	
-	if (self.accessoryButtonImage) {
-		NSRect accessoryButtonFrame = cellFrame;
-		accessoryButtonFrame.size.width = 16.0;
-		accessoryButtonFrame.size.height = 16.0;
-		accessoryButtonFrame.origin.x = cellFrame.origin.x + cellFrame.size.width - accessoryButtonFrame.size.width - 4;
-		
-		// adjust rect for top border
-		accessoryButtonFrame.origin.y += 1;
-		
-		// draw the accessory image
-		
-		[self.accessoryButtonImage drawInRect:accessoryButtonFrame
-									 fromRect:NSZeroRect
-									operation:NSCompositeSourceOver
-									 fraction:1.0];
-		
-		// adjust cellFrame to make room for accessory button so it's never overlapped
-		// with a little bit of padding.
-		
-		cellFrame.size.width -= accessoryButtonFrame.size.width + 2;
-	}
 
 	[self drawInteriorWithFrame:cellFrame inView:controlView];
 }

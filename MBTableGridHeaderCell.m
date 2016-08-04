@@ -27,8 +27,6 @@
 
 @interface MBTableGridHeaderCell ()
 
-@property (nonatomic, strong) NSShadow *textShadow;
-
 @end
 
 #pragma mark -
@@ -45,15 +43,11 @@
 	return _borderColor;
 }
 
-- (NSShadow*)textShadow
+- (NSColor*)textColor
 {
-	if (_textShadow == nil) {
-		_textShadow = [[NSShadow alloc] init];
-		_textShadow.shadowOffset = NSMakeSize(0,-1);
-		_textShadow.shadowBlurRadius = 0.0;
-		_textShadow.shadowColor = NSColor.controlHighlightColor;
-	}
-	return _textShadow;
+	if (_textColor == nil)
+		_textColor = [NSColor headerTextColor];
+	return _textColor;
 }
 
 - (NSFont*)labelFont
@@ -120,8 +114,10 @@
 }
 
 - (NSAttributedString *)attributedStringValue {
-	NSDictionary *attributes = @{ NSFontAttributeName: self.labelFont,
-								  NSForegroundColorAttributeName: [NSColor controlTextColor] };
+	NSDictionary *attributes = @{
+		NSFontAttributeName: self.labelFont,
+		NSForegroundColorAttributeName: self.textColor
+	};
 	return [[NSAttributedString alloc] initWithString:self.stringValue attributes:attributes];
 }
 
@@ -144,13 +140,7 @@
 							   stringSize.height);
 	}
 
-	[[NSGraphicsContext currentContext] saveGraphicsState];
-
-	[self.textShadow set];
-
 	[self.attributedStringValue drawWithRect:textFrame options:NSStringDrawingTruncatesLastVisibleLine | NSStringDrawingUsesLineFragmentOrigin];
-	
-	[[NSGraphicsContext currentContext] restoreGraphicsState];
 }
 
 @end

@@ -27,7 +27,6 @@
 #import "MBTableGrid.h"
 #import "MBTableGridContentView.h"
 #import "MBFooterTextCell.h"
-#import "MBLevelIndicatorCell.h"
 
 @interface MBTableGrid ()
 - (MBTableGridContentView *)_contentView;
@@ -56,7 +55,6 @@
 	// Draw the column footers
 	NSUInteger numberOfColumns = self.tableGrid.numberOfColumns;
 	NSUInteger column = 0;
-    NSColor *backgroundColor = [NSColor colorWithCalibratedWhite:0.91 alpha:1.0];
     
 	while (column < numberOfColumns) {
 		NSRect cellFrame = [self footerRectOfColumn:column];
@@ -68,38 +66,9 @@
             if (!_cell) {
                 _cell = _defaultCell;
             }
-            
-            id objectValue = [self.tableGrid _footerValueForColumn:column];
-            
-            if ([_cell isKindOfClass:[MBFooterPopupButtonCell class]]) {
-                MBFooterPopupButtonCell *cell = (MBFooterPopupButtonCell *)_cell;
-                NSInteger index = [cell indexOfItemWithTitle:objectValue];
-                [_cell setObjectValue:@(index)];
-            } else {
-                [_cell setObjectValue:objectValue];
-            }
-            
-            if ([_cell isKindOfClass:[MBFooterPopupButtonCell class]]) {
-                
-                MBFooterPopupButtonCell *cell = (MBFooterPopupButtonCell *)_cell;
-                [cell drawWithFrame:cellFrame inView:self withBackgroundColor:backgroundColor];// Draw background color
-                
-            } else if ([_cell isKindOfClass:[MBLevelIndicatorCell class]]) {
-                
-                MBLevelIndicatorCell *cell = (MBLevelIndicatorCell *)_cell;
-                
-                cell.target = self;
-                cell.action = @selector(updateLevelIndicator:);
-                
-                [cell drawWithFrame:cellFrame inView:self.tableGrid withBackgroundColor:backgroundColor];// Draw background color
-                
-            } else {
-                
-                MBTableGridCell *cell = (MBTableGridCell *)_cell;
-                
-                [cell drawWithFrame:cellFrame inView:self withBackgroundColor:backgroundColor];// Draw background color
-                
-            }
+
+            MBTableGridCell *cell = (MBTableGridCell *)_cell;
+			[cell drawWithFrame:cellFrame inView:self];
 		}
 		
 		column++;
@@ -137,34 +106,7 @@
         editedColumn = mouseDownColumn;
         
         NSCell *cell = [self.tableGrid _footerCellForColumn:mouseDownColumn];
-        id currentValue = [self.tableGrid _footerValueForColumn:editedColumn];
-        
-        if ([cell isKindOfClass:[MBFooterPopupButtonCell class]]) {
-            editedPopupCell = [cell copy];
-            NSRect cellFrame = [self footerRectOfColumn:editedColumn];
-            
-            editedPopupCell.menu.font = cell.menu.font;
-            editedPopupCell.editable = YES;
-            editedPopupCell.selectable = YES;
-            
-            NSMenu *menu = editedPopupCell.menu;
-            
-            for (NSMenuItem *item in menu.itemArray) {
-                item.action = @selector(cellPopupMenuItemSelected:);
-                item.target = self;
-                
-                if ([item.title isEqualToString:currentValue])
-                {
-                    [editedPopupCell selectItem:item];
-                }
-            }
-            
-            [editedPopupCell.menu popUpMenuPositioningItem:editedPopupCell.selectedItem atLocation:cellFrame.origin inView:self];
-            
-        }
-		else {
-			[self.tableGrid.delegate tableGrid:self.tableGrid footerCellClicked:cell forColumn:mouseDownColumn withEvent:theEvent];
-		}
+		[self.tableGrid.delegate tableGrid:self.tableGrid footerCellClicked:cell forColumn:mouseDownColumn withEvent:theEvent];
     }
     
     [self setNeedsDisplay:YES];
@@ -177,20 +119,6 @@
     modifiedRect.origin.y = 0.0;
     
     return modifiedRect;
-}
-
-- (void)cellPopupMenuItemSelected:(NSMenuItem *)menuItem {
-//    MBFooterPopupButtonCell *cell = (MBFooterPopupButtonCell *)[self.tableGrid _footerCellForColumn:editedColumn];
-    [editedPopupCell selectItemWithTitle:menuItem.title];
-    [editedPopupCell synchronizeTitleAndSelectedItem];
-    
-    [self.tableGrid _setFooterValue:menuItem.title forColumn:editedColumn];
-    
-    NSRect cellFrame = [self footerRectOfColumn:editedColumn];
-    [self.tableGrid setNeedsDisplayInRect:cellFrame];
-    
-    editedColumn = NSNotFound;
-    editedPopupCell = nil;
 }
 
 #pragma mark Layout Support

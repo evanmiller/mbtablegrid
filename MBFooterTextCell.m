@@ -9,7 +9,6 @@
 
 @interface MBFooterTextCell ()
 
-@property (nonatomic, strong) NSShadow *textShadow;
 @property (nonatomic, strong) NSFont *attributedTitleFont;
 
 @end
@@ -26,10 +25,6 @@
     return [[NSAttributedString alloc] initWithString:self.title attributes:attributes];
 }
 
-- (void) drawWithFrame:(NSRect)cellFrame inView:(NSView *)controlView withBackgroundColor:(NSColor *)backgroundColor {
-	
-}
-
 - (void)drawInteriorWithFrame:(NSRect)cellFrame inView:(NSView *)controlView
 {
     static CGFloat TEXT_PADDING = 6;
@@ -39,15 +34,8 @@
 						   cellFrame.origin.y + (cellFrame.size.height - stringSize.height)/2,
 						   cellFrame.size.width - TEXT_PADDING,
 						   stringSize.height);
-    
-    [[NSGraphicsContext currentContext] saveGraphicsState];
-    
-    [self.textShadow set];
-    
+
     [self.attributedTitle drawWithRect:textFrame options:NSStringDrawingTruncatesLastVisibleLine | NSStringDrawingUsesLineFragmentOrigin];
-    
-    [[NSGraphicsContext currentContext] restoreGraphicsState];
-    
 }
 
 - (NSFont*)attributedTitleFont
@@ -56,17 +44,6 @@
 		_attributedTitleFont = [NSFont labelFontOfSize:NSFont.labelFontSize];
 	}
 	return _attributedTitleFont;
-}
-
-- (NSShadow*)textShadow
-{
-	if (_textShadow == nil) {
-		_textShadow = [[NSShadow alloc] init];
-		_textShadow.shadowOffset = NSMakeSize(0,-1);
-		_textShadow.shadowBlurRadius = 0.0;
-		_textShadow.shadowColor = [NSColor colorWithDeviceWhite:1.0 alpha:0.8];
-	}
-	return _textShadow;
 }
 
 @end

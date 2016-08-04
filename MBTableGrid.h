@@ -665,83 +665,19 @@ cells. A cell can individually override this behavior. */
  *
  * @see			tableGrid:setObjectValue:forColumn:row:
  */
-- (id)tableGrid:(MBTableGrid *)aTableGrid objectValueForColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
-
-@optional
+- (id) tableGrid:(MBTableGrid *)aTableGrid objectValueForColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 
 /**
- *  @brief      Returns the formatter associated with the specified column.
- *
- *  @param      aTableGrid  The table grid that sent the message.
- *  @param      columnIndex A column in \c aTableGrid.
- *
- *  @return     The formatter for the specified column to use when displaying cell values
- */
-- (NSFormatter *)tableGrid:(MBTableGrid *)aTableGrid formatterForColumn:(NSUInteger)columnIndex;
-
-@optional
-
-/**
- *  @brief      Returns the cell associated with the specified column.
- *
- *  @param      aTableGrid  The table grid that sent the message.
- *  @param      columnIndex A column in \c aTableGrid.
- *
- *  @return     The cell for the specified column
- */
-- (NSCell *)tableGrid:(MBTableGrid *)aTableGrid cellForColumn:(NSUInteger)columnIndex;
-
-@optional
-
-/**
- *  @brief      Returns the cell's accessory button with the specified column and row
- *
- *  @param      aTableGrid  The table grid that sent the message.
- *  @param      columnIndex A column in \c aTableGrid.
- *  @
- *
- *  @return     The cell for the specified column
- */
-- (NSImage *)tableGrid:(MBTableGrid *)aTableGrid accessoryButtonImageForColumn:(NSUInteger)columnIndex row:(NSUInteger)row;
-
-@optional
-
-/**
- *  @brief
- *
- *  @param aTableGrid  The table grid that sent the message.
- *  @param columnIndex A column in \c aTableGrid.
- *
- *  @return An array of possible object values to represent in a popup button for a given column. Return nil if the cells in the column should not be edited with a popup button of available values, but should instead allow freeform string input. The count of the returned array should match that returned in tableGrid:availableUserStringsForColumn:.
- */
-- (NSArray *)tableGrid:(MBTableGrid *)aTableGrid availableObjectValuesForColumn:(NSUInteger)columnIndex;
-
-@optional
-
-/**
- *  @brief      Offer auto-completion strings based on the user input.
- *
- *  @param      aTableGrid      The table grid that sent the message.
- *  @param      value           The text the user entered in the cell editor.
- *  @param      columnIndex     A column in \c aTableGrid.
- *  @param		rowIndex		A row in \c aTableGrid.
- *
- *  @return An array of strings to offer as auto-completion matches for the user-entered text for a given column and row. The returned strings should generally be based on the other values in the column that have the same prefix as the given text. Return nil or an empty array if no auto-completion strings should be offered.
- */
-- (NSArray *)tableGrid:(MBTableGrid *)aTableGrid autocompleteValuesForEditString:(NSString *)editString column:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
-
-@optional
-
-/**
- * @brief		Returns the background color for the specified column and row.
+ * @brief		Returns the celll that should be used to render the specified column and row. The table view should not 
+				retain the cell beyond the painting action, as the cell may be re-used to render the next cell.
  *
  * @param		aTableGrid		The table grid that sent the message.
  * @param		columnIndex		A column in \c aTableGrid.
  * @param		rowIndex		A row in \c aTableGrid.
  *
- * @return		The background color for the specified cell of the view.
+ * @return		The cell to render the specified column.
  */
-- (NSColor *)tableGrid:(MBTableGrid *)aTableGrid backgroundColorForColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
+- (NSCell*) tableGrid:(MBTableGrid *)aTableGrid cellForColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 
 @optional
 

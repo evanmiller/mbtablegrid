@@ -62,4 +62,6 @@ typedef enum _MBTableGridHeaderOrientation {
 
 @property (nonatomic, strong) NSColor *borderColor;
 
+@property (nonatomic, strong) NSColor *textColor;
+
 @end

@@ -29,9 +29,6 @@
 #import "MBTableGridHeaderCell.h"
 #import "MBTableGridContentView.h"
 #import "MBTableGridCell.h"
-#import "MBImageCell.h"
-#import "MBButtonCell.h"
-#import "MBPopupButtonCell.h"
 
 #pragma mark -
 #pragma mark Constant Definitions
@@ -51,17 +48,9 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 @interface MBTableGrid (DataAccessors)
 - (NSString *)_headerStringForColumn:(NSUInteger)columnIndex;
 - (NSString *)_headerStringForRow:(NSUInteger)rowIndex;
-- (id)_objectValueForColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
-- (NSFormatter *)_formatterForColumn:(NSUInteger)columnIndex;
-- (NSCell *)_cellForColumn:(NSUInteger)columnIndex;
-- (NSImage *)_accessoryButtonImageForColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
-- (void)_accessoryButtonClicked:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
-- (NSArray *)_availableObjectValuesForColumn:(NSUInteger)columnIndex;
-- (NSArray *)_autocompleteValuesForEditString:(NSString *)editString column:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 - (void)_setObjectValue:(id)value forColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 - (float)_widthForColumn:(NSUInteger)columnIndex;
 - (void)_setWidth:(float) width forColumn:(NSUInteger)columnIndex;
-- (id)_backgroundColorForColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 - (BOOL)_canEditCellAtColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 - (void)_userDidEnterInvalidStringInColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex errorDescription:(NSString *)errorDescription;
 - (NSCell *)_footerCellForColumn:(NSUInteger)columnIndex;
@@ -248,6 +237,27 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 - (BOOL)acceptsFirstResponder {
 	return YES;
 }
+
+- (NSCell*) _cellForColumn: (NSUInteger)columnIndex row:(NSUInteger)rowIndex {
+	if ([self.dataSource respondsToSelector:@selector(tableGrid:cellForColumn:row:)]) {
+		return [self.dataSource tableGrid:self cellForColumn:columnIndex row:rowIndex];
+	}
+	else {
+		NSLog(@"WARNING: MBTableGrid data source does not implement tableGrid:cellForColumn:row:");
+	}
+	return nil;
+}
+
+- (id) _objectValueForColumn: (NSUInteger)columnIndex row:(NSUInteger)rowIndex {
+	if ([self.dataSource respondsToSelector:@selector(tableGrid:objectValueForColumn:row:)]) {
+		return [self.dataSource tableGrid:self objectValueForColumn:columnIndex row:rowIndex];
+	}
+	else {
+		NSLog(@"WARNING: MBTableGrid data source does not implement tableGrid:objectValueForColumn:row:");
+	}
+	return nil;
+}
+
 
 /**
  * @brief		Sets the indicator image for the specified column.
@@ -827,27 +837,21 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 
 - (void)insertText:(id)aString {
 	NSUInteger column = [self.selectedColumnIndexes firstIndex];
-	NSCell *selectedCell = [self _cellForColumn:column];
+	NSUInteger row = [self.selectedRowIndexes firstIndex];
+	NSCell *selectedCell = [self _cellForColumn:column row:row];
+
+	[contentView editSelectedCell:self text:aString];
 	
-	if (![selectedCell isKindOfClass:[MBImageCell class]]) {
-		[contentView editSelectedCell:self text:aString];
+	if ([selectedCell isKindOfClass:[MBTableGridCell class]]) {
+		// Insert the typed string into the field editor
+		NSText *fieldEditor = [[self window] fieldEditor:YES forObject:contentView];
+		fieldEditor.delegate = contentView;
+		[fieldEditor setString:aString];
 		
-		if ([selectedCell isKindOfClass:[MBTableGridCell class]]) {
-			// Insert the typed string into the field editor
-			NSText *fieldEditor = [[self window] fieldEditor:YES forObject:contentView];
-			fieldEditor.delegate = contentView;
-			[fieldEditor setString:aString];
-            
-            // The textDidBeginEditing notification isn't sent yet, so invoke a custom method
-            [contentView textDidBeginEditingWithEditor:fieldEditor];
-		}
-		
-	} else {
-		NSUInteger row = [self.selectedRowIndexes firstIndex];
-		[self _accessoryButtonClicked:column row:row];
+		// The textDidBeginEditing notification isn't sent yet, so invoke a custom method
+		[contentView textDidBeginEditingWithEditor:fieldEditor];
 	}
 	[self setNeedsDisplay:YES];
-
 }
 
 #pragma mark -
@@ -1445,62 +1449,6 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 	}
 
 	return [NSString stringWithFormat:@"%lu", (rowIndex + 1)];
-}
-
-- (id)_objectValueForColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex {
-	if ([self.dataSource respondsToSelector:@selector(tableGrid:objectValueForColumn:row:)]) {
-		id value = [self.dataSource tableGrid:self objectValueForColumn:columnIndex row:rowIndex];
-		return value;
-	}
-	else {
-		NSLog(@"WARNING: MBTableGrid data source does not implement tableGrid:objectValueForColumn:row:");
-	}
-	return nil;
-}
-
-- (NSImage *)_accessoryButtonImageForColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex {
-	if ([self.dataSource respondsToSelector:@selector(tableGrid:accessoryButtonImageForColumn:row:)]) {
-		return [self.dataSource tableGrid:self accessoryButtonImageForColumn:columnIndex row:rowIndex];
-	}
-	return nil;
-}
-
-- (NSFormatter *)_formatterForColumn:(NSUInteger)columnIndex {
-    if ([self.dataSource respondsToSelector:@selector(tableGrid:formatterForColumn:)]) {
-        return [self.dataSource tableGrid:self formatterForColumn:columnIndex];
-    }
-    return nil;
-}
-
-- (NSCell *)_cellForColumn:(NSUInteger)columnIndex {
-	if ([self.dataSource respondsToSelector:@selector(tableGrid:cellForColumn:)]) {
-		return [self.dataSource tableGrid:self cellForColumn:columnIndex];
-	}
-	return nil;
-}
-
-- (NSArray *)_availableObjectValuesForColumn:(NSUInteger)columnIndex {
-	if ([self.dataSource respondsToSelector:@selector(tableGrid:availableObjectValuesForColumn:)]) {
-		return [self.dataSource tableGrid:self availableObjectValuesForColumn:columnIndex];
-	}
-	return nil;
-}
-
-- (NSArray *)_autocompleteValuesForEditString:(NSString *)editString column:(NSUInteger)columnIndex row:(NSUInteger)rowIndex {
-    if ([self.dataSource respondsToSelector:@selector(tableGrid:autocompleteValuesForEditString:column:row:)]) {
-        return [self.dataSource tableGrid:self autocompleteValuesForEditString:editString column:columnIndex row:rowIndex];
-    }
-    return nil;
-}
-
-- (id)_backgroundColorForColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex {
-	if ([self.dataSource respondsToSelector:@selector(tableGrid:backgroundColorForColumn:row:)]) {
-		return [self.dataSource tableGrid:self backgroundColorForColumn:columnIndex row:rowIndex];
-	}
-	else {
-		NSLog(@"WARNING: MBTableGrid data source does not implement tableGrid:backgroundColorForColumn:row:");
-	}
-	return nil;
 }
 
 - (void)_setObjectValue:(id)value forColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex {
