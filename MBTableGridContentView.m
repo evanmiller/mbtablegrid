@@ -312,6 +312,10 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 	NSPoint mouseLocationInContentView = [self convertPoint:theEvent.locationInWindow fromView:nil];
 	mouseDownColumn = [self columnAtPoint:mouseLocationInContentView];
 	mouseDownRow = [self rowAtPoint:mouseLocationInContentView];
+
+	if(mouseDownRow == NSNotFound) {
+		return;
+	}
     
     // If the column wasn't found, probably need to flush the cached column rects
     if (mouseDownColumn == NSNotFound) {

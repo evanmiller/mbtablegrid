@@ -336,6 +336,32 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 
 #pragma mark Resize scrollview content size
 
+/** Make sure we catch mouse down events inside the scrollview, but outside the table content view. */
+- (NSView*) hitTest:(NSPoint)point {
+	NSView* v = [super hitTest:point];
+
+	BOOL isBeneathContentView = FALSE;
+	NSView* parent = v;
+	while(parent != nil) {
+		if(parent == self.contentView || parent == self.rowHeaderView || parent == self.columnHeaderView || parent == self.columnFooterView) {
+			isBeneathContentView = TRUE;
+			break;
+		}
+		parent = parent.superview;
+	}
+
+	if(!isBeneathContentView) {
+		NSEvent* event = self.window.currentEvent;
+		if(event != nil && event.type == NSLeftMouseDown) {
+			// Clear selection
+			NSIndexSet* empty = [NSIndexSet indexSet];
+			[self setSelectedRowIndexes:empty notify:YES];
+			[self setSelectedColumnIndexes:empty notify:YES];
+		}
+	}
+	return v;
+}
+
 - (CGFloat)resizeColumnWithIndex:(NSUInteger)columnIndex withDistance:(float)distance location:(NSPoint)location {
 	// Note that we only need this rect for its origin, which won't be changing, otherwise we'd need to flush the column rect cache first
 	NSRect columnRect = [self rectOfColumn:columnIndex];
