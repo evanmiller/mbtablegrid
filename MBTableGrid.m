@@ -1406,10 +1406,7 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 
 	selectedColumnIndexes = anIndexSet;
 
-	[self setNeedsDisplay:YES];
-	[self._contentView setNeedsDisplay:YES];
-	[self.columnHeaderView setNeedsDisplay:YES];
-	[self.rowHeaderView setNeedsDisplay:YES];
+	[self redrawVisibleContent];
 
 	// Post the notification
 	if(notify) {
@@ -1432,10 +1429,7 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 
 	selectedRowIndexes = anIndexSet;
 
-	[self setNeedsDisplay:YES];
-	[self._contentView setNeedsDisplay:YES];
-	[self.columnHeaderView setNeedsDisplay:YES];
-	[self.rowHeaderView setNeedsDisplay:YES];
+	[self redrawVisibleContent];
 	
 	// Post the notification
 	if(notify) {
