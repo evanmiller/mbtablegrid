@@ -536,7 +536,7 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 			[self scrollToArea:cellRect animate:NO];
 		}
 		else {
-			[self setNeedsDisplay:YES];
+			[self redrawVisibleContent];
 		}
 	}
 
@@ -584,7 +584,7 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 			[self scrollToArea:cellRect animate:NO];
 		}
 		else {
-			[self setNeedsDisplay:YES];
+			[contentView setNeedsDisplayInRect:contentView.visibleRect];
 		}
 	}
 }
@@ -651,7 +651,7 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 			[self scrollToArea:cellRect animate:NO];
 		}
 		else {
-            [self setNeedsDisplay:YES];
+            [self redrawVisibleContent];
 		}
 	}
 }
@@ -686,7 +686,7 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 			[self scrollToArea:cellRect animate:NO];
 		}
 		else {
-            [self setNeedsDisplay:YES];
+            [self redrawVisibleContent];
 		}
 	}
 
@@ -720,7 +720,7 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 			[self scrollToArea:cellRect animate:NO];
 		}
 		else {
-            [self setNeedsDisplay:YES];
+            [self redrawVisibleContent];
 		}
 	}
 
@@ -764,7 +764,7 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 		self.selectedRowIndexes = [NSIndexSet indexSetWithIndex:row];
 	}
 
-	if (column + 1 < [self numberOfColumns]) {
+    if (column + 1 < [self numberOfColumns]) {
 		NSRect cellRect = [self frameOfCellAtColumn:column + 1 row:row];
 		cellRect = [self convertRect:cellRect toView:contentScrollView.contentView];
 		if (!NSContainsRect(self.contentView.visibleRect, cellRect)) {
@@ -773,9 +773,16 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 			[self scrollToArea:cellRect animate:NO];
 		}
 		else {
-            [self setNeedsDisplay:YES];
+            [self redrawVisibleContent];
 		}
 	}
+}
+
+- (void)redrawVisibleContent
+{
+    [contentView setNeedsDisplayInRect:contentView.visibleRect];
+    [rowHeaderView setNeedsDisplayInRect:rowHeaderView.visibleRect];
+    [columnHeaderView setNeedsDisplayInRect:columnHeaderView.visibleRect];
 }
 
 - (void)moveRightAndModifySelection:(id)sender {
@@ -818,7 +825,7 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 			[self scrollToArea:cellRect animate:NO];
 		}
 		else {
-            [self setNeedsDisplay:YES];
+            [self redrawVisibleContent];
 		}
 	}
 }
@@ -906,7 +913,7 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
         [scrollView reflectScrolledClipView:scrollView.contentView];
     }
 
-	[contentView setNeedsDisplayInRect:contentView.visibleRect];
+	[self redrawVisibleContent];
 }
 
 - (void)columnHeaderViewDidScroll:(NSNotification *)aNotification {
