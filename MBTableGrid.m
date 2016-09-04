@@ -609,6 +609,18 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 	self.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:column];
 	self.selectedRowIndexes = [NSIndexSet indexSetWithIndex:(row + 1)];
 
+    if (row + 1 < [self numberOfRows]) {
+        NSRect cellRect = [self frameOfCellAtColumn:column row:row + 1];
+        cellRect = [self convertRect:cellRect toView:contentScrollView.contentView];
+        if (!NSContainsRect(self.contentView.visibleRect, cellRect)) {
+            cellRect.origin.y = cellRect.origin.y - self.contentView.visibleRect.size.height + cellRect.size.height;
+            cellRect.origin.x = self.contentView.visibleRect.origin.x;
+            [self scrollToArea:cellRect animate:NO];
+        }
+        else {
+            [self redrawVisibleContent];
+        }
+    }
 }
 
 - (void)moveDownAndModifySelection:(id)sender {
