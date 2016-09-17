@@ -136,15 +136,33 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 	}
 }
 
+- (void) updateTrackingAreas {
+	// Remove all tracking areas
+	for (NSTrackingArea *trackingArea in self.trackingAreas) {
+		[self removeTrackingArea:trackingArea];
+	}
+
+	if (self.orientation == MBTableHeaderHorizontalOrientation) {
+		// Draw the column headers
+		NSUInteger numberOfColumns = self.tableGrid.numberOfColumns;
+		[headerCell setOrientation:self.orientation];
+		NSUInteger column = 0;
+		while (column < numberOfColumns) {
+			NSRect headerRect = [self headerRectOfColumn:column];
+
+			// Create new tracking area for resizing columns
+			NSRect resizeRect = NSMakeRect(NSMinX(headerRect) + NSWidth(headerRect) - 2, NSMinY(headerRect), 5, NSHeight(headerRect));
+			NSTrackingArea *resizeTrackingArea = [[NSTrackingArea alloc] initWithRect:resizeRect options: (NSTrackingMouseEnteredAndExited | NSTrackingActiveAlways) owner:self userInfo:nil];
+			[self addTrackingArea:resizeTrackingArea];
+
+			column++;
+		}
+	}
+}
+
 - (void)drawRect:(NSRect)rect
 {
 	if (self.orientation == MBTableHeaderHorizontalOrientation) {
-        
-        // Remove all tracking areas
-		for (NSTrackingArea *trackingArea in self.trackingAreas) {
-			[self removeTrackingArea:trackingArea];
-		}
-
 		// Draw the column headers
 		NSUInteger numberOfColumns = self.tableGrid.numberOfColumns;
 		[headerCell setOrientation:self.orientation];
@@ -166,22 +184,7 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 				
 				headerCell.stringValue = [self.tableGrid _headerStringForColumn:column];
 				[headerCell drawWithFrame:headerRect inView:self];
-                
 			}
-			
-			// Create new tracking area for resizing columns
-			NSRect resizeRect = NSMakeRect(NSMinX(headerRect) + NSWidth(headerRect) - 2,
-										   NSMinY(headerRect),
-										   5, // width
-										   NSHeight(headerRect));
-			NSTrackingArea *resizeTrackingArea = [[NSTrackingArea alloc] initWithRect:resizeRect
-																			  options:(NSTrackingMouseEnteredAndExited | NSTrackingActiveAlways)
-																				owner:self
-																			 userInfo:nil];
-			
-			// keep track of tracking areas and add tracking to view
-			[self addTrackingArea:resizeTrackingArea];
-			
 			column++;
 		}
         
@@ -352,7 +355,7 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
             }
             
             // If there's nothing under the mouse, bail out (something went wrong)
-            if (itemUnderMouse < 0)
+            if (itemUnderMouse < 0 || itemUnderMouse == NSNotFound)
                 return;
             
             // Calculate the range of items to select
