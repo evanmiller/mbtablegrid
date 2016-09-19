@@ -513,6 +513,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 	
 	mouseDownColumn = NSNotFound;
 	mouseDownRow = NSNotFound;
+	[self.window resetCursorRects];
 }
 
 - (void)mouseEntered:(NSEvent *)theEvent
