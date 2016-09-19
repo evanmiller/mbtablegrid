@@ -917,7 +917,7 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
     [self syncronizeScrollView:contentScrollView withChangedBoundsOrigin:changedBoundsOrigin horizontal:YES];
     [self syncronizeScrollView:rowHeaderScrollView withChangedBoundsOrigin:changedBoundsOrigin horizontal:NO];
     [self syncronizeScrollView:columnFooterScrollView withChangedBoundsOrigin:changedBoundsOrigin horizontal:YES];
-    
+	[self.window invalidateCursorRectsForView:self];
 }
 
 - (void)rowHeaderViewDidScroll:(NSNotification *)aNotification {
@@ -926,7 +926,7 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
     NSPoint changedBoundsOrigin = changedView.bounds.origin;
     
     [self syncronizeScrollView:contentScrollView withChangedBoundsOrigin:changedBoundsOrigin horizontal:NO];
-    
+    [self.window invalidateCursorRectsForView:self];
 }
 
 - (void)columnFooterViewDidScroll:(NSNotification *)aNotification {
@@ -937,7 +937,7 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
     [self syncronizeScrollView:contentScrollView withChangedBoundsOrigin:changedBoundsOrigin horizontal:YES];
     [self syncronizeScrollView:columnHeaderScrollView withChangedBoundsOrigin:changedBoundsOrigin horizontal:YES];
     [self syncronizeScrollView:rowHeaderScrollView withChangedBoundsOrigin:changedBoundsOrigin horizontal:NO];
-    
+    [self.window invalidateCursorRectsForView:self];
 }
 
 - (void)contentViewDidScroll:(NSNotification *)aNotification {
@@ -948,7 +948,7 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
     [self syncronizeScrollView:columnHeaderScrollView withChangedBoundsOrigin:changedBoundsOrigin horizontal:YES];
     [self syncronizeScrollView:rowHeaderScrollView withChangedBoundsOrigin:changedBoundsOrigin horizontal:NO];
     [self syncronizeScrollView:columnFooterScrollView withChangedBoundsOrigin:changedBoundsOrigin horizontal:YES];
-    
+    [self.window invalidateCursorRectsForView:self];
 }
 
 #pragma mark -
