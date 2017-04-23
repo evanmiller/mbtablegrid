@@ -662,6 +662,9 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 		default:
 			break;
 	}
+
+	[fe setAlignment:NSTextAlignmentNatural];
+	[[self window] endEditingFor:self];
 }
 
 #pragma mark -
