@@ -69,9 +69,9 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 
 @interface MBTableGrid (PrivateAccessors)
 - (MBTableGridContentView *)_contentView;
-- (void)_setStickyColumn:(MBTableGridEdge)stickyColumn row:(MBTableGridEdge)stickyRow;
-- (MBTableGridEdge)_stickyColumn;
-- (MBTableGridEdge)_stickyRow;
+- (void)_setStickyColumn:(MBHorizontalEdge)stickyColumn row:(MBVerticalEdge)stickyRow;
+- (MBHorizontalEdge)_stickyColumn;
+- (MBVerticalEdge)_stickyRow;
 @end
 
 @interface MBTableGridContentView (Private)
@@ -97,6 +97,20 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 }
 @end
 
+NS_INLINE MBHorizontalEdge MBOppositeHorizontalEdge(MBHorizontalEdge other) {
+    return (other == MBHorizontalEdgeRight) ? MBHorizontalEdgeLeft : MBHorizontalEdgeRight;
+}
+
+NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
+    return (other == MBVerticalEdgeTop) ? MBVerticalEdgeBottom : MBVerticalEdgeTop;
+}
+
+@interface MBTableGrid ()
+@property (nonatomic, readwrite, assign) MBHorizontalEdge previousHorizontalSelectionDirection;
+@property (nonatomic, readwrite, assign) MBVerticalEdge previousVerticalSelectionDirection;
+@end
+
+
 @implementation MBTableGrid
 
 @synthesize allowsMultipleSelection;
@@ -108,6 +122,8 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 @synthesize showsGrabHandles;
 @synthesize columnFooterView;
 @synthesize singleClickCellEdit;
+@synthesize previousHorizontalSelectionDirection;
+@synthesize previousVerticalSelectionDirection;
 
 #pragma mark -
 #pragma mark Initialization & Superclass Overrides
@@ -213,11 +229,14 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 		self.allowsMultipleSelection = YES;
 
 		// Set the default sticky edges
-		stickyColumnEdge = MBTableGridLeftEdge;
-		stickyRowEdge = MBTableGridTopEdge;
+		stickyColumnEdge = MBHorizontalEdgeLeft;
+		stickyRowEdge = MBVerticalEdgeTop;
 
 		shouldOverrideModifiers = NO;
 		singleClickCellEdit = NO;
+
+        self.previousVerticalSelectionDirection = MBVerticalEdgeTop;
+        self.previousHorizontalSelectionDirection = MBHorizontalEdgeLeft;
 		
 		self.columnRects = [NSMutableDictionary dictionary];
 	}
@@ -530,10 +549,10 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 	NSUInteger row = [self.selectedRowIndexes firstIndex];
 
 	// Accomodate for the sticky edges
-	if (stickyColumnEdge == MBTableGridRightEdge) {
+	if (stickyColumnEdge == MBHorizontalEdgeRight) {
 		column = [self.selectedColumnIndexes lastIndex];
 	}
-	if (stickyRowEdge == MBTableGridBottomEdge) {
+	if (stickyRowEdge == MBVerticalEdgeBottom) {
 		row = [self.selectedRowIndexes lastIndex];
 	}
 
@@ -561,24 +580,23 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 
 	// If there is only one row selected, change the sticky edge to the bottom
 	if ([self.selectedRowIndexes count] == 1) {
-		stickyRowEdge = MBTableGridBottomEdge;
+		stickyRowEdge = MBVerticalEdgeBottom;
 	}
 
 	// We can't expand past the last row
-	if (stickyRowEdge == MBTableGridBottomEdge && firstRow <= 0)
-		return;
+	if (stickyRowEdge == MBVerticalEdgeBottom && firstRow <= 0) { return; }
 
-	if (stickyRowEdge == MBTableGridTopEdge) {
+	if (stickyRowEdge == MBVerticalEdgeTop) {
 		// If the top edge is sticky, contract the selection
 		lastRow--;
 	}
-	else if (stickyRowEdge == MBTableGridBottomEdge) {
+	else if (stickyRowEdge == MBVerticalEdgeBottom) {
 		// If the bottom edge is sticky, expand the contraction
 		firstRow--;
 	}
 	self.selectedRowIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(firstRow, lastRow - firstRow + 1)];
 
-    [self scrollSelectionToVisibleShowingVerticalEdge:MBVerticalEdgeTop];
+    [self scrollSelectionToVisibleShowingVerticalEdge:MBOppositeVerticalEdge(stickyRowEdge)];
 }
 
 - (void)moveDown:(id)sender {
@@ -586,10 +604,10 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 	NSUInteger row = [self.selectedRowIndexes firstIndex];
 
 	// Accomodate for the sticky edges
-	if (stickyColumnEdge == MBTableGridRightEdge) {
+	if (stickyColumnEdge == MBHorizontalEdgeRight) {
 		column = [self.selectedColumnIndexes lastIndex];
 	}
-	if (stickyRowEdge == MBTableGridBottomEdge) {
+	if (stickyRowEdge == MBVerticalEdgeBottom) {
 		row = [self.selectedRowIndexes lastIndex];
 	}
 
@@ -613,24 +631,24 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 
 	// If there is only one row selected, change the sticky edge to the top
 	if ([self.selectedRowIndexes count] == 1) {
-		stickyRowEdge = MBTableGridTopEdge;
+		stickyRowEdge = MBVerticalEdgeTop;
 	}
 
 	// We can't expand past the last row
-	if (stickyRowEdge == MBTableGridTopEdge && lastRow >= (_numberOfRows - 1))
+	if (stickyRowEdge == MBVerticalEdgeTop && lastRow >= (_numberOfRows - 1))
 		return;
 
-	if (stickyRowEdge == MBTableGridTopEdge) {
+	if (stickyRowEdge == MBVerticalEdgeTop) {
 		// If the top edge is sticky, contract the selection
 		lastRow++;
 	}
-	else if (stickyRowEdge == MBTableGridBottomEdge) {
+	else if (stickyRowEdge == MBVerticalEdgeBottom) {
 		// If the bottom edge is sticky, expand the contraction
 		firstRow++;
 	}
 	self.selectedRowIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(firstRow, lastRow - firstRow + 1)];
 
-    [self scrollSelectionToVisibleShowingVerticalEdge:MBVerticalEdgeBottom];
+    [self scrollSelectionToVisibleShowingVerticalEdge:MBOppositeVerticalEdge(stickyRowEdge)];
 }
 
 - (void)moveLeft:(id)sender {
@@ -638,10 +656,10 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 	NSUInteger row = [self.selectedRowIndexes firstIndex];
 
 	// Accomodate for the sticky edges
-	if (stickyColumnEdge == MBTableGridRightEdge) {
+	if (stickyColumnEdge == MBHorizontalEdgeRight) {
 		column = [self.selectedColumnIndexes lastIndex];
 	}
-	if (stickyRowEdge == MBTableGridBottomEdge) {
+	if (stickyRowEdge == MBVerticalEdgeBottom) {
 		row = [self.selectedRowIndexes lastIndex];
 	}
 
@@ -670,25 +688,23 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 
 	// If there is only one column selected, change the sticky edge to the right
 	if ([self.selectedColumnIndexes count] == 1) {
-		stickyColumnEdge = MBTableGridRightEdge;
+		stickyColumnEdge = MBHorizontalEdgeRight;
 	}
 
-
 	// We can't expand past the first column
-	if (stickyColumnEdge == MBTableGridRightEdge && firstColumn <= 0)
-		return;
+    if (stickyColumnEdge == MBHorizontalEdgeRight && firstColumn <= 0) { return; }
 
-	if (stickyColumnEdge == MBTableGridLeftEdge) {
+	if (stickyColumnEdge == MBHorizontalEdgeLeft) {
 		// If the top edge is sticky, contract the selection
 		lastColumn--;
 	}
-	else if (stickyColumnEdge == MBTableGridRightEdge) {
+	else if (stickyColumnEdge == MBHorizontalEdgeRight) {
 		// If the bottom edge is sticky, expand the contraction
 		firstColumn--;
 	}
 	self.selectedColumnIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(firstColumn, lastColumn - firstColumn + 1)];
 
-    [self scrollSelectionToVisibleShowingHorizontalEdge:MBHorizontalEdgeLeft];
+    [self scrollSelectionToVisibleShowingHorizontalEdge:MBOppositeHorizontalEdge(stickyColumnEdge)];
 }
 
 - (void)moveRight:(id)sender {
@@ -696,10 +712,10 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 	NSUInteger row = [self.selectedRowIndexes firstIndex];
 
 	// Accomodate for the sticky edges
-	if (stickyColumnEdge == MBTableGridRightEdge) {
+	if (stickyColumnEdge == MBHorizontalEdgeRight) {
 		column = [self.selectedColumnIndexes lastIndex];
 	}
-	if (stickyRowEdge == MBTableGridBottomEdge) {
+	if (stickyRowEdge == MBVerticalEdgeBottom) {
 		row = [self.selectedRowIndexes lastIndex];
 	}
 
@@ -718,6 +734,37 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
     [self scrollSelectionToVisible];
 }
 
+- (void)moveRightAndModifySelection:(id)sender {
+    if (shouldOverrideModifiers) {
+        [self moveRight:sender];
+        shouldOverrideModifiers = NO;
+        return;
+    }
+
+    NSUInteger firstColumn = [self.selectedColumnIndexes firstIndex];
+    NSUInteger lastColumn = [self.selectedColumnIndexes lastIndex];
+
+    // If there is only one column selected, change the sticky edge to the right
+    if ([self.selectedColumnIndexes count] == 1) {
+        stickyColumnEdge = MBHorizontalEdgeLeft;
+    }
+
+    // We can't expand past the last column
+    if (stickyColumnEdge == MBHorizontalEdgeLeft && lastColumn >= (_numberOfColumns - 1)) { return; }
+
+    if (stickyColumnEdge == MBHorizontalEdgeLeft) {
+        // If the top edge is sticky, contract the selection
+        lastColumn++;
+    }
+    else if (stickyColumnEdge == MBHorizontalEdgeRight) {
+        // If the bottom edge is sticky, expand the contraction
+        firstColumn++;
+    }
+    self.selectedColumnIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(firstColumn, lastColumn - firstColumn + 1)];
+
+    [self scrollSelectionToVisibleShowingHorizontalEdge:MBOppositeHorizontalEdge(stickyColumnEdge)];
+}
+
 /**
  Scrolls the minimum distance required to make the selection fully visible.
 
@@ -728,7 +775,6 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
     [self scrollSelectionToVisibleShowingHorizontalEdge:MBHorizontalEdgeLeft
                                            verticalEdge:MBVerticalEdgeTop];
 }
-
 
 /**
  Scrolls the minimum distance required to make the selection visible at the edge defined by @p vertical.
@@ -741,6 +787,11 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
                                            verticalEdge:vertical];
 }
 
+/**
+ Scrolls the minimum distance required to make the selection visible at the edge defined by @p horizontal.
+
+ @param horizontal Direction in which to expand the selection.
+ */
 - (void)scrollSelectionToVisibleShowingHorizontalEdge:(MBHorizontalEdge)horizontal
 {
     [self scrollSelectionToVisibleShowingHorizontalEdge:horizontal
@@ -794,38 +845,6 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
     [columnHeaderView setNeedsDisplayInRect:columnHeaderView.visibleRect];
 }
 
-- (void)moveRightAndModifySelection:(id)sender {
-	if (shouldOverrideModifiers) {
-		[self moveRight:sender];
-		shouldOverrideModifiers = NO;
-		return;
-	}
-
-	NSUInteger firstColumn = [self.selectedColumnIndexes firstIndex];
-	NSUInteger lastColumn = [self.selectedColumnIndexes lastIndex];
-
-	// If there is only one column selected, change the sticky edge to the right
-	if ([self.selectedColumnIndexes count] == 1) {
-		stickyColumnEdge = MBTableGridLeftEdge;
-	}
-
-	// We can't expand past the last column
-	if (stickyColumnEdge == MBTableGridLeftEdge && lastColumn >= (_numberOfColumns - 1))
-		return;
-
-	if (stickyColumnEdge == MBTableGridLeftEdge) {
-		// If the top edge is sticky, contract the selection
-		lastColumn++;
-	}
-	else if (stickyColumnEdge == MBTableGridRightEdge) {
-		// If the bottom edge is sticky, expand the contraction
-		firstColumn++;
-	}
-	self.selectedColumnIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(firstColumn, lastColumn - firstColumn + 1)];
-
-    [self scrollSelectionToVisibleShowingHorizontalEdge:MBHorizontalEdgeRight];
-}
-
 - (void)scrollToArea:(NSRect)area animate:(BOOL)shouldAnimate {
 	if (shouldAnimate) {
 		[NSAnimationContext runAnimationGroup: ^(NSAnimationContext *context) {
@@ -840,8 +859,8 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 }
 
 - (void)selectAll:(id)sender {
-	stickyColumnEdge = MBTableGridLeftEdge;
-	stickyRowEdge = MBTableGridTopEdge;
+	stickyColumnEdge = MBHorizontalEdgeLeft;
+	stickyRowEdge = MBVerticalEdgeTop;
 
 	self.selectedColumnIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, _numberOfColumns)];
 	self.selectedRowIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, _numberOfRows)];
@@ -1555,16 +1574,16 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 	return contentView;
 }
 
-- (void)_setStickyColumn:(MBTableGridEdge)stickyColumn row:(MBTableGridEdge)stickyRow {
+- (void)_setStickyColumn:(MBHorizontalEdge)stickyColumn row:(MBVerticalEdge)stickyRow {
 	stickyColumnEdge = stickyColumn;
 	stickyRowEdge = stickyRow;
 }
 
-- (MBTableGridEdge)_stickyColumn {
+- (MBHorizontalEdge)_stickyColumn {
 	return stickyColumnEdge;
 }
 
-- (MBTableGridEdge)_stickyRow {
+- (MBVerticalEdge)_stickyRow {
 	return stickyRowEdge;
 }
 

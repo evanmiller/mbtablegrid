@@ -71,12 +71,6 @@ APPKIT_EXTERN NSString *MBTableGridDidMoveRowsNotification;
 APPKIT_EXTERN NSString *MBTableGridColumnDataType;
 APPKIT_EXTERN NSString *MBTableGridRowDataType;
 
-typedef enum {
-	MBTableGridLeftEdge		= 0,
-	MBTableGridRightEdge	= 1,
-	MBTableGridTopEdge		= 3,
-	MBTableGridBottomEdge	= 4
-} MBTableGridEdge;
 typedef NS_ENUM(NSUInteger, MBHorizontalEdge) {
     MBHorizontalEdgeLeft,
     MBHorizontalEdgeRight
@@ -144,8 +138,8 @@ typedef NS_ENUM(NSUInteger, MBVerticalEdge) {
 	BOOL shouldOverrideModifiers;
 	
 	/* Sticky Edges (for Shift+Arrow expansions) */
-	MBTableGridEdge stickyColumnEdge;
-	MBTableGridEdge stickyRowEdge;
+	MBHorizontalEdge stickyColumnEdge;
+	MBVerticalEdge stickyRowEdge;
 	NSMutableArray *columnIndexNames;
 	NSMutableDictionary* _columnWidths;
 	
