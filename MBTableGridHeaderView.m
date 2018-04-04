@@ -136,15 +136,56 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 	}
 }
 
+- (void) resetCursorRects {
+	if (self.orientation == MBTableHeaderHorizontalOrientation) {
+		// Draw the column headers
+		NSUInteger numberOfColumns = self.tableGrid.numberOfColumns;
+		[headerCell setOrientation:self.orientation];
+		NSUInteger column = 0;
+		while (column < numberOfColumns) {
+			NSRect headerRect = [self headerRectOfColumn:column];
+			NSRect resizeRect = NSMakeRect(NSMinX(headerRect) + NSWidth(headerRect) - 2, NSMinY(headerRect), 5, NSHeight(headerRect));
+
+			if(CGRectIntersectsRect(resizeRect, self.visibleRect)) {
+				[self addCursorRect:resizeRect cursor:[NSCursor resizeLeftRightCursor]];
+			}
+			column++;
+		}
+	}
+}
+
+- (void) updateTrackingAreas {
+	// Remove all tracking areas
+	for (NSTrackingArea *trackingArea in self.trackingAreas) {
+		[self removeTrackingArea:trackingArea];
+	}
+
+	[super updateTrackingAreas];
+
+	if (self.orientation == MBTableHeaderHorizontalOrientation) {
+		// Draw the column headers
+		NSUInteger numberOfColumns = self.tableGrid.numberOfColumns;
+		[headerCell setOrientation:self.orientation];
+		NSUInteger column = 0;
+		while (column < numberOfColumns) {
+			NSRect headerRect = [self headerRectOfColumn:column];
+
+			// Create new tracking area for resizing columns
+			NSRect resizeRect = NSMakeRect(NSMinX(headerRect) + NSWidth(headerRect) - 2, NSMinY(headerRect), 5, NSHeight(headerRect));
+
+			if(CGRectIntersectsRect(resizeRect, self.visibleRect)) {
+				NSTrackingArea *resizeTrackingArea = [[NSTrackingArea alloc] initWithRect:resizeRect options: (NSTrackingMouseEnteredAndExited | NSTrackingActiveAlways) owner:self userInfo:nil];
+				[self addTrackingArea:resizeTrackingArea];
+			}
+
+			column++;
+		}
+	}
+}
+
 - (void)drawRect:(NSRect)rect
 {
 	if (self.orientation == MBTableHeaderHorizontalOrientation) {
-        
-        // Remove all tracking areas
-		for (NSTrackingArea *trackingArea in self.trackingAreas) {
-			[self removeTrackingArea:trackingArea];
-		}
-
 		// Draw the column headers
 		NSUInteger numberOfColumns = self.tableGrid.numberOfColumns;
 		[headerCell setOrientation:self.orientation];
@@ -166,22 +207,7 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 				
 				headerCell.stringValue = [self.tableGrid _headerStringForColumn:column];
 				[headerCell drawWithFrame:headerRect inView:self];
-                
 			}
-			
-			// Create new tracking area for resizing columns
-			NSRect resizeRect = NSMakeRect(NSMinX(headerRect) + NSWidth(headerRect) - 2,
-										   NSMinY(headerRect),
-										   5, // width
-										   NSHeight(headerRect));
-			NSTrackingArea *resizeTrackingArea = [[NSTrackingArea alloc] initWithRect:resizeRect
-																			  options:(NSTrackingMouseEnteredAndExited | NSTrackingActiveAlways)
-																				owner:self
-																			 userInfo:nil];
-			
-			// keep track of tracking areas and add tracking to view
-			[self addTrackingArea:resizeTrackingArea];
-			
 			column++;
 		}
         
@@ -234,9 +260,8 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 			draggingColumnIndex = [self.tableGrid columnAtPoint:[self convertPoint:NSMakePoint(loc.x - 3, loc.y) toView:self.tableGrid]];
 			lastMouseDraggingLocation = loc;
 			isResizing = YES;
-			
-		} else {
-		
+		}
+		else {
 			// For single clicks,
 			if (theEvent.clickCount == 1) {
 				if ((theEvent.modifierFlags & NSShiftKeyMask) && self.tableGrid.allowsMultipleSelection) {
@@ -302,7 +327,6 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 	CGFloat deltaY = fabs(loc.y - mouseDownLocation.y);
 	    
     if (canResize) {
-        
         [[NSCursor resizeLeftRightCursor] set];
         [[self window] disableCursorRects];
         
@@ -314,7 +338,7 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
         // Resize column and resize views
 		
         CGFloat offset = [self.tableGrid resizeColumnWithIndex:draggingColumnIndex withDistance:dragDistance location:loc];
-        lastMouseDraggingLocation.x += offset;
+       // lastMouseDraggingLocation.x += offset;
         
         if (offset != 0.0) {
             [[NSCursor resizeRightCursor] set];
@@ -352,7 +376,7 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
             }
             
             // If there's nothing under the mouse, bail out (something went wrong)
-            if (itemUnderMouse < 0)
+            if (itemUnderMouse < 0 || itemUnderMouse == NSNotFound)
                 return;
             
             // Calculate the range of items to select
@@ -392,6 +416,7 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 		// update cache of column rects
 		
 		[self.tableGrid.columnRects removeAllObjects];
+		[self updateTrackingAreas];
 		
     } else {
         
@@ -422,18 +447,13 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 
 - (void)mouseEntered:(NSEvent *)theEvent
 {
-    // Change to resize cursor
-    [[NSCursor resizeLeftRightCursor] set];
     canResize = YES;
-    
 }
 
 - (void)mouseExited:(NSEvent *)theEvent
 {
 	if (!isResizing) {
-        
         // Revert to normal cursor
-        [[NSCursor arrowCursor] set];
         canResize = NO;
     }
 }
