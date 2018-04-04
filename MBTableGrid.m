@@ -520,25 +520,12 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 		row = [self.selectedRowIndexes lastIndex];
 	}
 
-	// If we're already at the first row, do nothing
-	if (row <= 0)
-		return;
+    if (row <= 0) { return; }
 
-	// If the Shift key was not held, move the selection
 	self.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:column];
 	self.selectedRowIndexes = [NSIndexSet indexSetWithIndex:(row - 1)];
 
-	if (row > 0) {
-		NSRect cellRect = [self frameOfCellAtColumn:column row:row - 1];
-		cellRect = [self convertRect:cellRect toView:self.contentView];
-		if (!NSContainsRect(self.contentView.visibleRect, cellRect)) {
-			cellRect.origin.x = self.contentView.visibleRect.origin.x;
-			[self scrollToArea:cellRect animate:NO];
-		}
-		else {
-			[self redrawVisibleContent];
-		}
-	}
+    [self scrollSelectionToVisible];
 
 	if(self.singleClickCellEdit) {
 		[self.contentView editSelectedCell:nil text:@""];
@@ -601,26 +588,12 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 		row = [self.selectedRowIndexes lastIndex];
 	}
 
-	// If we're already at the last row, do nothing
-	if (row >= (_numberOfRows - 1))
-		return;
+    if (row >= (_numberOfRows - 1)) { return; }
 
-	// If the Shift key was not held, move the selection
 	self.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:column];
 	self.selectedRowIndexes = [NSIndexSet indexSetWithIndex:(row + 1)];
 
-    if (row + 1 < [self numberOfRows]) {
-        NSRect cellRect = [self frameOfCellAtColumn:column row:row + 1];
-        cellRect = [self convertRect:cellRect toView:contentScrollView.contentView];
-        if (!NSContainsRect(self.contentView.visibleRect, cellRect)) {
-            cellRect.origin.y = cellRect.origin.y - self.contentView.visibleRect.size.height + cellRect.size.height;
-            cellRect.origin.x = self.contentView.visibleRect.origin.x;
-            [self scrollToArea:cellRect animate:NO];
-        }
-        else {
-            [self redrawVisibleContent];
-        }
-    }
+    [self scrollSelectionToVisible];
 }
 
 - (void)moveDownAndModifySelection:(id)sender {
@@ -680,31 +653,17 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 		row = [self.selectedRowIndexes lastIndex];
 	}
 
-	if(column == 0) {
-		if(row > 0) {
-			column = _numberOfColumns;
-			row = row - 1;
-		}
-		else {
-			return;
-		}
-	}
+	if (column == 0) {
+        if (row <= 0) { return; }
 
-	if (column > 0) {
-		NSRect cellRect = [self frameOfCellAtColumn:column - 1 row:row];
-		cellRect = [self convertRect:cellRect toView:contentScrollView.contentView];
-		if (!NSContainsRect(self.contentView.visibleRect, cellRect)) {
-			cellRect.origin.y = self.contentView.visibleRect.origin.y;
-			[self scrollToArea:cellRect animate:NO];
-		}
-		else {
-            [self redrawVisibleContent];
-		}
-	}
+        self.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:MAX(0, _numberOfColumns - 1)];
+        self.selectedRowIndexes = [NSIndexSet indexSetWithIndex:row - 1];
+    } else {
+        self.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:(column - 1)];
+        self.selectedRowIndexes = [NSIndexSet indexSetWithIndex:row];
+    }
 
-	// If the Shift key was not held, move the selection
-	self.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:(column - 1)];
-	self.selectedRowIndexes = [NSIndexSet indexSetWithIndex:row];
+    [self scrollSelectionToVisible];
 }
 
 - (void)moveLeftAndModifySelection:(id)sender {
@@ -768,7 +727,7 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 	if (column >= (_numberOfColumns - 1)) {
 		if(row < (_numberOfRows - 1)) {
 			self.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:0];
-			self.selectedRowIndexes = [NSIndexSet indexSetWithIndex:row+1];
+			self.selectedRowIndexes = [NSIndexSet indexSetWithIndex:(row + 1)];
 		}
 	}
 	else {
@@ -776,18 +735,44 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 		self.selectedRowIndexes = [NSIndexSet indexSetWithIndex:row];
 	}
 
-    if (column + 1 < [self numberOfColumns]) {
-		NSRect cellRect = [self frameOfCellAtColumn:column + 1 row:row];
-		cellRect = [self convertRect:cellRect toView:contentScrollView.contentView];
-		if (!NSContainsRect(self.contentView.visibleRect, cellRect)) {
-			cellRect.origin.x = cellRect.origin.x - self.contentView.visibleRect.size.width + cellRect.size.width;
-			cellRect.origin.y = self.contentView.visibleRect.origin.y;
-			[self scrollToArea:cellRect animate:NO];
-		}
-		else {
-            [self redrawVisibleContent];
-		}
-	}
+    [self scrollSelectionToVisible];
+}
+
+/** Scrolls the minimum distance required to make the selection fully visible. Not animated. */
+- (void)scrollSelectionToVisible
+{
+    NSUInteger column = [self.selectedColumnIndexes firstIndex];
+    NSUInteger row = [self.selectedRowIndexes firstIndex];
+
+    if (column > [self numberOfColumns]) { return; }
+
+    NSRect visibleRect = self.contentView.visibleRect;
+    NSRect cellRect = [self frameOfCellAtColumn:column row:row];
+    cellRect = [self convertRect:cellRect toView:contentScrollView.contentView];
+
+    if (NSContainsRect(visibleRect, cellRect)) {
+        [self redrawVisibleContent];
+        return;
+    }
+
+    NSPoint scrollDelta = NSMakePoint(0, 0);
+
+    if (NSMinX(cellRect) < NSMinX(visibleRect)) {
+        scrollDelta.x = NSMinX(cellRect) - NSMinX(visibleRect);
+    } else if (NSMaxX(cellRect) > NSMaxX(visibleRect)) {
+        scrollDelta.x = NSMinX(cellRect) - NSMinX(visibleRect) - NSWidth(visibleRect) + NSWidth(cellRect);
+    }
+
+    if (NSMinY(cellRect) < NSMinY(visibleRect)) {
+        scrollDelta.y = NSMinY(cellRect) - NSMinY(visibleRect);
+    } else if (NSMaxY(cellRect) > NSMaxY(visibleRect)) {
+        scrollDelta.y = NSMinY(cellRect) - NSMinY(visibleRect) - NSHeight(visibleRect) + NSHeight(cellRect);
+    }
+
+    NSPoint scrollOffset = contentScrollView.contentView.bounds.origin;
+    scrollOffset.x += scrollDelta.x;
+    scrollOffset.y += scrollDelta.y;
+    [contentScrollView.contentView scrollToPoint:scrollOffset];
 }
 
 - (void)redrawVisibleContent
@@ -851,10 +836,8 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 		}];
 	}
 	else {
-//		[contentScrollView.contentView scrollRectToVisible:area];
-		[contentScrollView.contentView scrollToPoint:area.origin];
+        [contentScrollView.contentView scrollRectToVisible:area];
         [self setNeedsDisplay:YES];
-//		NSLog(@"area: %@", NSStringFromRect(area));
 	}
 }
 
