@@ -80,6 +80,23 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 - (void)_setDropRow:(NSInteger)rowIndex;
 @end
 
+
+@implementation NSIndexSet (DirectionalExpansionConvenience)
+- (NSUInteger)indexForExpansionInHorizontalDirection:(MBHorizontalEdge)direction
+{
+    return (direction == MBHorizontalEdgeLeft)
+        ? [self firstIndex]
+        : [self lastIndex];
+}
+
+- (NSUInteger)indexForExpansionInVerticalDirection:(MBVerticalEdge)direction
+{
+    return (direction == MBVerticalEdgeTop)
+        ? [self firstIndex]
+        : [self lastIndex];
+}
+@end
+
 @implementation MBTableGrid
 
 @synthesize allowsMultipleSelection;
@@ -561,19 +578,7 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 	}
 	self.selectedRowIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(firstRow, lastRow - firstRow + 1)];
 
-	NSUInteger column = [self.selectedColumnIndexes firstIndex];
-
-	if (firstRow - 1 > 0) {
-		NSRect cellRect = [self frameOfCellAtColumn:column row:firstRow - 1];
-		cellRect = [self convertRect:cellRect toView:contentScrollView.contentView];
-		if (!NSContainsRect(self.contentView.visibleRect, cellRect)) {
-			cellRect.origin.x = self.contentView.visibleRect.origin.x;
-			[self scrollToArea:cellRect animate:NO];
-		}
-		else {
-			[contentView setNeedsDisplayInRect:contentView.visibleRect];
-		}
-	}
+    [self scrollSelectionToVisibleShowingVerticalEdge:MBVerticalEdgeTop];
 }
 
 - (void)moveDown:(id)sender {
@@ -625,20 +630,7 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 	}
 	self.selectedRowIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(firstRow, lastRow - firstRow + 1)];
 
-	NSUInteger column = [self.selectedColumnIndexes lastIndex];
-
-	if (lastRow + 1 < [self numberOfRows]) {
-		NSRect cellRect = [self frameOfCellAtColumn:column row:lastRow + 1];
-		cellRect = [self convertRect:cellRect toView:contentScrollView.contentView];
-		if (!NSContainsRect(self.contentView.visibleRect, cellRect)) {
-			cellRect.origin.y = cellRect.origin.y - self.contentView.visibleRect.size.height + cellRect.size.height;
-			cellRect.origin.x = self.contentView.visibleRect.origin.x;
-			[self scrollToArea:cellRect animate:NO];
-		}
-		else {
-            [self redrawVisibleContent];
-		}
-	}
+    [self scrollSelectionToVisibleShowingVerticalEdge:MBVerticalEdgeBottom];
 }
 
 - (void)moveLeft:(id)sender {
@@ -681,20 +673,6 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 		stickyColumnEdge = MBTableGridRightEdge;
 	}
 
-	NSUInteger row = [self.selectedRowIndexes firstIndex];
-
-	if (firstColumn > 0) {
-		NSRect cellRect = [self frameOfCellAtColumn:firstColumn - 1 row:row];
-		cellRect = [self convertRect:cellRect toView:contentScrollView.contentView];
-		if (!NSContainsRect(self.contentView.visibleRect, cellRect)) {
-			cellRect.origin.y = self.contentView.visibleRect.origin.y;
-			[self scrollToArea:cellRect animate:NO];
-		}
-		else {
-            [self redrawVisibleContent];
-		}
-	}
-
 
 	// We can't expand past the first column
 	if (stickyColumnEdge == MBTableGridRightEdge && firstColumn <= 0)
@@ -709,6 +687,8 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 		firstColumn--;
 	}
 	self.selectedColumnIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(firstColumn, lastColumn - firstColumn + 1)];
+
+    [self scrollSelectionToVisibleShowingHorizontalEdge:MBHorizontalEdgeLeft];
 }
 
 - (void)moveRight:(id)sender {
@@ -738,11 +718,43 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
     [self scrollSelectionToVisible];
 }
 
-/** Scrolls the minimum distance required to make the selection fully visible. Not animated. */
+/**
+ Scrolls the minimum distance required to make the selection fully visible.
+
+ Use to put top-left corner or single cells into focus. Not animated. */
 - (void)scrollSelectionToVisible
 {
-    NSUInteger column = [self.selectedColumnIndexes firstIndex];
-    NSUInteger row = [self.selectedRowIndexes firstIndex];
+    // Single-cell selection equals top-left expansion.
+    [self scrollSelectionToVisibleShowingHorizontalEdge:MBHorizontalEdgeLeft
+                                           verticalEdge:MBVerticalEdgeTop];
+}
+
+
+/**
+ Scrolls the minimum distance required to make the selection visible at the edge defined by @p vertical.
+
+ @param vertical Direction in which to expand the selection.
+ */
+- (void)scrollSelectionToVisibleShowingVerticalEdge:(MBVerticalEdge)vertical
+{
+    [self scrollSelectionToVisibleShowingHorizontalEdge:self.previousHorizontalSelectionDirection
+                                           verticalEdge:vertical];
+}
+
+- (void)scrollSelectionToVisibleShowingHorizontalEdge:(MBHorizontalEdge)horizontal
+{
+    [self scrollSelectionToVisibleShowingHorizontalEdge:horizontal
+                                           verticalEdge:self.previousVerticalSelectionDirection];
+}
+
+- (void)scrollSelectionToVisibleShowingHorizontalEdge:(MBHorizontalEdge)horizontal verticalEdge:(MBVerticalEdge)vertical
+{
+    // Cache latest direction to keep orientation when using the keyboard to expand the selection.
+    self.previousHorizontalSelectionDirection = horizontal;
+    self.previousVerticalSelectionDirection = vertical;
+
+    NSUInteger column = [self.selectedColumnIndexes indexForExpansionInHorizontalDirection:horizontal];
+    NSUInteger row = [self.selectedRowIndexes indexForExpansionInVerticalDirection:vertical];
 
     if (column > [self numberOfColumns]) { return; }
 
@@ -811,20 +823,7 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 	}
 	self.selectedColumnIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(firstColumn, lastColumn - firstColumn + 1)];
 
-	NSUInteger row = [self.selectedRowIndexes lastIndex];
-
-	if (lastColumn + 1 < [self numberOfColumns]) {
-		NSRect cellRect = [self frameOfCellAtColumn:lastColumn + 1 row:row];
-		cellRect = [self convertRect:cellRect toView:contentScrollView.contentView];
-		if (!NSContainsRect(self.contentView.visibleRect, cellRect)) {
-			cellRect.origin.x = cellRect.origin.x - self.contentView.visibleRect.size.width + cellRect.size.width;
-			cellRect.origin.y = self.contentView.visibleRect.origin.y;
-			[self scrollToArea:cellRect animate:NO];
-		}
-		else {
-            [self redrawVisibleContent];
-		}
-	}
+    [self scrollSelectionToVisibleShowingHorizontalEdge:MBHorizontalEdgeRight];
 }
 
 - (void)scrollToArea:(NSRect)area animate:(BOOL)shouldAnimate {
@@ -832,8 +831,7 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 		[NSAnimationContext runAnimationGroup: ^(NSAnimationContext *context) {
 		    [context setAllowsImplicitAnimation:YES];
 		    [self.contentView scrollRectToVisible:area];
-		} completionHandler: ^{
-		}];
+		} completionHandler: ^{ }];
 	}
 	else {
         [contentScrollView.contentView scrollRectToVisible:area];

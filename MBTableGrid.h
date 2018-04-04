@@ -77,6 +77,15 @@ typedef enum {
 	MBTableGridTopEdge		= 3,
 	MBTableGridBottomEdge	= 4
 } MBTableGridEdge;
+typedef NS_ENUM(NSUInteger, MBHorizontalEdge) {
+    MBHorizontalEdgeLeft,
+    MBHorizontalEdgeRight
+};
+
+typedef NS_ENUM(NSUInteger, MBVerticalEdge) {
+    MBVerticalEdgeTop,
+    MBVerticalEdgeBottom
+};
 
 /**
  * @brief		MBTableGrid (sometimes referred to as a table grid)
