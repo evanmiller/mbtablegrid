@@ -39,7 +39,7 @@
 - (NSColor*)borderColor
 {
 	if (_borderColor == nil)
-		_borderColor = [[NSColor gridColor] colorWithAlphaComponent:0.5];
+		_borderColor = [NSColor gridColor];
 	return _borderColor;
 }
 
@@ -99,10 +99,6 @@
 			fillRect.size.width += 2.0;
 		}
 		NSBezierPath* path = [NSBezierPath bezierPathWithRoundedRect:fillRect xRadius:4.0 yRadius:4.0];
-
-		NSColor* overlayWhite = [NSColor whiteColor];
-		[overlayWhite set];
-		[path fill];
 
 		NSColor *overlayColor = [[NSColor alternateSelectedControlColor] colorWithAlphaComponent:0.26];
 		[overlayColor set];

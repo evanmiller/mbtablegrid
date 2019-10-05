@@ -42,7 +42,7 @@
     if (self)
     {
         self.backgroundColor = NSColor.clearColor;
-		self.borderColor = [NSColor.gridColor colorWithAlphaComponent:0.5];
+		self.borderColor = NSColor.gridColor;
 		self.truncatesLastVisibleLine = YES;
         return self;
     }
