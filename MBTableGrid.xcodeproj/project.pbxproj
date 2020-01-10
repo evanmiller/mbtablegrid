@@ -9,8 +9,6 @@
 /* Begin PBXBuildFile section */
 		173D292D1AA1779F009945FC /* MBFooterTextCell.h in Headers */ = {isa = PBXBuildFile; fileRef = 173D292B1AA1779F009945FC /* MBFooterTextCell.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		173D292E1AA1779F009945FC /* MBFooterTextCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 173D292C1AA1779F009945FC /* MBFooterTextCell.m */; };
-		8D11072A0486CEB800E47090 /* MainMenu.nib in Resources */ = {isa = PBXBuildFile; fileRef = 29B97318FDCFA39411CA2CEA /* MainMenu.nib */; };
-		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
 		C63DB4CD1A19E2F70069BF5D /* QuickLook.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C63DB4CB1A19DA030069BF5D /* QuickLook.framework */; };
@@ -28,6 +26,7 @@
 		C6BF26891A4AC502008EB93F /* MBTableGridFooterView.h in Headers */ = {isa = PBXBuildFile; fileRef = C6BF26881A4AC502008EB93F /* MBTableGridFooterView.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		C9412A5F0D8AE98C00E9E614 /* MBTableGridController.m in Sources */ = {isa = PBXBuildFile; fileRef = C9412A5E0D8AE98C00E9E614 /* MBTableGridController.m */; };
 		CA46E3621A09726A00C43B4B /* MBTableGridEditable.h in Headers */ = {isa = PBXBuildFile; fileRef = CA46E3611A09726A00C43B4B /* MBTableGridEditable.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DCDB6EDB23C905C200F348EB /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = DCDB6EDA23C905C200F348EB /* MainMenu.xib */; };
 		E2E62BAC1781C33500F36275 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2E62BAB1781C33400F36275 /* Cocoa.framework */; };
 		E2E62BBA1781C37300F36275 /* MBTableGrid.m in Sources */ = {isa = PBXBuildFile; fileRef = C9412A3E0D8A061C00E9E614 /* MBTableGrid.m */; };
 		E2E62BBB1781C37600F36275 /* MBTableGridContentView.m in Sources */ = {isa = PBXBuildFile; fileRef = C9412B210D8B2C5E00E9E614 /* MBTableGridContentView.m */; };
@@ -43,19 +42,14 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		089C165DFE840E0CC02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		13E42FB307B3F0F600E4EEF1 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = /System/Library/Frameworks/CoreData.framework; sourceTree = "<absolute>"; };
 		173D292B1AA1779F009945FC /* MBFooterTextCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MBFooterTextCell.h; sourceTree = SOURCE_ROOT; };
 		173D292C1AA1779F009945FC /* MBFooterTextCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MBFooterTextCell.m; sourceTree = SOURCE_ROOT; };
 		29B97316FDCFA39411CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
-		29B97319FDCFA39411CA2CEA /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = English.lproj/MainMenu.nib; sourceTree = "<group>"; };
 		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		32CA4F630368D1EE00C91783 /* MBTableGrid_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MBTableGrid_Prefix.pch; sourceTree = "<group>"; };
-		6593B73F1AA37B6200BE9726 /* nl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nl; path = nl.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		6593B7401AA37B6200BE9726 /* nl */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = nl; path = nl.lproj/MainMenu.nib; sourceTree = "<group>"; };
-		6593B7411AA37B6200BE9726 /* nl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nl; path = nl.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* MBTableGrid.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MBTableGrid.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C63DB4CB1A19DA030069BF5D /* QuickLook.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuickLook.framework; path = System/Library/Frameworks/QuickLook.framework; sourceTree = SDKROOT; };
@@ -83,11 +77,9 @@
 		C9412D7B0D8B5AB900E9E614 /* MBTableGridCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MBTableGridCell.h; sourceTree = SOURCE_ROOT; };
 		C9412D7C0D8B5AB900E9E614 /* MBTableGridCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MBTableGridCell.m; sourceTree = SOURCE_ROOT; };
 		CA46E3611A09726A00C43B4B /* MBTableGridEditable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MBTableGridEditable.h; sourceTree = SOURCE_ROOT; };
+		DCDB6EDA23C905C200F348EB /* MainMenu.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = MainMenu.xib; sourceTree = "<group>"; };
 		E2E62BAA1781C33400F36275 /* MBTableGrid.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = MBTableGrid.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		E2E62BAB1781C33400F36275 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
-		E2E62BAF1781C33500F36275 /* MBTableGrid-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "MBTableGrid-Info.plist"; sourceTree = "<group>"; };
-		E2E62BB11781C33500F36275 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		E2E62BB31781C33500F36275 /* MBTableGrid-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "MBTableGrid-Prefix.pch"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -177,11 +169,10 @@
 			isa = PBXGroup;
 			children = (
 				8D1107310486CEB800E47090 /* Info.plist */,
-				089C165CFE840E0CC02AAC07 /* InfoPlist.strings */,
-				29B97318FDCFA39411CA2CEA /* MainMenu.nib */,
 				C63F9EB2186AE60C00DB171F /* sort-asc.png */,
 				C63F9EB3186AE60C00DB171F /* sort-asc@2x.png */,
 				C63F9EB4186AE60C00DB171F /* sort-desc.png */,
+				DCDB6EDA23C905C200F348EB /* MainMenu.xib */,
 				C63F9EB5186AE60C00DB171F /* sort-desc@2x.png */,
 				C6AB1C281A15F0DF0092B29C /* rose.jpg */,
 				C6AB1C2C1A16B18B0092B29C /* acc-quicklook.png */,
@@ -221,19 +212,8 @@
 				C9412D7B0D8B5AB900E9E614 /* MBTableGridCell.h */,
 				C9412D7C0D8B5AB900E9E614 /* MBTableGridCell.m */,
 				CA46E3611A09726A00C43B4B /* MBTableGridEditable.h */,
-				E2E62BAE1781C33500F36275 /* Supporting Files */,
 			);
 			path = MBTableGrid;
-			sourceTree = "<group>";
-		};
-		E2E62BAE1781C33500F36275 /* Supporting Files */ = {
-			isa = PBXGroup;
-			children = (
-				E2E62BAF1781C33500F36275 /* MBTableGrid-Info.plist */,
-				E2E62BB01781C33500F36275 /* InfoPlist.strings */,
-				E2E62BB31781C33500F36275 /* MBTableGrid-Prefix.pch */,
-			);
-			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -303,7 +283,7 @@
 			};
 			buildConfigurationList = C01FCF4E08A954540054247B /* Build configuration list for PBXProject "MBTableGrid" */;
 			compatibilityVersion = "Xcode 3.2";
-			developmentRegion = English;
+			developmentRegion = en;
 			hasScannedForEncodings = 1;
 			knownRegions = (
 				en,
@@ -325,12 +305,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				C63F9EB7186AE60C00DB171F /* sort-asc@2x.png in Resources */,
+				DCDB6EDB23C905C200F348EB /* MainMenu.xib in Resources */,
 				C6AB1C2F1A16B18B0092B29C /* acc-quicklook@2x.png in Resources */,
 				C63F9EB8186AE60C00DB171F /* sort-desc.png in Resources */,
 				C6AB1C2E1A16B18B0092B29C /* acc-quicklook.png in Resources */,
-				8D11072A0486CEB800E47090 /* MainMenu.nib in Resources */,
 				C63F9EB6186AE60C00DB171F /* sort-asc.png in Resources */,
-				8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */,
 				C6AB1C291A15F0DF0092B29C /* rose.jpg in Resources */,
 				C63F9EB9186AE60C00DB171F /* sort-desc@2x.png in Resources */,
 			);
@@ -370,36 +349,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXVariantGroup section */
-		089C165CFE840E0CC02AAC07 /* InfoPlist.strings */ = {
-			isa = PBXVariantGroup;
-			children = (
-				089C165DFE840E0CC02AAC07 /* English */,
-				6593B73F1AA37B6200BE9726 /* nl */,
-			);
-			name = InfoPlist.strings;
-			sourceTree = "<group>";
-		};
-		29B97318FDCFA39411CA2CEA /* MainMenu.nib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				29B97319FDCFA39411CA2CEA /* English */,
-				6593B7401AA37B6200BE9726 /* nl */,
-			);
-			name = MainMenu.nib;
-			sourceTree = "<group>";
-		};
-		E2E62BB01781C33500F36275 /* InfoPlist.strings */ = {
-			isa = PBXVariantGroup;
-			children = (
-				E2E62BB11781C33500F36275 /* en */,
-				6593B7411AA37B6200BE9726 /* nl */,
-			);
-			name = InfoPlist.strings;
-			sourceTree = "<group>";
-		};
-/* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
 		C01FCF4B08A954540054247B /* Debug */ = {
