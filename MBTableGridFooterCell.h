@@ -24,13 +24,13 @@
  */
 
 #import <Cocoa/Cocoa.h>
-#import "MBPopupButtonCell.h"
+#import "MBTableGridCell.h"
 
 /**
  * @brief		\c MBTableGridFooterCell is solely
  *				responsible for drawing column footer
  */
-@interface MBTableGridFooterCell : MBPopupButtonCell {
+@interface MBTableGridFooterCell : MBTableGridCell {
 }
 
 
