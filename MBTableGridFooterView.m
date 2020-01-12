@@ -76,19 +76,6 @@
 	
 }
 
-- (void)updateLevelIndicator:(NSNumber *)value {
-    NSInteger selectedColumn = [self.tableGrid.selectedColumnIndexes firstIndex];
-    // sanity check to make sure we have an NSNumber.
-    // I've observed that when the user lets go of the mouse,
-    // the value parameter becomes the MBTableGridContentView
-    // object for some reason.
-    if ([value isKindOfClass:[NSNumber class]]) {
-        [self.tableGrid _setFooterValue:value forColumn:selectedColumn];
-        NSRect cellFrame = [self footerRectOfColumn:selectedColumn];
-        [self.tableGrid setNeedsDisplayInRect:cellFrame];
-    }
-}
-
 - (BOOL)isFlipped
 {
 	return YES;
