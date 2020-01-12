@@ -148,17 +148,9 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 		NSUInteger row = firstRow;
 		while (row <= lastRow) {
 			NSRect cellFrame = [self frameOfCellAtColumn:column row:row];
-			// Only draw the cell if we need to
-			NSCell* cell = [_tableGrid _cellForColumn:column row: row];
-			
-			// If we need to draw then check if we're a popup button. This may be a bit of
-			// a hack, but it seems to clear up the problem with the popup button clearing
-			// if you don't select a value. It's the editedRow and editedColumn bits that
-			// cause the problem. However, if you remove the row and column condition, then
-			// if you type into a text field, the text doesn't get cleared first before you
-			// start typing. So this seems to make both conditions work.
-			
 			if ([self needsToDrawRect:cellFrame] && (!(row == editedRow && column == editedColumn))) {
+                // Only fetch the cell if we need to
+                NSCell* cell = [_tableGrid _cellForColumn:column row: row];
 				[cell drawWithFrame:cellFrame inView:self];
 			}
 			row++;
