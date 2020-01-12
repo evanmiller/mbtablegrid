@@ -39,10 +39,10 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 - (id)_objectValueForColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 - (void)_setObjectValue:(id)value forColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 - (BOOL)_canEditCellAtColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
-- (void)_setStickyColumn:(MBTableGridEdge)stickyColumn row:(MBTableGridEdge)stickyRow;
+- (void)_setStickyColumn:(MBHorizontalEdge)stickyColumn row:(MBVerticalEdge)stickyRow;
 - (float)_widthForColumn:(NSUInteger)columnIndex;
-- (MBTableGridEdge)_stickyColumn;
-- (MBTableGridEdge)_stickyRow;
+- (MBHorizontalEdge)_stickyColumn;
+- (MBVerticalEdge)_stickyRow;
 - (void)_userDidEnterInvalidStringInColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex errorDescription:(NSString *)errorDescription;
 - (NSCell *)_footerCellForColumn:(NSUInteger)columnIndex;
 - (id)_footerValueForColumn:(NSUInteger)columnIndex;
@@ -346,15 +346,15 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 			// If the shift key was held down, extend the selection
 			NSUInteger stickyColumn = [self.tableGrid.selectedColumnIndexes firstIndex];
 			NSUInteger stickyRow = [self.tableGrid.selectedRowIndexes firstIndex];
-			
-			MBTableGridEdge stickyColumnEdge = [self.tableGrid _stickyColumn];
-			MBTableGridEdge stickyRowEdge = [self.tableGrid _stickyRow];
+
+			MBHorizontalEdge stickyColumnEdge = [self.tableGrid _stickyColumn];
+			MBVerticalEdge stickyRowEdge = [self.tableGrid _stickyRow];
 			
 			// Compensate for sticky edges
-			if (stickyColumnEdge == MBTableGridRightEdge) {
+			if (stickyColumnEdge == MBHorizontalEdgeRight) {
 				stickyColumn = [self.tableGrid.selectedColumnIndexes lastIndex];
 			}
-			if (stickyRowEdge == MBTableGridBottomEdge) {
+			if (stickyRowEdge == MBVerticalEdgeBottom) {
 				stickyRow = [self.tableGrid.selectedRowIndexes lastIndex];
 			}
 			
@@ -363,16 +363,16 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 			
 			if (mouseDownColumn < stickyColumn) {
 				selectionColumnRange = NSMakeRange(mouseDownColumn, stickyColumn-mouseDownColumn+1);
-				stickyColumnEdge = MBTableGridRightEdge;
+				stickyColumnEdge = MBHorizontalEdgeRight;
 			} else {
-				stickyColumnEdge = MBTableGridLeftEdge;
+				stickyColumnEdge = MBHorizontalEdgeLeft;
 			}
 			
 			if (mouseDownRow < stickyRow) {
 				selectionRowRange = NSMakeRange(mouseDownRow, stickyRow-mouseDownRow+1);
-				stickyRowEdge = MBTableGridBottomEdge;
+				stickyRowEdge = MBVerticalEdgeBottom;
 			} else {
-				stickyRowEdge = MBTableGridTopEdge;
+				stickyRowEdge = MBVerticalEdgeTop;
 			}
 			
 			// Select the proper cells
@@ -387,7 +387,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 			// Only notify observers once even though we change the selection twice
 			[self.tableGrid setSelectedColumnIndexes:[NSIndexSet indexSetWithIndex:mouseDownColumn] notify: NO];
 			self.tableGrid.selectedRowIndexes = [NSIndexSet indexSetWithIndex:mouseDownRow];
-			[self.tableGrid _setStickyColumn:MBTableGridLeftEdge row:MBTableGridTopEdge];
+			[self.tableGrid _setStickyColumn:MBHorizontalEdgeLeft row:MBVerticalEdgeTop];
 		}
     // Edit cells on double click if they don't already edit on first click
 	}
@@ -435,8 +435,8 @@ NSString * const MBTableGridTrackingPartKey = @"part";
             [self resetCursorRects];
         }
 		
-		MBTableGridEdge columnEdge = MBTableGridLeftEdge;
-		MBTableGridEdge rowEdge = MBTableGridTopEdge;
+		MBHorizontalEdge columnEdge = MBHorizontalEdgeLeft;
+		MBVerticalEdge rowEdge = MBVerticalEdgeTop;
 		
 		// Select the appropriate number of columns
 		if(column != NSNotFound && !isFilling) {
@@ -445,9 +445,8 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 			if(column < mouseDownColumn) {
 				firstColumnToSelect = column;
 				numberOfColumnsToSelect = mouseDownColumn-column+1;
-				
-				// Set the sticky edge to the right
-				columnEdge = MBTableGridRightEdge;
+
+				columnEdge = MBHorizontalEdgeRight;
 			}
 			
 			self.tableGrid.selectedColumnIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(firstColumnToSelect,numberOfColumnsToSelect)];
@@ -461,9 +460,8 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 			if(row < mouseDownRow) {
 				firstRowToSelect = row;
 				numberOfRowsToSelect = mouseDownRow-row+1;
-				
-				// Set the sticky row to the bottom
-				rowEdge = MBTableGridBottomEdge;
+
+				rowEdge = MBVerticalEdgeBottom;
 			}
 			
 			self.tableGrid.selectedRowIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(firstRowToSelect,numberOfRowsToSelect)];
