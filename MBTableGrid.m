@@ -172,23 +172,23 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 		// We want to synchronize the scroll views
         [[NSNotificationCenter defaultCenter] addObserver:self
 												 selector:@selector(columnHeaderViewDidScroll:)
-													 name:NSViewBoundsDidChangeNotification
-												   object:columnHeaderScrollView.contentView];
+													 name:NSScrollViewDidLiveScrollNotification
+												   object:columnHeaderScrollView];
         
         [[NSNotificationCenter defaultCenter] addObserver:self
 												 selector:@selector(rowHeaderViewDidScroll:)
-													 name:NSViewBoundsDidChangeNotification
-												   object:rowHeaderScrollView.contentView];
+													 name:NSScrollViewDidLiveScrollNotification
+												   object:rowHeaderScrollView];
         
         [[NSNotificationCenter defaultCenter] addObserver:self
 												 selector:@selector(columnFooterViewDidScroll:)
-													 name:NSViewBoundsDidChangeNotification
-												   object:columnFooterScrollView.contentView];
+													 name:NSScrollViewDidLiveScrollNotification
+												   object:columnFooterScrollView];
         
         [[NSNotificationCenter defaultCenter] addObserver:self
 												 selector:@selector(contentViewDidScroll:)
-													 name:NSViewBoundsDidChangeNotification
-												   object:contentScrollView.contentView];
+													 name:NSScrollViewDidLiveScrollNotification
+												   object:contentScrollView];
         
 		// Set the default selection
 		self.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:0];
@@ -911,7 +911,7 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 
 - (void)columnHeaderViewDidScroll:(NSNotification *)aNotification {
     
-	NSView *changedView = aNotification.object;
+    NSClipView *changedView = ((NSScrollView *)aNotification.object).contentView;
 	NSPoint changedBoundsOrigin = changedView.bounds.origin;
 
     [self syncronizeScrollView:contentScrollView withChangedBoundsOrigin:changedBoundsOrigin horizontal:YES];
@@ -922,7 +922,7 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 
 - (void)rowHeaderViewDidScroll:(NSNotification *)aNotification {
     
-    NSView *changedView = aNotification.object;
+    NSClipView *changedView = ((NSScrollView *)aNotification.object).contentView;
     NSPoint changedBoundsOrigin = changedView.bounds.origin;
     
     [self syncronizeScrollView:contentScrollView withChangedBoundsOrigin:changedBoundsOrigin horizontal:NO];
@@ -931,7 +931,7 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 
 - (void)columnFooterViewDidScroll:(NSNotification *)aNotification {
     
-    NSView *changedView = aNotification.object;
+    NSClipView *changedView = ((NSScrollView *)aNotification.object).contentView;
     NSPoint changedBoundsOrigin = changedView.bounds.origin;
     
     [self syncronizeScrollView:contentScrollView withChangedBoundsOrigin:changedBoundsOrigin horizontal:YES];
@@ -942,7 +942,7 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 
 - (void)contentViewDidScroll:(NSNotification *)aNotification {
     
-    NSView *changedView = aNotification.object;
+    NSClipView *changedView = ((NSScrollView *)aNotification.object).contentView;
     NSPoint changedBoundsOrigin = changedView.bounds.origin;
     
     [self syncronizeScrollView:columnHeaderScrollView withChangedBoundsOrigin:changedBoundsOrigin horizontal:YES];
