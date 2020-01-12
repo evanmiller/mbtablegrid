@@ -858,6 +858,51 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 	}
 }
 
+- (void)scrollPageDown:(id)sender {
+    NSPoint point = contentScrollView.contentView.bounds.origin;
+    point.y += (contentScrollView.bounds.size.height - contentScrollView.verticalPageScroll);
+    if (point.y > self.contentView.bounds.size.height - contentScrollView.bounds.size.height)
+        point.y = self.contentView.bounds.size.height - contentScrollView.bounds.size.height;
+
+    [self scrollToPoint:point animate:YES];
+}
+
+- (void)scrollPageUp:(id)sender {
+    NSPoint point = contentScrollView.contentView.bounds.origin;
+    point.y -= (contentScrollView.bounds.size.height - contentScrollView.verticalPageScroll);
+    if (point.y < 0.0)
+        point.y = 0.0;
+
+    [self scrollToPoint:point animate:YES];
+}
+
+- (void)scrollToEndOfDocument:(id)sender {
+    NSPoint point = contentScrollView.contentView.bounds.origin;
+    point.y = (self.contentView.bounds.size.height - contentScrollView.bounds.size.height);
+    [self scrollToPoint:point animate:YES];
+}
+
+- (void)scrollToBeginningOfDocument:(id)sender {
+    NSPoint point = contentScrollView.contentView.bounds.origin;
+    point.y = 0.0;
+    [self scrollToPoint:point animate:YES];
+}
+
+- (void)scrollToPoint:(NSPoint)point animate:(BOOL)shouldAnimate {
+    if (shouldAnimate) {
+        [NSAnimationContext runAnimationGroup: ^(NSAnimationContext *context) {
+            context.allowsImplicitAnimation = YES;
+            [contentScrollView.contentView scrollToPoint:point];
+            [rowHeaderScrollView.contentView scrollToPoint:NSMakePoint(0.0, point.y)];
+            [contentScrollView reflectScrolledClipView:contentScrollView.contentView];
+        } completionHandler: ^{
+
+        }];
+    } else {
+        [contentScrollView.contentView scrollToPoint:point];
+    }
+}
+
 - (void)selectAll:(id)sender {
 	stickyColumnEdge = MBHorizontalEdgeLeft;
 	stickyRowEdge = MBVerticalEdgeTop;
