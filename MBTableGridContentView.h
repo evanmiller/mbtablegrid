@@ -26,10 +26,9 @@
 #import <Cocoa/Cocoa.h>
 
 #define MBTableGridColumnHeaderHeight 24.0
+#define MBTableGridColumnFooterHeight 24.0
 #define MBTableGridColumnHeaderWidth 60
 #define MBTableGridRowHeaderWidth 40.0
-#define COLUMNFLOATSIZE(x) [NSNumber numberWithFloat:x]
-#define COLUMNKEY(idx) [NSString stringWithFormat:@"column%lu",idx]
 
 typedef NS_ENUM(NSUInteger, MBTableGridTrackingPart)
 {
