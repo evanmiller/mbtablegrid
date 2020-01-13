@@ -128,6 +128,8 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 #pragma mark -
 #pragma mark Initialization & Superclass Overrides
 
++ (BOOL)requiresConstraintBasedLayout { return YES; }
+
 - (id)initWithFrame:(NSRect)frameRect {
 	if (self = [super initWithFrame:frameRect]) {
 		columnIndexNames = [NSMutableArray array];
