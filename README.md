@@ -19,6 +19,8 @@ An NSControl subclass which provides a spreadsheet-style table grid, forked (ori
 * [Matt Ball](https://github.com/mattball) - original version
 * [Mikecsh](https://github.com/mikecsh)
 * [Tommy van der Vorst](https://pixelspark.nl)
+* [Demitri Muna](https://github.com/demitri)
+* [Christian Tietze](https://github.com/DivineDominion)
 * [Evan Miller](https://github.com/evanmiller)
 
 Contributions are very welcome. I will merge contributions provided that contributors agree to release their contributions under the license below.
