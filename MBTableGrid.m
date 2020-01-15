@@ -352,14 +352,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 	}
 	[self _setWidth:currentWidth forColumn:columnIndex];
 	
-	// Update views with new sizes
-	//[contentView setFrameSize:NSMakeSize(currentWidth, NSHeight(contentView.frame))];
-	//[columnHeaderView setFrameSize:NSMakeSize(currentWidth, NSHeight(columnHeaderView.frame))];
-	contentView.needsDisplay = YES;
-	columnHeaderView.needsDisplay = YES;
 	self.needsDisplay = YES;
-	[columnHeaderView setNeedsDisplayInRect:columnHeaderView.frame];
-	columnFooterView.needsDisplay = YES;
 }
 
 - (void)setNeedsDisplay:(BOOL)needsDisplay {
@@ -807,7 +800,6 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
     cellRect = [self convertRect:cellRect toView:contentScrollView.contentView];
 
     if (NSContainsRect(visibleRect, cellRect)) {
-        [self redrawVisibleContent];
         return;
     }
 
@@ -831,13 +823,6 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
     [contentScrollView.contentView scrollToPoint:scrollOffset];
 }
 
-- (void)redrawVisibleContent
-{
-    [contentView setNeedsDisplayInRect:contentView.visibleRect];
-    [rowHeaderView setNeedsDisplayInRect:rowHeaderView.visibleRect];
-    [columnHeaderView setNeedsDisplayInRect:columnHeaderView.visibleRect];
-}
-
 - (void)scrollToArea:(NSRect)area animate:(BOOL)shouldAnimate {
 	if (shouldAnimate) {
 		[NSAnimationContext runAnimationGroup: ^(NSAnimationContext *context) {
@@ -847,7 +832,6 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 	}
 	else {
         [contentScrollView.contentView scrollRectToVisible:area];
-        [self setNeedsDisplay:YES];
 	}
 }
 
@@ -962,8 +946,6 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
         // We have to tell the NSScrollView to update its scrollers
         [scrollView reflectScrolledClipView:scrollView.contentView];
     }
-
-	[self redrawVisibleContent];
 }
 
 - (void)columnHeaderViewDidScroll:(NSNotification *)aNotification {
@@ -1338,9 +1320,6 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 	[self scrollToArea:visibleRect animate:NO];
 
 	[self setNeedsDisplay:YES];
-	[self._contentView setNeedsDisplay:YES];
-	[self.columnHeaderView setNeedsDisplay:YES];
-	[self.rowHeaderView setNeedsDisplay:YES];
 }
 
 #pragma mark Layout Support
@@ -1367,6 +1346,23 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 	rect.size.width += MBTableGridRowHeaderWidth;
 
 	return rect;
+}
+
+- (NSRect)rectOfSelectionRelativeToContentView {
+    NSRect dirtyRect = NSZeroRect;
+    if (selectedRowIndexes.count) {
+        dirtyRect = NSUnionRect([self.contentView rectOfRow:selectedRowIndexes.firstIndex],
+                                [self.contentView rectOfRow:selectedRowIndexes.lastIndex]);
+        if (selectedColumnIndexes.count) {
+            NSRect dirtyColumnRect = NSUnionRect([self.contentView rectOfColumn:selectedColumnIndexes.firstIndex],
+                                                 [self.contentView rectOfColumn:selectedColumnIndexes.lastIndex]);
+            dirtyRect = NSIntersectionRect(dirtyRect, dirtyColumnRect);
+        }
+    } else if (selectedColumnIndexes.count) {
+        dirtyRect = NSUnionRect([self.contentView rectOfColumn:selectedColumnIndexes.firstIndex],
+                                [self.contentView rectOfColumn:selectedColumnIndexes.lastIndex]);
+    }
+    return dirtyRect;
 }
 
 - (NSRect)frameOfCellAtColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex {
@@ -1434,7 +1430,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 }
 
 - (void)setSelectedColumnIndexes:(NSIndexSet *)anIndexSet notify:(BOOL)notify {
-	if (anIndexSet == selectedColumnIndexes)
+    if ([anIndexSet isEqualToIndexSet:selectedColumnIndexes])
 		return;
 
 	// Allow the delegate to validate the selection
@@ -1442,9 +1438,17 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		anIndexSet = [self.delegate tableGrid:self willSelectColumnsAtIndexPath:anIndexSet];
 	}
 
+    // mark old selection as dirty
+    [self.contentView setNeedsDisplayInRect:[self rectOfSelectionRelativeToContentView]];
+
 	selectedColumnIndexes = anIndexSet;
 
-	[self redrawVisibleContent];
+    // mark new selection as dirty
+    [self.contentView setNeedsDisplayInRect:[self rectOfSelectionRelativeToContentView]];
+
+    // mark other views as dirty
+    columnHeaderView.needsDisplay = YES;
+    columnFooterView.needsDisplay = YES;
 
 	// Post the notification
 	if(notify) {
@@ -1457,7 +1461,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 }
 
 - (void)setSelectedRowIndexes:(NSIndexSet *)anIndexSet notify:(BOOL)notify {
-    if (anIndexSet == selectedRowIndexes)
+    if ([anIndexSet isEqualToIndexSet:selectedRowIndexes])
         return;
 
 	// Allow the delegate to validate the selection
@@ -1465,9 +1469,16 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		anIndexSet = [self.delegate tableGrid:self willSelectRowsAtIndexPath:anIndexSet];
 	}
 
+    // mark old selection as dirty
+    [self.contentView setNeedsDisplayInRect:[self rectOfSelectionRelativeToContentView]];
+
 	selectedRowIndexes = anIndexSet;
 
-	[self redrawVisibleContent];
+    // mark new selection as dirty
+    [self.contentView setNeedsDisplayInRect:[self rectOfSelectionRelativeToContentView]];
+
+    // mark other views as dirty
+    rowHeaderView.needsDisplay = YES;
 	
 	// Post the notification
 	if(notify) {
