@@ -270,26 +270,6 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 	}
 }
 
-- (void)updateCell:(id)sender {
-	// This is here just to satisfy NSLevelIndicatorCell because
-	// when this view is the controlView for the NSLevelIndicatorCell,
-	// it calls updateCell on this controlView.
-}
-
-- (void)updateLevelIndicator:(NSNumber *)value {
-	NSInteger selectedColumn = [self.tableGrid.selectedColumnIndexes firstIndex];
-	NSInteger selectedRow = [self.tableGrid.selectedRowIndexes firstIndex];
-	// sanity check to make sure we have an NSNumber.
-	// I've observed that when the user lets go of the mouse,
-	// the value parameter becomes the MBTableGridContentView
-	// object for some reason.
-	if ([value isKindOfClass:[NSNumber class]]) {
-		[self.tableGrid _setObjectValue:value forColumn:selectedColumn row:selectedRow];
-		NSRect cellFrame = [self.tableGrid frameOfCellAtColumn:selectedColumn row:selectedRow];
-		[self.tableGrid setNeedsDisplayInRect:cellFrame];
-	}
-}
-
 - (BOOL)isFlipped
 {
 	return YES;
@@ -570,20 +550,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 }
 
 - (void) resetCursorRects {
-	NSIndexSet *selectedColumns = self.tableGrid.selectedColumnIndexes;
-	NSIndexSet *selectedRows = self.tableGrid.selectedRowIndexes;
-
-	if (selectedColumns.count > 0 && selectedRows.count > 0) {
-		NSRect selectionTopLeft = [self frameOfCellAtColumn:[selectedColumns firstIndex] row:[selectedRows firstIndex]];
-		NSRect selectionBottomRight = [self frameOfCellAtColumn:[selectedColumns lastIndex] row:[selectedRows lastIndex]];
-		
-		NSRect selectionRect;
-		selectionRect.origin = selectionTopLeft.origin;
-		selectionRect.size.width = NSMaxX(selectionBottomRight)-selectionTopLeft.origin.x;
-		selectionRect.size.height = NSMaxY(selectionBottomRight)-selectionTopLeft.origin.y;
-
-		[self addCursorRect:[self visibleRect] cursor:[self _cellSelectionCursor]];
-	}
+    [self addCursorRect:[self visibleRect] cursor:[self _cellSelectionCursor]];
 }
 
 #pragma mark -
