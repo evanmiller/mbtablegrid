@@ -819,7 +819,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 	NSInteger column = 0;
 	while(column < self.tableGrid.numberOfColumns) {
 		NSRect columnFrame = [self rectOfColumn:column];
-		if(aPoint.x > columnFrame.origin.x && aPoint.x < (columnFrame.origin.x + columnFrame.size.width)) {
+		if(aPoint.x >= columnFrame.origin.x && aPoint.x < (columnFrame.origin.x + columnFrame.size.width)) {
 			return column;
 		}
 		column++;
