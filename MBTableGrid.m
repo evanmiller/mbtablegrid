@@ -239,6 +239,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
         self.previousHorizontalSelectionDirection = MBHorizontalEdgeLeft;
 		
 		self.columnRects = [NSMutableDictionary dictionary];
+        [self registerForDraggedTypes:@[MBTableGridColumnDataType, MBTableGridRowDataType]];
 	}
 	return self;
 }
@@ -446,15 +447,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
     return offset;
 }
 
-- (void)registerForDraggedTypes:(NSArray *)pboardTypes {
-	// Add the column and row types to the array
-	NSMutableArray *types = [NSMutableArray arrayWithArray:pboardTypes];
-
-	if (!pboardTypes) {
-		types = [NSMutableArray array];
-	}
-	[types addObjectsFromArray:@[MBTableGridColumnDataType, MBTableGridRowDataType]];
-
+- (void)registerForDraggedTypes:(NSArray *)types {
 	[super registerForDraggedTypes:types];
 
 	// Register the content view for everything
