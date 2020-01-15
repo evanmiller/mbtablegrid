@@ -338,7 +338,7 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
         // Resize column and resize views
 		
         CGFloat offset = [self.tableGrid resizeColumnWithIndex:draggingColumnIndex withDistance:dragDistance location:loc];
-       // lastMouseDraggingLocation.x += offset;
+        lastMouseDraggingLocation.x += offset;
         
         if (offset != 0.0) {
             [[NSCursor resizeRightCursor] set];
