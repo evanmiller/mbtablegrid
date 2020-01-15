@@ -420,7 +420,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		parent = parent.superview;
 	}
 
-	if(!isBeneathContentView) {
+	if (v != nil && !isBeneathContentView) {
 		NSEvent* event = self.window.currentEvent;
 		if(event != nil && event.type == NSLeftMouseDown) {
 			// Clear selection
