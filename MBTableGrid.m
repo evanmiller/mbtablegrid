@@ -434,7 +434,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 - (CGFloat)resizeColumnWithIndex:(NSUInteger)columnIndex withDistance:(float)distance location:(NSPoint)location {
 	// Note that we only need this rect for its origin, which won't be changing, otherwise we'd need to flush the column rect cache first
-	NSRect columnRect = [self rectOfColumn:columnIndex];
+	NSRect columnRect = [self.contentView rectOfColumn:columnIndex];
 
 	// Flush rect cache for this column because we're changing its size
 	// Note that we're doing this after calling rectOfColumn: because that would cache the rect before we change its width...
@@ -443,25 +443,21 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 	// Set new width of column
 	CGFloat currentWidth = [self _widthForColumn:columnIndex];
     CGFloat offset = 0.0;
-	
-    currentWidth += distance;
-    
     CGFloat minColumnWidth = MBTableHeaderMinimumColumnWidth;
     
     if (columnHeaderView.indicatorImage && [columnHeaderView.indicatorImageColumns containsObject:[NSNumber numberWithInteger:columnIndex]]) {
         minColumnWidth += columnHeaderView.indicatorImage.size.width + 2.0f;
     }
-    
-    if (currentWidth < minColumnWidth) {
+
+    if (currentWidth + distance <= minColumnWidth) {
+        distance = -(currentWidth - minColumnWidth);
         currentWidth = minColumnWidth;
+        offset = columnRect.origin.x - location.x + minColumnWidth;
+    } else {
+        currentWidth += distance;
     }
 	
 	[self _setWidth:currentWidth forColumn:columnIndex];
-    
-    if (currentWidth == minColumnWidth) {
-        offset = columnRect.origin.x - location.x + minColumnWidth - self.rowHeaderView.frame.size.width;
-        distance = 0.0;
-    }
     
     // Update views with new sizes
     [contentView setFrameSize:NSMakeSize(NSWidth(contentView.frame) + distance, NSHeight(contentView.frame))];
