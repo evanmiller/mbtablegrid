@@ -252,7 +252,8 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 	NSInteger row = [self.tableGrid rowAtPoint:loc];
 
 	if([theEvent clickCount] == 2 && !rightMouse) {
-		[self.tableGrid.delegate tableGrid:self.tableGrid didDoubleClickColumn:column];
+        if ([self.tableGrid.delegate respondsToSelector:@selector(tableGrid:didDoubleClickColumn:)])
+            [self.tableGrid.delegate tableGrid:self.tableGrid didDoubleClickColumn:column];
 	}
 	else {
 		if (canResize) {
