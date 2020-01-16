@@ -764,7 +764,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 		}
 	}
 	
-	return rect;
+    return NSMakeRect(rect.origin.x, 0.0, rect.size.width, [self frame].size.height);
 }
 
 - (NSRect)rectOfRow:(NSUInteger)rowIndex
