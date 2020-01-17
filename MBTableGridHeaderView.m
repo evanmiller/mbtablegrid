@@ -266,6 +266,21 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 			if (theEvent.clickCount == 1) {
 				if ((theEvent.modifierFlags & NSShiftKeyMask) && self.tableGrid.allowsMultipleSelection) {
 					// If the shift key was held down, extend the selection
+                    if(self.orientation == MBTableHeaderHorizontalOrientation) {
+                        if (self.tableGrid.selectedColumnIndexes.count && column != NSNotFound) {
+                            NSInteger firstIndex = MIN(column, self.tableGrid.selectedColumnIndexes.firstIndex);
+                            NSInteger lastIndex = MAX(column, self.tableGrid.selectedColumnIndexes.lastIndex);
+                            self.tableGrid.selectedColumnIndexes = [NSIndexSet indexSetWithIndexesInRange:
+                                                                    NSMakeRange(firstIndex, lastIndex - firstIndex + 1)];
+                        }
+                    } else {
+                        if (self.tableGrid.selectedRowIndexes.count && row != NSNotFound) {
+                            NSInteger firstIndex = MIN(row, self.tableGrid.selectedRowIndexes.firstIndex);
+                            NSInteger lastIndex = MAX(row, self.tableGrid.selectedRowIndexes.lastIndex);
+                            self.tableGrid.selectedRowIndexes = [NSIndexSet indexSetWithIndexesInRange:
+                                                                 NSMakeRange(firstIndex, lastIndex - firstIndex + 1)];
+                        }
+                    }
 				} else {
 					// No modifier keys, so change the selection
 					if(self.orientation == MBTableHeaderHorizontalOrientation) {
