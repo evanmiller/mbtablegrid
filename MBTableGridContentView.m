@@ -103,11 +103,11 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 		
 		self.wantsLayer = true;
 		self.layerContentsRedrawPolicy = NSViewLayerContentsRedrawOnSetNeedsDisplay;
-		[self.layer setDrawsAsynchronously:YES];
+		self.layer.drawsAsynchronously = YES;
 		_defaultCell = [[MBTableGridCell alloc] initTextCell:@""];
-        [_defaultCell setBordered:YES];
-		[_defaultCell setScrollable:YES];
-		[_defaultCell setLineBreakMode:NSLineBreakByTruncatingTail];
+        _defaultCell.bordered = YES;
+        _defaultCell.scrollable = YES;
+        _defaultCell.lineBreakMode = NSLineBreakByTruncatingTail;
 	}
 	return self;
 }
@@ -120,8 +120,8 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 - (void)drawRect:(NSRect)rect
 {
     
-    NSIndexSet *selectedColumns = [_tableGrid selectedColumnIndexes];
-    NSIndexSet *selectedRows = [_tableGrid selectedRowIndexes];
+    NSIndexSet *selectedColumns = _tableGrid.selectedColumnIndexes;
+    NSIndexSet *selectedRows = _tableGrid.selectedRowIndexes;
 	NSUInteger numberOfColumns = _tableGrid.numberOfColumns;
 	NSUInteger numberOfRows = _tableGrid.numberOfRows;
 	
@@ -174,36 +174,36 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 		//[translate translateXBy:-0.5 yBy:-0.5];
 		[selectionPath transformUsingAffineTransform:translate];
 		
-		NSColor *selectionColor = [NSColor alternateSelectedControlColor];
+		NSColor *selectionColor = NSColor.alternateSelectedControlColor;
 		
 		// If the view is not the first responder, then use a gray selection color
 		NSResponder *firstResponder = [self.window firstResponder];
 		BOOL disabled = (![firstResponder.class isSubclassOfClass:NSView.class] || ![(NSView *)firstResponder isDescendantOf:_tableGrid] || !self.window.isKeyWindow);
 		
 		if (disabled) {
-			selectionColor = [[selectionColor colorUsingColorSpaceName:NSDeviceWhiteColorSpace] colorUsingColorSpaceName:NSDeviceRGBColorSpace];
+            selectionColor = [[selectionColor colorUsingColorSpace:NSColorSpace.genericGrayColorSpace] colorUsingColorSpace:NSColorSpace.genericRGBColorSpace];
         } else if (isFilling) {
             selectionColor = [NSColor colorWithCalibratedRed:0.996 green:0.827 blue:0.176 alpha:1.000];
         }
 		
 		[[selectionColor colorWithAlphaComponent:0.3] set];
-		[selectionPath setLineWidth: 1.0];
+		selectionPath.lineWidth = 1.0;
 		[selectionPath stroke];
         
         [[selectionColor colorWithAlphaComponent:0.2f] set];
         [selectionPath fill];
         
-		if (!showsGrabHandle || disabled || [selectedColumns count] > 1) {
+		if (!showsGrabHandle || disabled || selectedColumns.count > 1) {
 			grabHandleRect = NSZeroRect;
 		}
         else if (shouldDrawFillPart != MBTableGridTrackingPartNone) {
             // Draw grab handle
             grabHandleRect = NSMakeRect(NSMidX(selectionInsetRect) - kGRAB_HANDLE_HALF_SIDE_LENGTH - 2, (shouldDrawFillPart == MBTableGridTrackingPartFillTop ? NSMinY(selectionInsetRect) : NSMaxY(selectionInsetRect)) - kGRAB_HANDLE_HALF_SIDE_LENGTH - 2, kGRAB_HANDLE_SIDE_LENGTH + 4, kGRAB_HANDLE_SIDE_LENGTH + 4);
-            [grabHandleImage drawInRect:grabHandleRect fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1.0];
+            [grabHandleImage drawInRect:grabHandleRect fromRect:NSZeroRect operation:NSCompositingOperationSourceOver fraction:1.0];
         }
 		
         // Inavlidate cursors so we use the correct cursor for the selection in the right place
-        [[self window] invalidateCursorRectsForView:self];
+        [self.window invalidateCursorRectsForView:self];
 	}
 	
 	// Draw the column drop indicator
@@ -222,10 +222,10 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 		columnBorder.origin.x = NSMinX(columnBorder)-2.0;
 		columnBorder.size.width = 4.0;
 		
-		NSColor *selectionColor = [NSColor alternateSelectedControlColor];
+		NSColor *selectionColor = NSColor.alternateSelectedControlColor;
 		
 		NSBezierPath *borderPath = [NSBezierPath bezierPathWithRect:columnBorder];
-		[borderPath setLineWidth:2.0];
+		borderPath.lineWidth = 2.0;
 		
 		[selectionColor set];
 		[borderPath stroke];
@@ -243,10 +243,10 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 		rowBorder.origin.y = NSMinY(rowBorder)-2.0;
 		rowBorder.size.height = 4.0;
 		
-		NSColor *selectionColor = [NSColor alternateSelectedControlColor];
+		NSColor *selectionColor = NSColor.alternateSelectedControlColor;
 		
 		NSBezierPath *borderPath = [NSBezierPath bezierPathWithRect:rowBorder];
-		[borderPath setLineWidth:2.0];
+		borderPath.lineWidth = 2.0;
 		
 		[selectionColor set];
 		[borderPath stroke];
@@ -262,7 +262,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 		
 		NSBezierPath *borderPath = [NSBezierPath bezierPathWithRect:NSInsetRect(cellFrame, 2, 2)];
 		
-		NSColor *dropColor = [NSColor alternateSelectedControlColor];
+		NSColor *dropColor = NSColor.alternateSelectedControlColor;
 		[dropColor set];
 		
 		borderPath.lineWidth = 2.0;
@@ -304,8 +304,8 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 		// Pass the event back to the MBTableGrid (Used to give First Responder status)
 		[self.tableGrid mouseDown:theEvent];
 		
-		NSUInteger selectedColumn = [self.tableGrid.selectedColumnIndexes firstIndex];
-		NSUInteger selectedRow = [self.tableGrid.selectedRowIndexes firstIndex];
+		NSUInteger selectedColumn = self.tableGrid.selectedColumnIndexes.firstIndex;
+		NSUInteger selectedRow = self.tableGrid.selectedRowIndexes.firstIndex;
 
         isFilling = showsGrabHandle && NSPointInRect(mouseLocationInContentView, grabHandleRect);
         
@@ -322,20 +322,20 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 			[self editSelectedCell:self text:nil];
 
 		// Expand a selection when the user holds the shift key
-		} else if (([theEvent modifierFlags] & NSShiftKeyMask) && self.tableGrid.allowsMultipleSelection && !isFilling) {
+        } else if ((theEvent.modifierFlags & NSEventModifierFlagShift) && self.tableGrid.allowsMultipleSelection && !isFilling) {
 			// If the shift key was held down, extend the selection
-			NSUInteger stickyColumn = [self.tableGrid.selectedColumnIndexes firstIndex];
-			NSUInteger stickyRow = [self.tableGrid.selectedRowIndexes firstIndex];
+			NSUInteger stickyColumn = self.tableGrid.selectedColumnIndexes.firstIndex;
+			NSUInteger stickyRow = self.tableGrid.selectedRowIndexes.firstIndex;
 
 			MBHorizontalEdge stickyColumnEdge = [self.tableGrid _stickyColumn];
 			MBVerticalEdge stickyRowEdge = [self.tableGrid _stickyRow];
 			
 			// Compensate for sticky edges
 			if (stickyColumnEdge == MBHorizontalEdgeRight) {
-				stickyColumn = [self.tableGrid.selectedColumnIndexes lastIndex];
+				stickyColumn = self.tableGrid.selectedColumnIndexes.lastIndex;
 			}
 			if (stickyRowEdge == MBVerticalEdgeBottom) {
-				stickyRow = [self.tableGrid.selectedRowIndexes lastIndex];
+				stickyRow = self.tableGrid.selectedRowIndexes.lastIndex;
 			}
 			
 			NSRange selectionColumnRange = NSMakeRange(stickyColumn, mouseDownColumn-stickyColumn+1);
@@ -377,7 +377,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 		[self editSelectedCell:self text:nil];
 	}
 
-	[self setNeedsDisplay:YES];
+	self.needsDisplay = YES;
 }
 
 - (void)mouseDragged:(NSEvent *)theEvent
@@ -451,7 +451,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 		// Set the sticky edges
 		[self.tableGrid _setStickyColumn:columnEdge row:rowEdge];
 		
-        [self setNeedsDisplay:YES];
+        self.needsDisplay = YES;
 	}
 }
 
@@ -478,7 +478,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
         
 		isFilling = NO;
         
-        [self.tableGrid setNeedsDisplay:YES];
+        self.tableGrid.needsDisplay = YES;
 	}
 	
 	mouseDownColumn = NSNotFound;
@@ -488,7 +488,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 
 - (void)mouseEntered:(NSEvent *)theEvent
 {
-    NSDictionary *dict = theEvent.userData;
+    NSDictionary<NSString *, id> *dict = theEvent.userData;
     MBTableGridTrackingPart part = [dict[MBTableGridTrackingPartKey] integerValue];
     
     if (shouldDrawFillPart != part) {
@@ -512,8 +512,8 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 	NSIndexSet *selectedRows = self.tableGrid.selectedRowIndexes;
 
 	if (selectedColumns.count > 0 && selectedRows.count > 0) {
-		NSRect selectionTopLeft = [self frameOfCellAtColumn:[selectedColumns firstIndex] row:[selectedRows firstIndex]];
-		NSRect selectionBottomRight = [self frameOfCellAtColumn:[selectedColumns lastIndex] row:[selectedRows lastIndex]];
+		NSRect selectionTopLeft = [self frameOfCellAtColumn:selectedColumns.firstIndex row:selectedRows.firstIndex];
+        NSRect selectionBottomRight = [self frameOfCellAtColumn:selectedColumns.lastIndex row:selectedRows.lastIndex];
 
 		NSRect selectionRect;
 		selectionRect.origin = selectionTopLeft.origin;
@@ -528,7 +528,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 		}
 
 		if (selectedColumns.count == 1 && CGRectIntersectsRect(self.visibleRect, selectionRect)) {
-			NSRect fillTrackingRect = [self rectOfColumn:[selectedColumns firstIndex]];
+			NSRect fillTrackingRect = [self rectOfColumn:selectedColumns.firstIndex];
 			fillTrackingRect = CGRectIntersection(fillTrackingRect, self.visibleRect);
 			fillTrackingRect.size.height = self.frame.size.height;
 			NSRect topFillTrackingRect, bottomFillTrackingRect;
@@ -550,7 +550,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 }
 
 - (void) resetCursorRects {
-    [self addCursorRect:[self visibleRect] cursor:[self _cellSelectionCursor]];
+    [self addCursorRect:self.visibleRect cursor:[self _cellSelectionCursor]];
 }
 
 #pragma mark -
@@ -579,10 +579,10 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 	NSInteger movementType = [aNotification.userInfo[@"NSTextMovement"] integerValue];
 
 	// Give focus back to the table grid (the field editor took it)
-	[[self window] makeFirstResponder:self.tableGrid];
+	[self.window makeFirstResponder:self.tableGrid];
 
 	if(movementType != NSCancelTextMovement) {
-		NSString *stringValue = [[[aNotification object] string] copy];
+		NSString *stringValue = [[aNotification.object string] copy];
 		[self.tableGrid _setObjectValue:stringValue forColumn:editedColumn row:editedRow];
 	}
 
@@ -590,8 +590,8 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 	editedRow = NSNotFound;
 	
 	// End the editing session
-	NSText* fe = [[self window] fieldEditor:NO forObject:self];
-	[[self.tableGrid cell] endEditing:fe];
+	NSText* fe = [self.window fieldEditor:NO forObject:self];
+	[self.tableGrid.cell endEditing:fe];
 
 
 	switch (movementType) {
@@ -604,7 +604,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 			break;
 
 		case NSReturnTextMovement:
-			if([NSApp currentEvent].modifierFlags & NSShiftKeyMask) {
+            if(NSApp.currentEvent.modifierFlags & NSEventModifierFlagShift) {
 				[self.tableGrid moveUp:self];
 			}
 			else {
@@ -620,8 +620,8 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 			break;
 	}
 
-	[fe setAlignment:NSTextAlignmentNatural];
-	[[self window] endEditingFor:self];
+	fe.alignment = NSTextAlignmentNatural;
+	[self.window endEditingFor:self];
 }
 
 #pragma mark -
@@ -688,8 +688,8 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 
 - (void)editSelectedCell:(id)sender text:(NSString *)aString
 {
-	NSInteger selectedColumn = [self.tableGrid.selectedColumnIndexes firstIndex];
-	NSInteger selectedRow = [self.tableGrid.selectedRowIndexes firstIndex];
+	NSInteger selectedColumn = self.tableGrid.selectedColumnIndexes.firstIndex;
+	NSInteger selectedRow = self.tableGrid.selectedRowIndexes.firstIndex;
 	NSCell *selectedCell = [self.tableGrid _cellForColumn:selectedColumn row: selectedRow];
 
 	// Check if the cell can be edited
@@ -700,10 +700,10 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 	}
 
 	// Select it and only it
-	if([self.tableGrid.selectedColumnIndexes count] > 1 && editedColumn != NSNotFound) {
+	if (self.tableGrid.selectedColumnIndexes.count > 1 && editedColumn != NSNotFound) {
 		self.tableGrid.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:editedColumn];
 	}
-	if([self.tableGrid.selectedRowIndexes count] > 1 && editedRow != NSNotFound) {
+	if (self.tableGrid.selectedRowIndexes.count > 1 && editedRow != NSNotFound) {
 		self.tableGrid.selectedRowIndexes = [NSIndexSet indexSetWithIndex:editedRow];
 	}
 
@@ -713,8 +713,8 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 
 	NSRect cellFrame = [self frameOfCellAtColumn:editedColumn row:editedRow];
 
-	[selectedCell setEditable:YES];
-	[selectedCell setSelectable:YES];
+	selectedCell.editable = YES;
+	selectedCell.selectable = YES;
 	
 	id currentValue = [self.tableGrid _objectValueForColumn:editedColumn row:editedRow];
 
@@ -724,9 +724,9 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 	editor.font = selectedCell.font;
 	selectedCell.stringValue = currentValue;
 	editor.string = currentValue;
-	NSEvent* event = [NSApp currentEvent];
-	if(event != nil && event.type == NSLeftMouseDown) {
-		[selectedCell editWithFrame:cellFrame inView:self editor:editor delegate:self event:[NSApp currentEvent]];
+	NSEvent* event = NSApp.currentEvent;
+    if(event != nil && event.type == NSEventTypeLeftMouseDown) {
+		[selectedCell editWithFrame:cellFrame inView:self editor:editor delegate:self event:event];
 	}
 	else {
 		[selectedCell selectWithFrame:cellFrame inView:self editor:editor delegate:self start:0 length:[currentValue length]];
@@ -742,14 +742,14 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 	if (columnIndex < self.tableGrid.numberOfColumns) {
 		NSValue *cachedRectValue = self.tableGrid.columnRects[@(columnIndex)];
 		if (cachedRectValue) {
-			rect = [cachedRectValue rectValue];
+			rect = cachedRectValue.rectValue;
 			foundRect = YES;
 		}
 	
 		if (!foundRect) {
 			float width = [self.tableGrid _widthForColumn:columnIndex];
 			
-			rect = NSMakeRect(0, 0, width, [self frame].size.height);
+			rect = NSMakeRect(0, 0, width, self.frame.size.height);
 			//rect.origin.x += 60.0 * columnIndex;
 			
 			NSUInteger i = 0;
@@ -769,7 +769,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 
 - (NSRect)rectOfRow:(NSUInteger)rowIndex
 {
-	NSRect rect = NSMakeRect(0, 0, [self frame].size.width, self.rowHeight);
+	NSRect rect = NSMakeRect(0, 0, self.frame.size.width, self.rowHeight);
 	rect.origin.y += self.rowHeight * rowIndex;
 	return rect;
 }
@@ -831,25 +831,25 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 	
 	// Set the shadow
 	NSShadow *shadow = [[NSShadow alloc] init];
-	[shadow setShadowColor:[NSColor colorWithDeviceWhite:0.0 alpha:0.8]];
-	[shadow setShadowBlurRadius:2.0];
-	[shadow setShadowOffset:NSMakeSize(0, -1.0)];
+	shadow.shadowColor = [NSColor colorWithCalibratedWhite:0.0 alpha:0.8];
+	shadow.shadowBlurRadius = 2.0;
+	shadow.shadowOffset = NSMakeSize(0, -1.0);
 	
-	[[NSGraphicsContext currentContext] saveGraphicsState];
+	[NSGraphicsContext.currentContext saveGraphicsState];
 	
 	[shadow set];
 	
-	[[NSColor blackColor] set];
+	[NSColor.blackColor set];
 	NSRectFill(horizontalOuter);
 	NSRectFill(verticalOuter);
 	
-	[[NSGraphicsContext currentContext] restoreGraphicsState];
+	[NSGraphicsContext.currentContext restoreGraphicsState];
 	
 	// Fill them again to compensate for the shadows
 	NSRectFill(horizontalOuter);
 	NSRectFill(verticalOuter);
 	
-	[[NSColor whiteColor] set];
+	[NSColor.whiteColor set];
 	NSRectFill(horizontalInner);
 	NSRectFill(verticalInner);
 	
@@ -880,19 +880,19 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 	NSRect horizontalOuter = NSInsetRect(horizontalInner, -1.0, -1.0);
 	NSRect verticalOuter = NSInsetRect(verticalInner, -1.0, -1.0);
 	
-	[[NSGraphicsContext currentContext] saveGraphicsState];
+	[NSGraphicsContext.currentContext saveGraphicsState];
 
-	[[NSColor whiteColor] set];
+	[NSColor.whiteColor set];
 	NSRectFill(horizontalOuter);
 	NSRectFill(verticalOuter);
 	
-	[[NSGraphicsContext currentContext] restoreGraphicsState];
+	[NSGraphicsContext.currentContext restoreGraphicsState];
 	
 	// Fill them again to compensate for the shadows
 	NSRectFill(horizontalOuter);
 	NSRectFill(verticalOuter);
 	
-	[[NSColor blackColor] set];
+	[NSColor.blackColor set];
 	NSRectFill(horizontalInner);
 	NSRectFill(verticalInner);
 	
@@ -913,13 +913,13 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 	
 	// Set the color in the current graphics context
 	
-	[[NSColor darkGrayColor] setStroke];
+	[NSColor.darkGrayColor setStroke];
 	[[NSColor colorWithCalibratedRed:0.996 green:0.827 blue:0.176 alpha:1.000] setFill];
 	
 	// Create our circle path
 	NSRect rect = NSMakeRect(1.0, 1.0, kGRAB_HANDLE_SIDE_LENGTH - 2.0, kGRAB_HANDLE_SIDE_LENGTH - 2.0);
 	NSBezierPath *circlePath = [NSBezierPath bezierPath];
-	[circlePath setLineWidth:0.5];
+	circlePath.lineWidth = 0.5;
 	[circlePath appendBezierPathWithOvalInRect: rect];
 	
 	// Outline and fill the path
@@ -945,19 +945,19 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 - (void)_setDropColumn:(NSInteger)columnIndex
 {
 	dropColumn = columnIndex;
-	[self setNeedsDisplay:YES];
+	self.needsDisplay = YES;
 }
 
 - (void)_setDropRow:(NSInteger)rowIndex
 {
 	dropRow = rowIndex;
-	[self setNeedsDisplay:YES];
+	self.needsDisplay = YES;
 }
 
 - (void)_timerAutoscrollCallback:(NSTimer *)aTimer
 {
-	NSEvent* event = [NSApp currentEvent];
-    if ([event type] == NSLeftMouseDragged )
+	NSEvent* event = NSApp.currentEvent;
+    if (NSApp.currentEvent.type == NSEventTypeLeftMouseDragged)
         [self autoscroll:event];
 }
 
