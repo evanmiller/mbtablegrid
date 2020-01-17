@@ -243,12 +243,15 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
                                                                          constant:MBTableGridRowHeaderWidth]];
 
 		// We want to synchronize the scroll views
-    for (NSScrollView *scrollView in @[ contentScrollView, columnHeaderScrollView, rowHeaderScrollView, columnFooterScrollView ]) {
-        [NSNotificationCenter.defaultCenter addObserver:self
-                                               selector:@selector(clipViewBoundsDidChange:)
-                                                   name:NSViewBoundsDidChangeNotification
-                                                 object:scrollView.contentView];
-    }
+        for (NSScrollView *scrollView in @[ contentScrollView, columnHeaderScrollView, rowHeaderScrollView, columnFooterScrollView ]) {
+            [NSNotificationCenter.defaultCenter addObserver:self
+                                                   selector:@selector(clipViewBoundsDidChange:)
+                                                       name:NSViewBoundsDidChangeNotification
+                                                     object:scrollView.contentView];
+        }
+
+        [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(preferredScrollerStyleDidChange:)
+                                                   name:NSPreferredScrollerStyleDidChangeNotification object:nil];
         
 		// Set the default selection
 		self.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:0];
@@ -1261,6 +1264,41 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
     }
 }
 
+- (void)updateAuxiliaryViewSizes {
+    NSRect contentRect = contentView.frame;
+
+	// Update the column header view's size
+    NSRect columnHeaderFrame = columnHeaderView.frame;
+    columnHeaderFrame.size.width = contentRect.size.width;
+    if (!contentScrollView.verticalScroller.isHidden && contentScrollView.scrollerStyle == NSScrollerStyleLegacy) {
+        columnHeaderFrame.size.width += [NSScroller scrollerWidthForControlSize:NSControlSizeRegular
+                                                                  scrollerStyle:contentScrollView.scrollerStyle];
+    }
+    [columnHeaderView setFrameSize:columnHeaderFrame.size];
+
+    // Update the row header view's size
+    NSRect rowHeaderFrame = rowHeaderView.frame;
+    rowHeaderFrame.size.height = contentRect.size.height;
+    if (!contentScrollView.horizontalScroller.isHidden && contentScrollView.scrollerStyle == NSScrollerStyleLegacy) {
+        columnHeaderFrame.size.height += [NSScroller scrollerWidthForControlSize:NSControlSizeRegular
+                                                                   scrollerStyle:contentScrollView.scrollerStyle];
+    }
+    [rowHeaderView setFrameSize:rowHeaderFrame.size];
+
+    // Update the colunm footer view's size
+    NSRect columnFooterFrame = columnFooterView.frame;
+    columnFooterFrame.size.width = contentRect.size.width;
+    if (!contentScrollView.verticalScroller.isHidden && contentScrollView.scrollerStyle == NSScrollerStyleLegacy) {
+        columnFooterFrame.size.width += [NSScroller scrollerWidthForControlSize:NSControlSizeRegular
+                                                                  scrollerStyle:contentScrollView.scrollerStyle];
+    }
+    [columnFooterView setFrameSize:columnHeaderFrame.size];
+}
+
+- (void)preferredScrollerStyleDidChange:(NSNotification *)notification {
+    [self updateAuxiliaryViewSizes];
+}
+
 - (void)reloadData {
 	CGRect visibleRect = [contentScrollView contentView].documentVisibleRect;
 	
@@ -1290,28 +1328,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 	NSRect contentRect = NSMakeRect(contentView.frame.origin.x, contentView.frame.origin.y, NSMaxX(bottomRightCellFrame), NSMaxY(bottomRightCellFrame));
 	[contentView setFrameSize:contentRect.size];
 
-	// Update the column header view's size
-	NSRect columnHeaderFrame = columnHeaderView.frame;
-	columnHeaderFrame.size.width = contentRect.size.width;
-    if (!contentScrollView.verticalScroller.isHidden) {
-        columnHeaderFrame.size.width += [NSScroller scrollerWidthForControlSize:NSControlSizeRegular scrollerStyle:NSScrollerStyleLegacy];	}
-	[columnHeaderView setFrameSize:columnHeaderFrame.size];
-
-	// Update the row header view's size
-	NSRect rowHeaderFrame = rowHeaderView.frame;
-	rowHeaderFrame.size.height = contentRect.size.height;
-    if (!contentScrollView.horizontalScroller.isHidden) {
-        columnHeaderFrame.size.height += [NSScroller scrollerWidthForControlSize:NSControlSizeRegular scrollerStyle:NSScrollerStyleLegacy];
-	}
-	[rowHeaderView setFrameSize:rowHeaderFrame.size];
-
-	NSRect columnFooterFrame = columnFooterView.frame;
-	columnFooterFrame.size.width = contentRect.size.width;
-    if (!contentScrollView.verticalScroller.isHidden) {
-        columnFooterFrame.size.width += [NSScroller scrollerWidthForControlSize:NSControlSizeRegular
-																  scrollerStyle:NSScrollerStyleOverlay];
-	}
-	[columnFooterView setFrameSize:columnHeaderFrame.size];
+    [self updateAuxiliaryViewSizes];
 
 	if(_numberOfRows > 0) {
 		if((visibleRect.size.height + visibleRect.origin.y) > contentRect.size.height) {
