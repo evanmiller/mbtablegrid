@@ -1206,9 +1206,11 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 				NSUInteger startIndex = dropRow;
 				NSUInteger length = draggedRows.count;
 
-				if (dropRow > draggedRows.firstIndex) {
-					startIndex -= draggedRows.count;
-				}
+        if (dropRow > draggedRows.lastIndex) {
+            startIndex -= length;
+        } else if (dropRow >= draggedRows.firstIndex) {
+            startIndex = draggedRows.firstIndex;
+        }
 
 				NSIndexSet *newRows = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(startIndex, length)];
 
@@ -1402,13 +1404,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 }
 
 - (NSInteger)rowAtPoint:(NSPoint)aPoint {
-	CGFloat y = aPoint.y - self.contentView.rowHeight;
-	NSInteger row = ceil(y / self.contentView.rowHeight);
-	if(row >= 0 && row <= _numberOfRows) {
-		return row;
-	}
-
-	return NSNotFound;
+    return [self.contentView rowAtPoint:[self convertPoint:aPoint toView:self.contentView]];
 }
 
 #pragma mark Auxiliary Views
