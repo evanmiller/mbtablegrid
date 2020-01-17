@@ -56,7 +56,9 @@ typedef enum _MBTableGridHeaderOrientation {
 
 @property (nonatomic, strong) NSFont* labelFont;
 
-@property (nonatomic, strong) NSImage *sortIndicatorImage;
+@property (nonatomic, strong) NSColor *sortIndicatorColor;
+
+@property (nonatomic, assign) BOOL sortIndicatorAscending;
 
 @property (nonatomic, strong) NSTrackingArea *resizeTrackingArea;
 

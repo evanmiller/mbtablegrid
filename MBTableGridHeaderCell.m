@@ -25,6 +25,8 @@
 
 #import "MBTableGridHeaderCell.h"
 
+#define kSortIndicatorXInset        4.0      /* Number of pixels to inset the drawing of the indicator from the right edge */
+
 @interface MBTableGridHeaderCell ()
 
 @end
@@ -55,6 +57,15 @@
 	if (_labelFont == nil)
 		_labelFont = [NSFont labelFontOfSize:NSFont.labelFontSize];
 	return _labelFont;
+}
+
+- (NSRect)imageRectForBounds:(NSRect)rect {
+    NSRect indicatorRect = NSZeroRect;
+    NSSize sortImageSize = NSMakeSize(10.0, 10.0);
+    indicatorRect.size = sortImageSize;
+    indicatorRect.origin.x = NSMaxX(rect) - (sortImageSize.width + kSortIndicatorXInset);
+    indicatorRect.origin.y = NSMinY(rect) + roundf((NSHeight(rect) - sortImageSize.height) / 2.0);
+    return indicatorRect;
 }
 
 - (void)drawWithFrame:(NSRect)cellFrame inView:(NSView *)controlView
@@ -129,6 +140,28 @@
 							   cellFrameRect.origin.y + (cellFrameRect.size.height - stringSize.height)/2,
 							   cellFrameRect.size.width - TEXT_PADDING,
 							   stringSize.height);
+        
+        if (self.sortIndicatorColor) {
+            NSRect indicatorRect = [self imageRectForBounds:cellFrame];
+            NSBezierPath *path = [NSBezierPath bezierPath];
+            path.lineCapStyle = NSRoundLineCapStyle;
+            path.lineWidth = 1.5;
+            [self.sortIndicatorColor setStroke];
+            [path moveToPoint:NSMakePoint(NSMinX(indicatorRect) + path.lineWidth / 2,
+                                          indicatorRect.origin.y + 0.25 * indicatorRect.size.height)];
+            [path lineToPoint:NSMakePoint(NSMidX(indicatorRect),
+                                          indicatorRect.origin.y + 0.75 * indicatorRect.size.height)];
+            [path lineToPoint:NSMakePoint(NSMaxX(indicatorRect) - path.lineWidth / 2,
+                                          indicatorRect.origin.y + 0.25 * indicatorRect.size.height)];
+            if (self.sortIndicatorAscending) {
+                NSAffineTransform *transform = [NSAffineTransform transform];
+                [transform translateXBy:0.0 yBy:2.5*indicatorRect.size.height];
+                [transform scaleXBy:1.0 yBy:-1.0];
+                [path transformUsingAffineTransform:transform];
+            }
+            [path stroke];
+            
+        }
 	} else {
 		textFrame = NSMakeRect(cellFrameRect.origin.x + (cellFrameRect.size.width - stringSize.width)/2,
 							   cellFrameRect.origin.y + (cellFrameRect.size.height - stringSize.height)/2,

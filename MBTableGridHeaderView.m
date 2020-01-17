@@ -39,6 +39,7 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 - (MBTableGridContentView *)_contentView;
 - (void)_dragColumnsWithEvent:(NSEvent *)theEvent;
 - (void)_dragRowsWithEvent:(NSEvent *)theEvent;
+- (void)_sortButtonClickedForColumn:(NSUInteger)column;
 @end
 
 @implementation MBTableGridHeaderView
@@ -69,71 +70,6 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
         isResizing = NO;
 	}
 	return self;
-}
-
-- (void)placeSortButtons
-{
-	NSMutableArray<NSButton *> *capturingButtons = [NSMutableArray arrayWithCapacity:0];
-
-	NSButton *sortButton;
-
-	for (NSNumber *cellNumber in self.indicatorImageColumns)
-	{
-		sortButton = [[NSButton alloc] init];
-		sortButton.image = self.indicatorImage;
-		sortButton.alternateImage = self.indicatorReverseImage;
-		sortButton.bordered = NO;
-        sortButton.state = NSControlStateValueOn;
-		sortButton.tag = cellNumber.integerValue;
-		sortButton.target = self.tableGrid;
-		sortButton.action = @selector(sortButtonClicked:);
-
-		[self addSubview:sortButton];
-		
-		[sortButton setNextState];
-		
-		[capturingButtons addObject:sortButton];
-	}
-
-	self.tableGrid.sortButtons = [[NSArray alloc] initWithArray:capturingButtons];
-}
-
-- (void)toggleSortButtonIcon:(NSButton*)btn
-{
-	btn.image = (btn.image == self.indicatorImage) ? self.indicatorReverseImage : self.indicatorImage;
-}
-
-- (void)layoutSortButtonWithRect:(NSRect)rect forColumn:(NSInteger)column
-{
-	// Set the frames of the sort buttons here
-	NSRect indicatorRect = NSZeroRect;
-	NSSize sortImageSize = self.indicatorImage.size;
-	indicatorRect.size = sortImageSize;
-	indicatorRect.origin.x = NSMaxX(rect) - (sortImageSize.width + kSortIndicatorXInset);
-	indicatorRect.origin.y = NSMinY(rect) + roundf((NSHeight(rect) - sortImageSize.height) / 2.0);
-
-	MBTableGrid *tableGrid = self.tableGrid;
-	
-	for (NSButton *button in tableGrid.sortButtons)
-	{
-		if (button.tag == column)
-		{
-			button.frame = indicatorRect;
-		}
-	}
-}
-
-- (void)viewWillDraw
-{
-	[super viewWillDraw];
-	
-	for (NSNumber *columnNumber in self.indicatorImageColumns)
-	{
-		NSInteger column = [columnNumber integerValue];
-		NSRect headerRect = [self headerRectOfColumn:column];
-
-		[self layoutSortButtonWithRect:headerRect forColumn:column];
-	}
 }
 
 - (void) resetCursorRects {
@@ -199,10 +135,16 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 				NSIndexSet *selectedColumns = [self.tableGrid selectedColumnIndexes];
                 headerCell.state = [selectedColumns containsIndex:column] ? NSControlStateValueOn : NSControlStateValueOff;
 				
-				if ([self.indicatorImageColumns containsObject:@(column)]) {
-					headerCell.sortIndicatorImage = self.indicatorImage;
+				if ([self.indicatorImageColumns containsIndex:column]) {
+                    if (_tableGrid.sortColumnIndex == column) {
+                        headerCell.sortIndicatorAscending = _tableGrid.isSortColumnAscending;
+                        headerCell.sortIndicatorColor = NSColor.labelColor;
+                    } else {
+                        headerCell.sortIndicatorAscending = NO;
+                        headerCell.sortIndicatorColor = NSColor.tertiaryLabelColor;
+                    }
 				} else {
-					headerCell.sortIndicatorImage = nil;
+					headerCell.sortIndicatorColor = nil;
 				}
 				
 				headerCell.stringValue = [self.tableGrid _headerStringForColumn:column];
@@ -251,6 +193,10 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 	NSInteger column = [self.tableGrid columnAtPoint:[self convertPoint:loc toView:self.tableGrid]];
 	NSInteger row = [self.tableGrid rowAtPoint:[self convertPoint:loc toView:self.tableGrid]];
 
+    if (!rightMouse && self.orientation == MBTableHeaderHorizontalOrientation &&
+        NSPointInRect(loc, [self sortImageRectOfColumn:column])) {
+        [self.tableGrid _sortButtonClickedForColumn:column];
+    } else
 	if([theEvent clickCount] == 2 && !rightMouse) {
         if ([self.tableGrid.delegate respondsToSelector:@selector(tableGrid:didDoubleClickColumn:)])
             [self.tableGrid.delegate tableGrid:self.tableGrid didDoubleClickColumn:column];
@@ -518,6 +464,14 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 	rect.size.width = MBTableGridRowHeaderWidth;
 	
 	return rect;
+}
+
+- (NSRect)sortImageRectOfColumn:(NSUInteger)columnIndex
+{
+    if (![self.indicatorImageColumns containsIndex:columnIndex])
+        return NSZeroRect;
+    
+    return NSInsetRect([headerCell imageRectForBounds:[self headerRectOfColumn:columnIndex]], -2, -4);
 }
 
 @end

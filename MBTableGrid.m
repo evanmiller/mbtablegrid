@@ -118,7 +118,6 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 @synthesize delegate;
 @synthesize selectedColumnIndexes;
 @synthesize selectedRowIndexes;
-@synthesize sortButtons;
 @synthesize showsGrabHandles;
 @synthesize columnFooterView;
 @synthesize singleClickCellEdit;
@@ -132,12 +131,11 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 - (id)initWithFrame:(NSRect)frameRect {
 	if (self = [super initWithFrame:frameRect]) {
-		columnIndexNames = [NSMutableArray array];
 		_columnWidths = [NSMutableDictionary dictionary];
 
 		// Post frame changed notifications
 		self.postsFrameChangedNotifications = YES;
-		[NSNotificationCenter.defaultCenter addObserver:self selector:@selector(viewFrameDidChange:) name:NSViewFrameDidChangeNotification object:self];
+		//[NSNotificationCenter.defaultCenter addObserver:self selector:@selector(viewFrameDidChange:) name:NSViewFrameDidChangeNotification object:self];
 
 		// Set the default cell
 		MBTableGridCell *defaultCell = [[MBTableGridCell alloc] initTextCell:@""];
@@ -276,9 +274,31 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 	[self.contentView setShowsGrabHandle:s];
 }
 
-- (void)sortButtonClicked:(id)sender
-{
-	[columnHeaderView toggleSortButtonIcon:(NSButton*)sender];
+- (void)_sortButtonClickedForColumn:(NSUInteger)column {
+    if (self.sortColumnIndex == column) {
+        if (self.isSortColumnAscending) {
+            self.sortColumnIndex = NSNotFound;
+        } else {
+            self.sortColumnAscending = YES;
+        }
+    } else {
+        self.sortColumnIndex = column;
+        self.sortColumnAscending = NO;
+    }
+    if ([self.delegate respondsToSelector:@selector(tableGrid:didSortByColumn:ascending:)]) {
+        [self.delegate tableGrid:self didSortByColumn:self.sortColumnIndex ascending:self.sortColumnAscending];
+    }
+    [self reloadData];
+}
+
+- (void)setSortColumnIndex:(NSUInteger)sortColumnIndex {
+    _sortColumnIndex = sortColumnIndex;
+    columnHeaderView.needsDisplay = YES;
+}
+
+- (void)setSortColumnAscending:(BOOL)sortColumnAscending {
+    _sortColumnAscending = sortColumnAscending;
+    columnHeaderView.needsDisplay = YES;
 }
 
 - (void)awakeFromNib {
@@ -320,41 +340,6 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		NSLog(@"WARNING: MBTableGrid data source does not implement tableGrid:objectValueForColumn:row:");
 	}
 	return nil;
-}
-
-
-/**
- * @brief		Sets the indicator image for the specified column.
- *				This is used for indicating which direction the
- *				column is being sorted by.
- *
- * @param		anImage			The sort indicator image.
- * @param		reverseImage	The reversed sort indicator image.
- *
- * @return		The header value for the row.
- */
-- (void)setIndicatorImage:(NSImage *)anImage reverseImage:(NSImage*)reverseImg inColumns:(NSArray*)columns {
-	MBTableGridHeaderView *headerView = [self columnHeaderView];
-	headerView.indicatorImageColumns = columns;
-	headerView.indicatorImage = anImage;
-	headerView.indicatorReverseImage = reverseImg;
-
-
-	[headerView placeSortButtons];
-}
-
-/**
- * @brief		Returns the sort indicator image
- *				for the specified column.
- *
- * @param		columnIndex		The index of the column.
- *
- * @return		The sort indicator image for the column.
- */
-- (NSImage *)indicatorImageInColumn:(NSUInteger)columnIndex {
-	NSImage *indicatorImage = nil;
-
-	return indicatorImage;
 }
 
 - (void)setAutosaveName:(NSString *)autosaveName {
@@ -432,8 +417,8 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
     CGFloat offset = 0.0;
     CGFloat minColumnWidth = MBTableHeaderMinimumColumnWidth;
     
-    if (columnHeaderView.indicatorImage && [columnHeaderView.indicatorImageColumns containsObject:@(columnIndex)]) {
-        minColumnWidth += columnHeaderView.indicatorImage.size.width + 2.0f;
+    if ([columnHeaderView.indicatorImageColumns containsIndex:columnIndex]) {
+        minColumnWidth += [columnHeaderView sortImageRectOfColumn:columnIndex].size.width + 2.0f;
     }
 
     if (currentWidth + distance <= minColumnWidth) {
@@ -1252,15 +1237,6 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 #pragma mark Reloading the Grid
 
-- (void)populateColumnInfo {
-    if (columnIndexNames.count < _numberOfColumns) {
-        for (NSUInteger columnIndex = columnIndexNames.count; columnIndex < _numberOfColumns; columnIndex++) {
-            NSString *column = [NSString stringWithFormat:@"column%lu", columnIndex];
-            columnIndexNames[columnIndex] = column;
-        }
-    }
-}
-
 - (void)reloadData {
 	CGRect visibleRect = [contentScrollView contentView].documentVisibleRect;
 	
@@ -1279,9 +1255,10 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 	else {
 		_numberOfRows = 0;
 	}
+        
+    if ([self.delegate respondsToSelector:@selector(sortableColumnIndexesInTableGrid:)])
+        columnHeaderView.indicatorImageColumns = [self.delegate sortableColumnIndexesInTableGrid:self];
     
-    [self populateColumnInfo];
-
 	// Update the content view's size
     NSUInteger lastColumn = (_numberOfColumns>0) ? _numberOfColumns-1 : 0;
     NSUInteger lastRow = (_numberOfRows>0) ? _numberOfRows-1 : 0;
@@ -1547,12 +1524,12 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 }
 
 - (float)_widthForColumn:(NSUInteger)columnIndex {
-	if (columnIndexNames.count > columnIndex) {
-		NSNumber* width = _columnWidths[@(columnIndex)];
-		return width == nil ? MBTableHeaderMinimumColumnWidth : width.floatValue;
-	}
-	
-	return 0.0f;
+    if (columnIndex < _numberOfColumns) {
+        if (_columnWidths[@(columnIndex)])
+            return _columnWidths[@(columnIndex)].doubleValue;
+        return MBTableHeaderMinimumColumnWidth;
+    }
+    return 0.0;
 }
 
 - (void) _setWidth:(float)width forColumn:(NSUInteger)columnIndex

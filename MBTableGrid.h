@@ -140,7 +140,6 @@ typedef NS_ENUM(NSUInteger, MBVerticalEdge) {
 	/* Sticky Edges (for Shift+Arrow expansions) */
 	MBHorizontalEdge stickyColumnEdge;
 	MBVerticalEdge stickyRowEdge;
-	NSMutableArray<NSString *> *columnIndexNames;
 	NSMutableDictionary<NSNumber *, NSNumber *>* _columnWidths;
 	
 }
@@ -151,10 +150,11 @@ typedef NS_ENUM(NSUInteger, MBVerticalEdge) {
 @property (nonatomic, readonly) MBTableGridFooterView* columnFooterView;
 @property (nonatomic, readonly) MBTableGridHeaderView* rowHeaderView;
 
+@property (nonatomic, assign) NSUInteger sortColumnIndex; // NSNotFound for none
+@property (getter=isSortColumnAscending, nonatomic, assign) BOOL sortColumnAscending;
+
 - (void)setSelectedRowIndexes:(NSIndexSet *)anIndexSet notify:(BOOL)notify;
 - (void)setSelectedColumnIndexes:(NSIndexSet *)anIndexSet notify:(BOOL)notify;
-
-- (void)sortButtonClicked:(id)sender;
 
 #pragma mark -
 #pragma mark Reloading the Grid
@@ -292,44 +292,6 @@ typedef NS_ENUM(NSUInteger, MBVerticalEdge) {
 
 @property (nonatomic, assign) NSUInteger numberOfColumns;
 
-#pragma mar -
-#pragma mark Sort Indicators
-
-/**
- * @brief		An array that holds the sort buttons that sort the colums.
- *
- * @return		A NSArray for use with the sort indicator.
- */
-
-@property (nonatomic, strong) NSArray<NSButton *> *sortButtons;
-
-/**
- * @brief		Sets the indicator image for the specified column.
- *				This is used for indicating which direction the
- *				column is being sorted by.
- *
- * @param		anImage			The sort indicator image.
- * @param		reverseImage	The reversed sort indicator image.
- * @param		inColumns		Array of columns.
- *
- * @return		The header value for the row.
- */
-- (void)setIndicatorImage:(NSImage *)anImage reverseImage:(NSImage*)reverseImg inColumns:(NSArray*)columns;
-
-/**
- * @brief		Returns the sort indicator image
- *				for the specified column.
- *
- * @param		columnIndex		The index of the column.
- *
- * @return		The sort indicator image for the column.
- */
-- (NSImage *)indicatorImageInColumn:(NSUInteger)columnIndex;
-
-
-/**
- * @}
- */
 
 #pragma mark -
 #pragma mark Configuring Behavior
@@ -1214,5 +1176,11 @@ cells. A cell can individually override this behavior. */
 - (void)tableGrid:(MBTableGrid *)aTableGrid didAddRows:(NSIndexSet *)rowIndexes;
 
 - (void)tableGrid:(MBTableGrid*)aTableGrid footerCellClicked:(NSCell*)cell forColumn:(NSUInteger)columnIndex withEvent:(NSEvent*)theEvent;
+
+#pragma mark Sorting
+
+- (NSIndexSet *)sortableColumnIndexesInTableGrid:(MBTableGrid*)aTableGrid;
+
+- (void)tableGrid:(MBTableGrid*)aTableGrid didSortByColumn:(NSUInteger)columnIndex ascending:(BOOL)isAscending;
 
 @end
