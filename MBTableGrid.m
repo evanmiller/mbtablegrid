@@ -28,6 +28,8 @@
 #import "MBTableGridFooterView.h"
 #import "MBTableGridHeaderCell.h"
 #import "MBTableGridContentView.h"
+#import "MBTableGridContentScrollView.h"
+#import "MBTableGridTextFinderClient.h"
 #import "MBTableGridCell.h"
 
 #pragma mark -
@@ -190,7 +192,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		NSRect contentFrame = NSMakeRect(MBTableGridRowHeaderWidth, MBTableGridColumnHeaderHeight,
 										 self.frame.size.width - MBTableGridRowHeaderWidth,
 										 self.frame.size.height - MBTableGridColumnHeaderHeight - MBTableGridColumnFooterHeight);
-		contentScrollView = [[NSScrollView alloc] initWithFrame:contentFrame];
+		contentScrollView = [[MBTableGridContentScrollView alloc] initWithFrame:contentFrame];
 		contentView = [[MBTableGridContentView alloc] initWithFrame:NSMakeRect(0, 0, contentFrame.size.width, contentFrame.size.height)
 													   andTableGrid:self];
 		contentScrollView.documentView = contentView;
@@ -267,6 +269,14 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		
 		self.columnRects = [NSMutableDictionary dictionary];
         [self registerForDraggedTypes:@[MBTableGridColumnDataType, MBTableGridRowDataType]];
+        
+        _textFinder = [[NSTextFinder alloc] init];
+        _textFinder.findBarContainer = contentScrollView;
+        _textFinder.incrementalSearchingEnabled = YES;
+        _textFinder.incrementalSearchingShouldDimContentView = YES;
+        
+        _textFinderClient = [[MBTableGridTextFinderClient alloc] initWithTableGrid:self];
+        _textFinder.client = _textFinderClient;
 	}
 	return self;
 }
@@ -400,7 +410,9 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 	BOOL isBeneathContentView = FALSE;
 	NSView* parent = v;
 	while(parent != nil) {
-		if(parent == self.contentView || parent == self.rowHeaderView || parent == self.columnHeaderView || parent == self.columnFooterView) {
+        if(parent == self.contentView || parent == self.rowHeaderView ||
+           parent == self.columnHeaderView || parent == self.columnFooterView ||
+           parent == contentScrollView.findBarView) {
 			isBeneathContentView = TRUE;
 			break;
 		}
@@ -944,6 +956,40 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 }
 
 #pragma mark -
+#pragma mark Find Bar Support
+
+- (IBAction)performTextFinderAction:(NSControl *)sender {
+    [_textFinder performAction:sender.tag];
+}
+
+- (BOOL)validateUserInterfaceItem:(id<NSValidatedUserInterfaceItem>)item {
+    if (item.action == @selector(performTextFinderAction:)) {
+        return [_textFinder validateAction:item.tag];
+    }
+    return YES;
+}
+
+- (BOOL)_shouldAbortFindOperation {
+    if (NSThread.isMainThread)
+        return self.isHiddenOrHasHiddenAncestor || !contentScrollView.findBarVisible;
+    
+    __block BOOL return_value = NO;
+    NSOperation *operation = [NSBlockOperation blockOperationWithBlock:^{
+        return_value = self.isHiddenOrHasHiddenAncestor || !self->contentScrollView.findBarVisible;
+    }];
+    [NSOperationQueue.mainQueue addOperations:@[ operation ] waitUntilFinished:YES];
+    return return_value;
+}
+
+- (BOOL)isFindBarVisible {
+    return contentScrollView.isFindBarVisible;
+}
+
+- (void)setFindBarVisible:(BOOL)findBarVisible {
+    contentScrollView.findBarVisible = findBarVisible;
+}
+
+#pragma mark -
 #pragma mark Notifications
 
 - (void)synchronizeScrollView:(NSScrollView *)scrollView withChangedBoundsOrigin:(NSPoint)changedBoundsOrigin horizontal:(BOOL)horizontal {
@@ -1322,8 +1368,10 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 	// Restore original visible rectangle of scroller
 	[self scrollToArea:visibleRect animate:NO];
+    
+    [_textFinder noteClientStringWillChange];
 
-	[self setNeedsDisplay:YES];
+	self.needsDisplay = YES;
 }
 
 #pragma mark Layout Support
