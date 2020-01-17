@@ -92,8 +92,10 @@
         
         editedColumn = mouseDownColumn;
         
-        NSCell *cell = [self.tableGrid _footerCellForColumn:mouseDownColumn];
-		[self.tableGrid.delegate tableGrid:self.tableGrid footerCellClicked:cell forColumn:mouseDownColumn withEvent:theEvent];
+        if ([self.tableGrid.delegate respondsToSelector:@selector(tableGrid:footerCellClicked:forColumn:withEvent:)]) {
+            NSCell *cell = [self.tableGrid _footerCellForColumn:mouseDownColumn];
+            [self.tableGrid.delegate tableGrid:self.tableGrid footerCellClicked:cell forColumn:mouseDownColumn withEvent:theEvent];
+        }
     }
     
     self.needsDisplay = YES;
