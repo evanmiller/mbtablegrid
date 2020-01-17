@@ -1353,9 +1353,10 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		rect.size.height = self.frame.size.height;
 
 		// If the scrollbar is visible, don't include it in the rect
-        if(!contentScrollView.horizontalScroller.isHidden) {
-            rect.size.height -= [NSScroller scrollerWidthForControlSize:NSControlSizeRegular scrollerStyle:NSScrollerStyleLegacy];
-		}
+        if (!contentScrollView.horizontalScroller.isHidden && contentScrollView.scrollerStyle == NSScrollerStyleLegacy) {
+            rect.size.height -= [NSScroller scrollerWidthForControlSize:NSControlSizeRegular
+                                                          scrollerStyle:contentScrollView.scrollerStyle];
+        }
 	}
 
 	return rect;
