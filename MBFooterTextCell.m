@@ -19,8 +19,8 @@
 
 - (NSAttributedString *)attributedTitle
 {
-    NSColor *color = [NSColor controlTextColor];
-    NSDictionary *attributes = @{NSFontAttributeName : self.attributedTitleFont, NSForegroundColorAttributeName : color};
+    NSColor *color = NSColor.controlTextColor;
+    NSDictionary<NSAttributedStringKey, id> *attributes = @{NSFontAttributeName : self.attributedTitleFont, NSForegroundColorAttributeName : color};
     
     return [[NSAttributedString alloc] initWithString:self.title attributes:attributes];
 }

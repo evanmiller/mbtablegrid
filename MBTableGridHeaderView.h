@@ -49,7 +49,7 @@
     BOOL isResizing;
     NSUInteger draggingColumnIndex;
 	
-	NSMutableDictionary *columnAutoSaveProperties;
+	NSMutableDictionary<NSString *, NSDictionary<NSString *, id> *> *columnAutoSaveProperties;
 	
 }
 
@@ -97,7 +97,7 @@
 /**
  * @brief		The column to set the indicator image on
  */
-@property (nonatomic, strong) NSArray *indicatorImageColumns;
+@property (nonatomic, strong) NSArray<NSNumber *> *indicatorImageColumns;
 
 /**
  * @brief		The autosave name for this grid
