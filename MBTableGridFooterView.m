@@ -42,7 +42,7 @@
     if(self = [super initWithFrame:frameRect]) {
 		self.tableGrid = tableGrid;
         _defaultCell = [[MBFooterTextCell alloc] initTextCell:@""];
-        [_defaultCell setBordered:NO];
+        _defaultCell.bordered = NO;
 		self.wantsLayer = YES;
 		self.layer.drawsAsynchronously = YES;
 		self.layerContentsRedrawPolicy = NSViewLayerContentsRedrawOnSetNeedsDisplay;
@@ -83,7 +83,7 @@
 
 - (void)mouseDown:(NSEvent *)theEvent
 {
-    NSPoint mouseLocationInContentView = [self convertPoint:[theEvent locationInWindow] fromView:nil];
+    NSPoint mouseLocationInContentView = [self convertPoint:theEvent.locationInWindow fromView:nil];
     NSInteger mouseDownColumn = [self footerColumnAtPoint:mouseLocationInContentView];
     
     if (theEvent.clickCount == 1) {
@@ -92,11 +92,13 @@
         
         editedColumn = mouseDownColumn;
         
-        NSCell *cell = [self.tableGrid _footerCellForColumn:mouseDownColumn];
-		[self.tableGrid.delegate tableGrid:self.tableGrid footerCellClicked:cell forColumn:mouseDownColumn withEvent:theEvent];
+        if ([self.tableGrid.delegate respondsToSelector:@selector(tableGrid:footerCellClicked:forColumn:withEvent:)]) {
+            NSCell *cell = [self.tableGrid _footerCellForColumn:mouseDownColumn];
+            [self.tableGrid.delegate tableGrid:self.tableGrid footerCellClicked:cell forColumn:mouseDownColumn withEvent:theEvent];
+        }
     }
     
-    [self setNeedsDisplay:YES];
+    self.needsDisplay = YES;
 }
 
 - (NSRect)adjustScroll:(NSRect)proposedVisibleRect

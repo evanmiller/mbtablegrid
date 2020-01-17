@@ -140,8 +140,8 @@ typedef NS_ENUM(NSUInteger, MBVerticalEdge) {
 	/* Sticky Edges (for Shift+Arrow expansions) */
 	MBHorizontalEdge stickyColumnEdge;
 	MBVerticalEdge stickyRowEdge;
-	NSMutableArray *columnIndexNames;
-	NSMutableDictionary* _columnWidths;
+	NSMutableArray<NSString *> *columnIndexNames;
+	NSMutableDictionary<NSNumber *, NSNumber *>* _columnWidths;
 	
 }
 
@@ -215,7 +215,7 @@ typedef NS_ENUM(NSUInteger, MBVerticalEdge) {
  *
  */
 
-@property (nonatomic, strong) NSMutableDictionary *columnRects;
+@property (nonatomic, strong) NSMutableDictionary<NSNumber *, NSValue *> *columnRects;
 
 
 - (void) resizeColumnWithIndex:(NSUInteger)columnIndex width:(float)w;
@@ -301,7 +301,7 @@ typedef NS_ENUM(NSUInteger, MBVerticalEdge) {
  * @return		A NSArray for use with the sort indicator.
  */
 
-@property (nonatomic, strong) NSArray *sortButtons;
+@property (nonatomic, strong) NSArray<NSButton *> *sortButtons;
 
 /**
  * @brief		Sets the indicator image for the specified column.

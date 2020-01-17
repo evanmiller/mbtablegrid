@@ -85,15 +85,15 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 - (NSUInteger)indexForExpansionInHorizontalDirection:(MBHorizontalEdge)direction
 {
     return (direction == MBHorizontalEdgeLeft)
-        ? [self firstIndex]
-        : [self lastIndex];
+        ? self.firstIndex
+        : self.lastIndex;
 }
 
 - (NSUInteger)indexForExpansionInVerticalDirection:(MBVerticalEdge)direction
 {
     return (direction == MBVerticalEdgeTop)
-        ? [self firstIndex]
-        : [self lastIndex];
+        ? self.firstIndex
+        : self.lastIndex;
 }
 @end
 
@@ -134,6 +134,10 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 	if (self = [super initWithFrame:frameRect]) {
 		columnIndexNames = [NSMutableArray array];
 		_columnWidths = [NSMutableDictionary dictionary];
+
+		// Post frame changed notifications
+		self.postsFrameChangedNotifications = YES;
+		[NSNotificationCenter.defaultCenter addObserver:self selector:@selector(viewFrameDidChange:) name:NSViewFrameDidChangeNotification object:self];
 
 		// Set the default cell
 		MBTableGridCell *defaultCell = [[MBTableGridCell alloc] initTextCell:@""];
@@ -239,12 +243,12 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
                                                                          constant:MBTableGridRowHeaderWidth]];
 
 		// We want to synchronize the scroll views
-        for (NSScrollView *scrollView in @[ contentScrollView, columnHeaderScrollView, rowHeaderScrollView, columnFooterScrollView ]) {
-            [NSNotificationCenter.defaultCenter addObserver:self
-                                                   selector:@selector(clipViewBoundsDidChange:)
-                                                       name:NSViewBoundsDidChangeNotification
-                                                     object:scrollView.contentView];
-        }
+    for (NSScrollView *scrollView in @[ contentScrollView, columnHeaderScrollView, rowHeaderScrollView, columnFooterScrollView ]) {
+        [NSNotificationCenter.defaultCenter addObserver:self
+                                               selector:@selector(clipViewBoundsDidChange:)
+                                                   name:NSViewBoundsDidChangeNotification
+                                                 object:scrollView.contentView];
+    }
         
 		// Set the default selection
 		self.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:0];
@@ -283,7 +287,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 }
 
 - (void)dealloc {
-	[[NSNotificationCenter defaultCenter] removeObserver:self];
+	[NSNotificationCenter.defaultCenter removeObserver:self];
 }
 
 - (BOOL)isFlipped {
@@ -359,7 +363,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 }
 
 - (void)drawRect:(NSRect)aRect {
-	[[NSColor windowBackgroundColor] set];
+	[NSColor.windowBackgroundColor set];
 	NSRectFill(aRect);
 }
 
@@ -405,7 +409,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 	if (v != nil && !isBeneathContentView) {
 		NSEvent* event = self.window.currentEvent;
-		if(event != nil && event.type == NSLeftMouseDown) {
+        if(event != nil && event.type == NSEventTypeLeftMouseDown) {
 			// Clear selection
 			NSIndexSet* empty = [NSIndexSet indexSet];
 			[self setSelectedRowIndexes:empty notify:YES];
@@ -417,7 +421,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 - (CGFloat)resizeColumnWithIndex:(NSUInteger)columnIndex withDistance:(float)distance location:(NSPoint)location {
 	// Note that we only need this rect for its origin, which won't be changing, otherwise we'd need to flush the column rect cache first
-	NSRect columnRect = [self rectOfColumn:columnIndex];
+	NSRect columnRect = [self.contentView rectOfColumn:columnIndex];
 
 	// Flush rect cache for this column because we're changing its size
 	// Note that we're doing this after calling rectOfColumn: because that would cache the rect before we change its width...
@@ -426,25 +430,21 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 	// Set new width of column
 	CGFloat currentWidth = [self _widthForColumn:columnIndex];
     CGFloat offset = 0.0;
-	
-    currentWidth += distance;
-    
     CGFloat minColumnWidth = MBTableHeaderMinimumColumnWidth;
     
-    if (columnHeaderView.indicatorImage && [columnHeaderView.indicatorImageColumns containsObject:[NSNumber numberWithInteger:columnIndex]]) {
+    if (columnHeaderView.indicatorImage && [columnHeaderView.indicatorImageColumns containsObject:@(columnIndex)]) {
         minColumnWidth += columnHeaderView.indicatorImage.size.width + 2.0f;
     }
-    
-    if (currentWidth < minColumnWidth) {
+
+    if (currentWidth + distance <= minColumnWidth) {
+        distance = -(currentWidth - minColumnWidth);
         currentWidth = minColumnWidth;
+        offset = columnRect.origin.x - location.x + minColumnWidth;
+    } else {
+        currentWidth += distance;
     }
 	
 	[self _setWidth:currentWidth forColumn:columnIndex];
-    
-    if (currentWidth == minColumnWidth) {
-        offset = columnRect.origin.x - location.x + minColumnWidth - self.rowHeaderView.frame.size.width;
-        distance = 0.0;
-    }
     
     // Update views with new sizes
     [contentView setFrameSize:NSMakeSize(NSWidth(contentView.frame) + distance, NSHeight(contentView.frame))];
@@ -463,7 +463,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
     return offset;
 }
 
-- (void)registerForDraggedTypes:(NSArray *)types {
+- (void)registerForDraggedTypes:(NSArray<NSPasteboardType> *)types {
 	[super registerForDraggedTypes:types];
 
 	// Register the content view for everything
@@ -474,11 +474,11 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 - (void)mouseDown:(NSEvent *)theEvent {
 	// End editing (if necessary)
-	[[self cell] endEditing:[[self window] fieldEditor:NO forObject:contentView]];
+	[self.cell endEditing:[self.window fieldEditor:NO forObject:contentView]];
 
 	// If we're not the first responder, we need to be
-	if ([[self window] firstResponder] != self) {
-		[[self window] makeFirstResponder:self];
+	if (self.window.firstResponder != self) {
+		[self.window makeFirstResponder:self];
 	}
 }
 
@@ -538,7 +538,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 }
 
 - (void)insertNewline:(id)sender {
-	if ([[NSApp currentEvent] modifierFlags] & NSShiftKeyMask) {
+    if (NSApp.currentEvent.modifierFlags & NSEventModifierFlagShift) {
 		// Pressing Shift+Return moves to the previous row
 		shouldOverrideModifiers = YES;
 		[self moveUp:sender];
@@ -554,15 +554,15 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 }
 
 - (void)moveUp:(id)sender {
-	NSUInteger column = [self.selectedColumnIndexes firstIndex];
-	NSUInteger row = [self.selectedRowIndexes firstIndex];
+	NSUInteger column = self.selectedColumnIndexes.firstIndex;
+	NSUInteger row = self.selectedRowIndexes.firstIndex;
 
 	// Accomodate for the sticky edges
 	if (stickyColumnEdge == MBHorizontalEdgeRight) {
-		column = [self.selectedColumnIndexes lastIndex];
+		column = self.selectedColumnIndexes.lastIndex;
 	}
 	if (stickyRowEdge == MBVerticalEdgeBottom) {
-		row = [self.selectedRowIndexes lastIndex];
+		row = self.selectedRowIndexes.lastIndex;
 	}
 
     if (row <= 0) { return; }
@@ -584,11 +584,11 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		return;
 	}
 
-	NSUInteger firstRow = [self.selectedRowIndexes firstIndex];
-	NSUInteger lastRow = [self.selectedRowIndexes lastIndex];
+	NSUInteger firstRow = self.selectedRowIndexes.firstIndex;
+	NSUInteger lastRow = self.selectedRowIndexes.lastIndex;
 
 	// If there is only one row selected, change the sticky edge to the bottom
-	if ([self.selectedRowIndexes count] == 1) {
+	if (self.selectedRowIndexes.count == 1) {
 		stickyRowEdge = MBVerticalEdgeBottom;
 	}
 
@@ -609,15 +609,15 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 }
 
 - (void)moveDown:(id)sender {
-	NSUInteger column = [self.selectedColumnIndexes firstIndex];
-	NSUInteger row = [self.selectedRowIndexes firstIndex];
+	NSUInteger column = self.selectedColumnIndexes.firstIndex;
+	NSUInteger row = self.selectedRowIndexes.firstIndex;
 
 	// Accomodate for the sticky edges
 	if (stickyColumnEdge == MBHorizontalEdgeRight) {
-		column = [self.selectedColumnIndexes lastIndex];
+		column = self.selectedColumnIndexes.lastIndex;
 	}
 	if (stickyRowEdge == MBVerticalEdgeBottom) {
-		row = [self.selectedRowIndexes lastIndex];
+		row = self.selectedRowIndexes.lastIndex;
 	}
 
     if (row >= (_numberOfRows - 1)) { return; }
@@ -635,11 +635,11 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		return;
 	}
 
-	NSUInteger firstRow = [self.selectedRowIndexes firstIndex];
-	NSUInteger lastRow = [self.selectedRowIndexes lastIndex];
+	NSUInteger firstRow = self.selectedRowIndexes.firstIndex;
+	NSUInteger lastRow = self.selectedRowIndexes.lastIndex;
 
 	// If there is only one row selected, change the sticky edge to the top
-	if ([self.selectedRowIndexes count] == 1) {
+	if (self.selectedRowIndexes.count == 1) {
 		stickyRowEdge = MBVerticalEdgeTop;
 	}
 
@@ -661,15 +661,15 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 }
 
 - (void)moveLeft:(id)sender {
-	NSUInteger column = [self.selectedColumnIndexes firstIndex];
-	NSUInteger row = [self.selectedRowIndexes firstIndex];
+	NSUInteger column = self.selectedColumnIndexes.firstIndex;
+	NSUInteger row = self.selectedRowIndexes.firstIndex;
 
 	// Accomodate for the sticky edges
 	if (stickyColumnEdge == MBHorizontalEdgeRight) {
-		column = [self.selectedColumnIndexes lastIndex];
+		column = self.selectedColumnIndexes.lastIndex;
 	}
 	if (stickyRowEdge == MBVerticalEdgeBottom) {
-		row = [self.selectedRowIndexes lastIndex];
+		row = self.selectedRowIndexes.lastIndex;
 	}
 
 	if (column == 0) {
@@ -692,11 +692,11 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		return;
 	}
 
-	NSUInteger firstColumn = [self.selectedColumnIndexes firstIndex];
-	NSUInteger lastColumn = [self.selectedColumnIndexes lastIndex];
+	NSUInteger firstColumn = self.selectedColumnIndexes.firstIndex;
+	NSUInteger lastColumn = self.selectedColumnIndexes.lastIndex;
 
 	// If there is only one column selected, change the sticky edge to the right
-	if ([self.selectedColumnIndexes count] == 1) {
+	if (self.selectedColumnIndexes.count == 1) {
 		stickyColumnEdge = MBHorizontalEdgeRight;
 	}
 
@@ -717,15 +717,15 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 }
 
 - (void)moveRight:(id)sender {
-	NSUInteger column = [self.selectedColumnIndexes firstIndex];
-	NSUInteger row = [self.selectedRowIndexes firstIndex];
+	NSUInteger column = self.selectedColumnIndexes.firstIndex;
+	NSUInteger row = self.selectedRowIndexes.firstIndex;
 
 	// Accomodate for the sticky edges
 	if (stickyColumnEdge == MBHorizontalEdgeRight) {
-		column = [self.selectedColumnIndexes lastIndex];
+		column = self.selectedColumnIndexes.lastIndex;
 	}
 	if (stickyRowEdge == MBVerticalEdgeBottom) {
-		row = [self.selectedRowIndexes lastIndex];
+		row = self.selectedRowIndexes.lastIndex;
 	}
 
 	// If we're already at the last column, move down and to the leftmost column
@@ -750,11 +750,11 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
         return;
     }
 
-    NSUInteger firstColumn = [self.selectedColumnIndexes firstIndex];
-    NSUInteger lastColumn = [self.selectedColumnIndexes lastIndex];
+    NSUInteger firstColumn = self.selectedColumnIndexes.firstIndex;
+    NSUInteger lastColumn = self.selectedColumnIndexes.lastIndex;
 
     // If there is only one column selected, change the sticky edge to the right
-    if ([self.selectedColumnIndexes count] == 1) {
+    if (self.selectedColumnIndexes.count == 1) {
         stickyColumnEdge = MBHorizontalEdgeLeft;
     }
 
@@ -816,7 +816,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
     NSUInteger column = [self.selectedColumnIndexes indexForExpansionInHorizontalDirection:horizontal];
     NSUInteger row = [self.selectedRowIndexes indexForExpansionInVerticalDirection:vertical];
 
-    if (column > [self numberOfColumns]) { return; }
+    if (column > self.numberOfColumns) { return; }
 
     NSRect visibleRect = self.contentView.visibleRect;
     NSRect cellRect = [self frameOfCellAtColumn:column row:row];
@@ -849,7 +849,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 - (void)scrollToArea:(NSRect)area animate:(BOOL)shouldAnimate {
 	if (shouldAnimate) {
 		[NSAnimationContext runAnimationGroup: ^(NSAnimationContext *context) {
-		    [context setAllowsImplicitAnimation:YES];
+		    context.allowsImplicitAnimation = YES;
 		    [self.contentView scrollRectToVisible:area];
 		} completionHandler: ^{ }];
 	}
@@ -912,10 +912,10 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 - (void)deleteBackward:(id)sender {
 	// Clear the contents of every selected cell
-	NSUInteger column = [self.selectedColumnIndexes firstIndex];
-	while (column <= [self.selectedColumnIndexes lastIndex]) {
-		NSUInteger row = [self.selectedRowIndexes firstIndex];
-		while (row <= [self.selectedRowIndexes lastIndex]) {
+	NSUInteger column = self.selectedColumnIndexes.firstIndex;
+	while (column <= self.selectedColumnIndexes.lastIndex) {
+		NSUInteger row = self.selectedRowIndexes.firstIndex;
+		while (row <= self.selectedRowIndexes.lastIndex) {
 			[self _setObjectValue:nil forColumn:column row:row];
 			row++;
 		}
@@ -925,22 +925,22 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 }
 
 - (void)insertText:(id)aString {
-	NSUInteger column = [self.selectedColumnIndexes firstIndex];
-	NSUInteger row = [self.selectedRowIndexes firstIndex];
+	NSUInteger column = self.selectedColumnIndexes.firstIndex;
+	NSUInteger row = self.selectedRowIndexes.firstIndex;
 	NSCell *selectedCell = [self _cellForColumn:column row:row];
 
 	[contentView editSelectedCell:self text:aString];
 	
 	if ([selectedCell isKindOfClass:[MBTableGridCell class]]) {
 		// Insert the typed string into the field editor
-		NSText *fieldEditor = [[self window] fieldEditor:YES forObject:contentView];
+		NSText *fieldEditor = [self.window fieldEditor:YES forObject:contentView];
 		fieldEditor.delegate = contentView;
-		[fieldEditor setString:aString];
+		fieldEditor.string = aString;
 		
 		// The textDidBeginEditing notification isn't sent yet, so invoke a custom method
 		[contentView textDidBeginEditingWithEditor:fieldEditor];
 	}
-	[self setNeedsDisplay:YES];
+	self.needsDisplay = YES;
 }
 
 #pragma mark -
@@ -1031,7 +1031,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 	}
 	else {
 		if ([self.dataSource respondsToSelector:@selector(tableGrid:validateDrop:proposedColumn:row:)]) {
-			NSPoint mouseLocation = [self convertPoint:[sender draggingLocation] fromView:nil];
+			NSPoint mouseLocation = [self convertPoint:sender.draggingLocation fromView:nil];
 			NSUInteger dropColumn = [self columnAtPoint:mouseLocation];
 			NSUInteger dropRow = [self rowAtPoint:mouseLocation];
 
@@ -1172,16 +1172,16 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 			if (didDrag) {
 				NSUInteger startIndex = dropColumn;
-				NSUInteger length = [draggedColumns count];
+				NSUInteger length = draggedColumns.count;
 
-				if (dropColumn > [draggedColumns firstIndex]) {
-					startIndex -= [draggedColumns count];
+				if (dropColumn > draggedColumns.firstIndex) {
+					startIndex -= draggedColumns.count;
 				}
 
 				NSIndexSet *newColumns = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(startIndex, length)];
 
 				// Post the notification
-				[[NSNotificationCenter defaultCenter] postNotificationName:MBTableGridDidMoveColumnsNotification object:self userInfo:@{ @"OldColumns": draggedColumns, @"NewColumns": newColumns }];
+				[NSNotificationCenter.defaultCenter postNotificationName:MBTableGridDidMoveColumnsNotification object:self userInfo:@{ @"OldColumns": draggedColumns, @"NewColumns": newColumns }];
 
 				// Change the selection to reflect the newly-dragged columns
 				self.selectedColumnIndexes = newColumns;
@@ -1204,16 +1204,16 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 			if (didDrag) {
 				NSUInteger startIndex = dropRow;
-				NSUInteger length = [draggedRows count];
+				NSUInteger length = draggedRows.count;
 
-				if (dropRow > [draggedRows firstIndex]) {
-					startIndex -= [draggedRows count];
+				if (dropRow > draggedRows.firstIndex) {
+					startIndex -= draggedRows.count;
 				}
 
 				NSIndexSet *newRows = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(startIndex, length)];
 
 				// Post the notification
-				[[NSNotificationCenter defaultCenter] postNotificationName:MBTableGridDidMoveRowsNotification object:self userInfo:@{ @"OldRows": draggedRows, @"NewRows": newRows }];
+				[NSNotificationCenter.defaultCenter postNotificationName:MBTableGridDidMoveRowsNotification object:self userInfo:@{ @"OldRows": draggedRows, @"NewRows": newRows }];
 
 				// Change the selection to reflect the newly-dragged rows
 				self.selectedRowIndexes = newRows;
@@ -1285,28 +1285,28 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
     NSUInteger lastRow = (_numberOfRows>0) ? _numberOfRows-1 : 0;
 	NSRect bottomRightCellFrame = [contentView frameOfCellAtColumn:lastColumn row:lastRow];
 
-	NSRect contentRect = NSMakeRect([contentView frame].origin.x, [contentView frame].origin.y, NSMaxX(bottomRightCellFrame), NSMaxY(bottomRightCellFrame));
+	NSRect contentRect = NSMakeRect(contentView.frame.origin.x, contentView.frame.origin.y, NSMaxX(bottomRightCellFrame), NSMaxY(bottomRightCellFrame));
 	[contentView setFrameSize:contentRect.size];
 
 	// Update the column header view's size
-	NSRect columnHeaderFrame = [columnHeaderView frame];
+	NSRect columnHeaderFrame = columnHeaderView.frame;
 	columnHeaderFrame.size.width = contentRect.size.width;
-	if(![[contentScrollView verticalScroller] isHidden]) {
-		columnHeaderFrame.size.width += [NSScroller scrollerWidthForControlSize:NSRegularControlSize scrollerStyle:NSScrollerStyleLegacy];	}
+    if (!contentScrollView.verticalScroller.isHidden) {
+        columnHeaderFrame.size.width += [NSScroller scrollerWidthForControlSize:NSControlSizeRegular scrollerStyle:NSScrollerStyleLegacy];	}
 	[columnHeaderView setFrameSize:columnHeaderFrame.size];
 
 	// Update the row header view's size
-	NSRect rowHeaderFrame = [rowHeaderView frame];
+	NSRect rowHeaderFrame = rowHeaderView.frame;
 	rowHeaderFrame.size.height = contentRect.size.height;
-	if(![[contentScrollView horizontalScroller] isHidden]) {
-		columnHeaderFrame.size.height += [NSScroller scrollerWidthForControlSize:NSRegularControlSize scrollerStyle:NSScrollerStyleLegacy];
+    if (!contentScrollView.horizontalScroller.isHidden) {
+        columnHeaderFrame.size.height += [NSScroller scrollerWidthForControlSize:NSControlSizeRegular scrollerStyle:NSScrollerStyleLegacy];
 	}
 	[rowHeaderView setFrameSize:rowHeaderFrame.size];
 
-	NSRect columnFooterFrame = [columnFooterView frame];
+	NSRect columnFooterFrame = columnFooterView.frame;
 	columnFooterFrame.size.width = contentRect.size.width;
-	if (![[contentScrollView verticalScroller] isHidden]) {
-		columnFooterFrame.size.width += [NSScroller scrollerWidthForControlSize:NSRegularControlSize
+    if (!contentScrollView.verticalScroller.isHidden) {
+        columnFooterFrame.size.width += [NSScroller scrollerWidthForControlSize:NSControlSizeRegular
 																  scrollerStyle:NSScrollerStyleOverlay];
 	}
 	[columnFooterView setFrameSize:columnHeaderFrame.size];
@@ -1330,12 +1330,12 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 	NSRect rect = [self convertRect:[contentView rectOfColumn:columnIndex] fromView:contentView];
 	rect.origin.y = 0;
 	rect.size.height += MBTableGridColumnHeaderHeight;
-	if (rect.size.height > [self frame].size.height) {
-		rect.size.height = [self frame].size.height;
+	if (rect.size.height > self.frame.size.height) {
+		rect.size.height = self.frame.size.height;
 
 		// If the scrollbar is visible, don't include it in the rect
-		if(![[contentScrollView horizontalScroller] isHidden]) {
-			rect.size.height -= [NSScroller scrollerWidthForControlSize:NSRegularControlSize scrollerStyle:NSScrollerStyleLegacy];
+        if(!contentScrollView.horizontalScroller.isHidden) {
+            rect.size.height -= [NSScroller scrollerWidthForControlSize:NSControlSizeRegular scrollerStyle:NSScrollerStyleLegacy];
 		}
 	}
 
@@ -1385,7 +1385,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 }
 
 - (NSRect)footerRectOfCorner {
-	NSRect rect = NSMakeRect(0, [self frame].size.height - MBTableGridColumnHeaderHeight, MBTableGridRowHeaderWidth, MBTableGridColumnHeaderHeight);
+	NSRect rect = NSMakeRect(0, self.frame.size.height - MBTableGridColumnFooterHeight, MBTableGridRowHeaderWidth, MBTableGridColumnFooterHeight);
 	return rect;
 }
 
@@ -1454,7 +1454,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 	// Post the notification
 	if(notify) {
-		[[NSNotificationCenter defaultCenter] postNotificationName:MBTableGridDidChangeSelectionNotification object:self];
+		[NSNotificationCenter.defaultCenter postNotificationName:MBTableGridDidChangeSelectionNotification object:self];
 	}
 }
 
@@ -1484,7 +1484,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 	
 	// Post the notification
 	if(notify) {
-		[[NSNotificationCenter defaultCenter] postNotificationName:MBTableGridDidChangeSelectionNotification object:self];
+		[NSNotificationCenter.defaultCenter postNotificationName:MBTableGridDidChangeSelectionNotification object:self];
 	}
 }
 
@@ -1494,22 +1494,22 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 	if (delegate) {
 		// Unregister the delegate for relevant notifications
-		[[NSNotificationCenter defaultCenter] removeObserver:delegate name:MBTableGridDidChangeSelectionNotification object:self];
-		[[NSNotificationCenter defaultCenter] removeObserver:delegate name:MBTableGridDidMoveColumnsNotification object:self];
-		[[NSNotificationCenter defaultCenter] removeObserver:delegate name:MBTableGridDidMoveRowsNotification object:self];
+		[NSNotificationCenter.defaultCenter removeObserver:delegate name:MBTableGridDidChangeSelectionNotification object:self];
+		[NSNotificationCenter.defaultCenter removeObserver:delegate name:MBTableGridDidMoveColumnsNotification object:self];
+		[NSNotificationCenter.defaultCenter removeObserver:delegate name:MBTableGridDidMoveRowsNotification object:self];
 	}
 
 	delegate = anObject;
 
 	// Register the new delegate for relevant notifications
 	if ([delegate respondsToSelector:@selector(tableGridDidChangeSelection:)]) {
-		[[NSNotificationCenter defaultCenter] addObserver:delegate selector:@selector(tableGridDidChangeSelection:) name:MBTableGridDidChangeSelectionNotification object:self];
+		[NSNotificationCenter.defaultCenter addObserver:delegate selector:@selector(tableGridDidChangeSelection:) name:MBTableGridDidChangeSelectionNotification object:self];
 	}
 	if ([delegate respondsToSelector:@selector(tableGridDidMoveColumns:)]) {
-		[[NSNotificationCenter defaultCenter] addObserver:delegate selector:@selector(tableGridDidMoveColumns:) name:MBTableGridDidMoveColumnsNotification object:self];
+		[NSNotificationCenter.defaultCenter addObserver:delegate selector:@selector(tableGridDidMoveColumns:) name:MBTableGridDidMoveColumnsNotification object:self];
 	}
 	if ([delegate respondsToSelector:@selector(tableGridDidMoveRows:)]) {
-		[[NSNotificationCenter defaultCenter] addObserver:delegate selector:@selector(tableGridDidMoveRows:) name:MBTableGridDidMoveRowsNotification object:self];
+		[NSNotificationCenter.defaultCenter addObserver:delegate selector:@selector(tableGridDidMoveRows:) name:MBTableGridDidMoveRowsNotification object:self];
 	}
 }
 
@@ -1552,7 +1552,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 - (float)_widthForColumn:(NSUInteger)columnIndex {
 	if (columnIndexNames.count > columnIndex) {
-		NSNumber* width = [_columnWidths objectForKey:@(columnIndex)];
+		NSNumber* width = _columnWidths[@(columnIndex)];
 		return width == nil ? MBTableHeaderMinimumColumnWidth : width.floatValue;
 	}
 	
@@ -1561,7 +1561,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 - (void) _setWidth:(float)width forColumn:(NSUInteger)columnIndex
 {
-	[_columnWidths setObject:@(width) forKey:@(columnIndex)];
+    _columnWidths[@(columnIndex)] = @(width);
 	
 	if ([self.dataSource respondsToSelector:@selector(tableGrid:setWidth:forColumn:)]) {
 		[self.dataSource tableGrid:self setWidth:width forColumn:columnIndex];
@@ -1645,7 +1645,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 - (void)_dragColumnsWithEvent:(NSEvent *)theEvent {
 	NSImage *dragImage = [self _imageForSelectedColumns];
 
-	NSRect firstSelectedColumn = [self rectOfColumn:[self.selectedColumnIndexes firstIndex]];
+	NSRect firstSelectedColumn = [self rectOfColumn:self.selectedColumnIndexes.firstIndex];
 	NSPoint location = firstSelectedColumn.origin;
     
     NSData *data = [NSKeyedArchiver archivedDataWithRootObject:self.selectedColumnIndexes];
@@ -1662,7 +1662,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 - (void)_dragRowsWithEvent:(NSEvent *)theEvent {
 	NSImage *dragImage = [self _imageForSelectedRows];
     
-	NSRect firstSelectedRow = [self rectOfRow:[self.selectedRowIndexes firstIndex]];
+	NSRect firstSelectedRow = [self rectOfRow:self.selectedRowIndexes.firstIndex];
 	NSPoint location = firstSelectedRow.origin;
     
     NSData *data = [NSKeyedArchiver archivedDataWithRootObject:self.selectedRowIndexes];
@@ -1688,12 +1688,12 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 	NSImage *opaqueImage = [[NSImage alloc] initWithData:[self dataWithPDFInsideRect:columnsFrame]];
 
 	// Create the translucent drag image
-	NSImage *finalImage = [[NSImage alloc] initWithSize:[opaqueImage size]];
+	NSImage *finalImage = [[NSImage alloc] initWithSize:opaqueImage.size];
 	[finalImage lockFocus];
 #if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_8
 	[opaqueImage compositeToPoint:NSZeroPoint operation:NSCompositeCopy fraction:0.7];
 #else
-	[opaqueImage drawAtPoint:NSZeroPoint fromRect:NSZeroRect operation:NSCompositeCopy fraction:0.7];
+    [opaqueImage drawAtPoint:NSZeroPoint fromRect:NSZeroRect operation:NSCompositingOperationCopy fraction:0.7];
 #endif
 	[finalImage unlockFocus];
 
@@ -1712,12 +1712,12 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 	NSImage *opaqueImage = [[NSImage alloc] initWithData:[self dataWithPDFInsideRect:rowsFrame]];
 
 	// Create the translucent drag image
-	NSImage *finalImage = [[NSImage alloc] initWithSize:[opaqueImage size]];
+	NSImage *finalImage = [[NSImage alloc] initWithSize:opaqueImage.size];
 	[finalImage lockFocus];
 #if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_8
 	[opaqueImage compositeToPoint:NSZeroPoint operation:NSCompositeCopy fraction:0.7];
 #else
-	[opaqueImage drawAtPoint:NSZeroPoint fromRect:NSZeroRect operation:NSCompositeCopy fraction:0.7];
+    [opaqueImage drawAtPoint:NSZeroPoint fromRect:NSZeroRect operation:NSCompositingOperationCopy fraction:0.7];
 #endif
 	[finalImage unlockFocus];
 

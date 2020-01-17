@@ -39,21 +39,21 @@
 - (NSColor*)borderColor
 {
 	if (_borderColor == nil)
-		_borderColor = [NSColor gridColor];
+		_borderColor = NSColor.gridColor;
 	return _borderColor;
 }
 
 - (NSColor*)textColor
 {
 	if (_textColor == nil)
-		_textColor = [NSColor headerTextColor];
+		_textColor = NSColor.headerTextColor;
 	return _textColor;
 }
 
 - (NSFont*)labelFont
 {
 	if (_labelFont == nil)
-		_labelFont = [NSFont labelFontOfSize:[NSFont labelFontSize]];
+		_labelFont = [NSFont labelFontOfSize:NSFont.labelFontSize];
 	return _labelFont;
 }
 
@@ -61,7 +61,7 @@
 {
 	NSRect cellFrameRect = cellFrame;
 	
-	[[NSColor windowBackgroundColor] set];
+	[NSColor.windowBackgroundColor set];
 	NSRectFill(cellFrame);
 		
 	if(self.orientation == MBTableHeaderHorizontalOrientation) {
@@ -85,7 +85,7 @@
 		NSRectFill(bottomLine);
 	}
 	
-	if([self state] == NSOnState) {
+    if(self.state == NSControlStateValueOn) {
 		NSRect fillRect = cellFrameRect;
 		if(self.orientation == MBTableHeaderVerticalOrientation) {
 			fillRect.origin.y -= 1.0;
@@ -100,7 +100,7 @@
 		}
 		NSBezierPath* path = [NSBezierPath bezierPathWithRoundedRect:fillRect xRadius:4.0 yRadius:4.0];
 
-		NSColor *overlayColor = [[NSColor alternateSelectedControlColor] colorWithAlphaComponent:0.26];
+		NSColor *overlayColor = [NSColor.alternateSelectedControlColor colorWithAlphaComponent:0.26];
 		[overlayColor set];
 		[path fill];
 	}
@@ -110,7 +110,7 @@
 }
 
 - (NSAttributedString *)attributedStringValue {
-	NSDictionary *attributes = @{
+	NSDictionary<NSAttributedStringKey, id> *attributes = @{
 		NSFontAttributeName: self.labelFont,
 		NSForegroundColorAttributeName: self.textColor
 	};
