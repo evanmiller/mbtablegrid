@@ -267,6 +267,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		
 		self.columnRects = [NSMutableDictionary dictionary];
         [self registerForDraggedTypes:@[MBTableGridColumnDataType, MBTableGridRowDataType]];
+        self.wantsLayer = YES;
 	}
 	return self;
 }

@@ -43,9 +43,6 @@
 		self.tableGrid = tableGrid;
         _defaultCell = [[MBFooterTextCell alloc] initTextCell:@""];
         _defaultCell.bordered = NO;
-		self.wantsLayer = YES;
-		self.layer.drawsAsynchronously = YES;
-		self.layerContentsRedrawPolicy = NSViewLayerContentsRedrawOnSetNeedsDisplay;
     }
     return self;
 }
