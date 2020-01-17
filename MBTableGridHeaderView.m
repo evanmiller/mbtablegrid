@@ -249,7 +249,7 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 	NSPoint loc = [self convertPoint:theEvent.locationInWindow fromView:nil];
 	mouseDownLocation = loc;
 	NSInteger column = [self.tableGrid columnAtPoint:[self convertPoint:loc toView:self.tableGrid]];
-	NSInteger row = [self.tableGrid rowAtPoint:loc];
+	NSInteger row = [self.tableGrid rowAtPoint:[self convertPoint:loc toView:self.tableGrid]];
 
 	if([theEvent clickCount] == 2 && !rightMouse) {
 		[self.tableGrid.delegate tableGrid:self.tableGrid didDoubleClickColumn:column];
@@ -372,7 +372,7 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
             if (self.orientation == MBTableHeaderHorizontalOrientation) {
                 itemUnderMouse = [self.tableGrid columnAtPoint:[self convertPoint:loc toView:self.tableGrid]];
             } else if(self.orientation == MBTableHeaderVerticalOrientation) {
-				itemUnderMouse = [self.tableGrid rowAtPoint:loc];
+				itemUnderMouse = [self.tableGrid rowAtPoint:[self convertPoint:loc toView:self.tableGrid]];
             }
             
             // If there's nothing under the mouse, bail out (something went wrong)
