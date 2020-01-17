@@ -11,9 +11,11 @@
 #define _row(cellIndex, rows, cols) ((cellIndex) % (rows) + (cols-cols))
 #define _col(cellIndex, rows, cols) ((cellIndex) / (rows) + (cols-cols))
 
-@interface MBTableGrid ()
+@interface MBTableGrid (Private)
 
 @property (nonatomic, readonly) BOOL _shouldAbortFindOperation;
+
+- (id)_objectValueForColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 
 @end
 
@@ -50,7 +52,7 @@
         NSUInteger columnIndex = _col(cellIndex, rowCount, columnCount);
         
         @autoreleasepool {
-            NSString *value = [_tableGrid.dataSource tableGrid:_tableGrid objectValueForColumn:columnIndex row:rowIndex];
+            NSString *value = [_tableGrid _objectValueForColumn:columnIndex row:rowIndex];
             if (value) {
                 result = [value rangeOfString:searchString options:mask];
             }

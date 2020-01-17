@@ -11,6 +11,10 @@
 #import "MBTableGridContentView.h"
 
 @interface MBTableGrid ()
+- (NSCell *)_cellForColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
+- (id)_objectValueForColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
+- (void)_setObjectValue:(id)value forColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
+- (BOOL)_canEditCellAtColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 - (void)scrollToArea:(NSRect)area animate:(BOOL)animate;
 @end
 
@@ -159,7 +163,7 @@
     NSUInteger cellIndex = range.location;
     NSUInteger rowIndex = _row(cellIndex, rowCount, columnCount);
     NSUInteger filteredIndex = _col(cellIndex, rowCount, columnCount);
-    NSCell* cell = [_tableGrid.dataSource tableGrid:_tableGrid cellForColumn:filteredIndex row:rowIndex];
+    NSCell* cell = [_tableGrid _cellForColumn:filteredIndex row:rowIndex];
     NSRect cellFrame = [_tableGrid.contentView frameOfCellAtColumn:filteredIndex row:rowIndex];
     [cell drawInteriorWithFrame:cellFrame inView:view];
 }
@@ -175,7 +179,7 @@
         while (cellIndex < range.location + range.length) {
             NSUInteger rowIndex = _row(cellIndex, rowCount, columnCount);
             NSUInteger filteredIndex = _col(cellIndex, rowCount, columnCount);
-            if (![_tableGrid.delegate tableGrid:_tableGrid shouldEditColumn:filteredIndex row:rowIndex])
+            if (![_tableGrid _canEditCellAtColumn:filteredIndex row:rowIndex])
                 return NO;
 
             cellIndex++;
@@ -192,7 +196,7 @@
     NSUInteger rowIndex = _row(cellIndex, rowCount, columnCount);
     NSUInteger filteredIndex = _col(cellIndex, rowCount, columnCount);
     
-    [_tableGrid.dataSource tableGrid:_tableGrid setObjectValue:string forColumn:filteredIndex row:rowIndex];
+    [_tableGrid _setObjectValue:string forColumn:filteredIndex row:rowIndex];
 }
 
 - (BOOL)isEditable {
