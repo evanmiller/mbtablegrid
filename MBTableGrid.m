@@ -137,7 +137,6 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 		// Post frame changed notifications
 		self.postsFrameChangedNotifications = YES;
-		[NSNotificationCenter.defaultCenter addObserver:self selector:@selector(viewFrameDidChange:) name:NSViewFrameDidChangeNotification object:self];
 
 		// Set the default cell
 		MBTableGridCell *defaultCell = [[MBTableGridCell alloc] initTextCell:@""];
