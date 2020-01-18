@@ -101,9 +101,6 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 
 		_rowHeight = 20.0f;
 		
-		self.wantsLayer = true;
-		self.layerContentsRedrawPolicy = NSViewLayerContentsRedrawOnSetNeedsDisplay;
-		self.layer.drawsAsynchronously = YES;
 		_defaultCell = [[MBTableGridCell alloc] initTextCell:@""];
         _defaultCell.bordered = YES;
         _defaultCell.scrollable = YES;

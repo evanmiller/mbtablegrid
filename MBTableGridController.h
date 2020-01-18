@@ -34,7 +34,4 @@
     NSArray *columnSampleWidths;
 }
 
-- (IBAction)addColumn:(id)sender;
-- (IBAction)addRow:(id)sender;
-
 @end
