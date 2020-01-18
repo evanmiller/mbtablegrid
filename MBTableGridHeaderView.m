@@ -51,9 +51,6 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 {
 	if(self = [super initWithFrame:frameRect]) {
 		self.tableGrid = tableGrid;
-		self.wantsLayer = YES;
-		self.layer.drawsAsynchronously = YES;
-		self.layerContentsRedrawPolicy = NSViewLayerContentsRedrawOnSetNeedsDisplay;
 		
 		// Setup the header cell
 		headerCell = [[MBTableGridHeaderCell alloc] init];

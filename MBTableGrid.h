@@ -325,7 +325,7 @@ cells. A cell can individually override this behavior. */
 /**
  * @brief		The autosave name for this grid
  */
-@property (nonatomic) NSString *autosaveName;
+@property (nonatomic, strong) NSString *autosaveName;
 
 - (void)copy:(id)sender;
 
