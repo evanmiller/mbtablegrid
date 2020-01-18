@@ -37,6 +37,10 @@ NSString *MBTableGridDidMoveColumnsNotification         = @"MBTableGridDidMoveCo
 NSString *MBTableGridDidMoveRowsNotification            = @"MBTableGridDidMoveRowsNotification";
 CGFloat MBTableHeaderMinimumColumnWidth = 60.0f;
 
+#define MBTableGridColumnHeaderHeight 24.0
+#define MBTableGridColumnFooterHeight 24.0
+#define MBTableGridRowHeaderWidth 40.0
+
 #pragma mark -
 #pragma mark Drag Types
 NSString *MBTableGridColumnDataType = @"mbtablegrid.pasteboard.column";
@@ -1348,7 +1352,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 - (NSRect)rectOfColumn:(NSUInteger)columnIndex {
 	NSRect rect = [self convertRect:[contentView rectOfColumn:columnIndex] fromView:contentView];
 	rect.origin.y = 0;
-	rect.size.height += MBTableGridColumnHeaderHeight;
+	rect.size.height += columnHeaderScrollView.frame.size.height;
 	if (rect.size.height > self.frame.size.height) {
 		rect.size.height = self.frame.size.height;
 
@@ -1365,7 +1369,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 - (NSRect)rectOfRow:(NSUInteger)rowIndex {
 	NSRect rect = [self convertRect:[contentView rectOfRow:rowIndex] fromView:contentView];
 	rect.origin.x = 0;
-	rect.size.width += MBTableGridRowHeaderWidth;
+	rect.size.width += rowHeaderScrollView.frame.size.width;
 
 	return rect;
 }
@@ -1400,12 +1404,18 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 }
 
 - (NSRect)headerRectOfCorner {
-	NSRect rect = NSMakeRect(0, 0, MBTableGridRowHeaderWidth, MBTableGridColumnHeaderHeight);
+    NSRect rect = NSMakeRect(NSMinX(rowHeaderScrollView.frame),
+                             NSMinY(columnHeaderScrollView.frame),
+                             NSWidth(rowHeaderScrollView.frame),
+                             NSHeight(columnHeaderScrollView.frame));
 	return rect;
 }
 
 - (NSRect)footerRectOfCorner {
-	NSRect rect = NSMakeRect(0, self.frame.size.height - MBTableGridColumnFooterHeight, MBTableGridRowHeaderWidth, MBTableGridColumnFooterHeight);
+    NSRect rect = NSMakeRect(NSMinX(rowHeaderScrollView.frame),
+                             NSMinY(columnFooterScrollView.frame),
+                             NSWidth(rowHeaderScrollView.frame),
+                             NSHeight(columnFooterScrollView.frame));
 	return rect;
 }
 
@@ -1437,6 +1447,51 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 - (MBTableGridContentView *)contentView {
 	return contentView;
+}
+
+- (BOOL)isColumnHeaderVisible {
+    return columnHeaderScrollView.frame.size.height > 0.0;
+}
+
+- (void)setColumnHeaderVisible:(BOOL)isVisible {
+    [columnHeaderScrollView removeConstraints:columnHeaderScrollView.constraints];
+    [NSLayoutConstraint constraintWithItem:columnHeaderScrollView
+                                 attribute:NSLayoutAttributeHeight
+                                 relatedBy:NSLayoutRelationEqual
+                                    toItem:nil
+                                 attribute:NSLayoutAttributeNotAnAttribute
+                                multiplier:0.0
+                                  constant:isVisible ? MBTableGridColumnHeaderHeight : 0.0].active = YES;
+}
+
+- (BOOL)isColumnFooterVisible {
+    return columnFooterScrollView.frame.size.height > 0.0;
+}
+
+- (void)setColumnFooterVisible:(BOOL)isVisible {
+    [columnFooterScrollView removeConstraints:columnFooterScrollView.constraints];
+    [NSLayoutConstraint constraintWithItem:columnFooterScrollView
+                                 attribute:NSLayoutAttributeHeight
+                                 relatedBy:NSLayoutRelationEqual
+                                    toItem:nil
+                                 attribute:NSLayoutAttributeNotAnAttribute
+                                multiplier:0.0
+                                  constant:isVisible ? MBTableGridColumnFooterHeight : 0.0].active = YES;
+}
+
+- (BOOL)isRowHeaderVisible {
+    return rowHeaderScrollView.frame.size.width > 0.0;
+}
+
+- (void)setRowHeaderVisible:(BOOL)isVisible {
+    [rowHeaderScrollView removeConstraints:rowHeaderScrollView.constraints];
+    [NSLayoutConstraint constraintWithItem:rowHeaderScrollView
+                                 attribute:NSLayoutAttributeWidth
+                                 relatedBy:NSLayoutRelationEqual
+                                    toItem:nil
+                                 attribute:NSLayoutAttributeNotAnAttribute
+                                multiplier:0.0
+                                  constant:isVisible ? MBTableGridRowHeaderWidth : 0.0].active = YES;
 }
 
 #pragma mark - Overridden Property Accessors

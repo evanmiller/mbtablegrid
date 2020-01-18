@@ -151,6 +151,10 @@ typedef NS_ENUM(NSUInteger, MBVerticalEdge) {
 @property (nonatomic, readonly) MBTableGridFooterView* columnFooterView;
 @property (nonatomic, readonly) MBTableGridHeaderView* rowHeaderView;
 
+@property (getter=isColumnHeaderVisible, nonatomic, assign) BOOL columnHeaderVisible;
+@property (getter=isColumnFooterVisible, nonatomic, assign) BOOL columnFooterVisible;
+@property (getter=isRowHeaderVisible, nonatomic, assign) BOOL rowHeaderVisible;
+
 - (void)setSelectedRowIndexes:(NSIndexSet *)anIndexSet notify:(BOOL)notify;
 - (void)setSelectedColumnIndexes:(NSIndexSet *)anIndexSet notify:(BOOL)notify;
 

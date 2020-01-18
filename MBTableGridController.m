@@ -103,6 +103,20 @@ NSString * const PasteboardTypeColumnClass = @"pasteboardTypeColumnClass";
     return randomString;
 }
 
+#pragma mark Actions
+
+- (IBAction)toggleColumnHeaderVisible:(NSButton *)sender {
+    tableGrid.columnHeaderVisible = !tableGrid.isColumnHeaderVisible;
+}
+
+- (IBAction)toggleRowHeaderVisible:(NSButton *)sender {
+    tableGrid.rowHeaderVisible = !tableGrid.isRowHeaderVisible;
+}
+
+- (IBAction)toggleColumnFooterVisible:(NSButton *)sender {
+    tableGrid.columnFooterVisible = !tableGrid.isColumnFooterVisible;
+}
+
 #pragma mark -
 #pragma mark Protocol Methods
 
