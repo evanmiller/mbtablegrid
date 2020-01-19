@@ -666,7 +666,8 @@ cells. A cell can individually override this behavior. */
  *
  * @return		The object for the specified cell of the view.
  *
- * @see			tableGrid:setObjectValue:forColumn:row:
+ * @see            tableGrid:setObjectValue:forColumn:row:
+ * @see            tableGrid:setObjectValue:forColumns:rows:
  */
 - (id) tableGrid:(MBTableGrid *)aTableGrid objectValueForColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 
@@ -685,19 +686,39 @@ cells. A cell can individually override this behavior. */
 @optional
 
 /**
- * @brief		Sets the sata object for an item in a given row in a given column.
+ * @brief		Sets the data object for an item in a given row in a given column.
  *
- * @details		Although this method is optional, it must be implemented in order
- *				to enable grid editing.
+ * @details		Although this method is optional, either it or the plural form \c setObjectValue:forColumns:rows:
+ *              must be implemented in order to enable grid editing, Find/Replace, and deletions.
  *
  * @param		aTableGrid		The table grid that sent the message.
- * @param		anObject		The new value for the item.
+ * @param		anObject		The new value for the item, or \c nil for deletions.
  * @param		columnIndex		A column in \c aTableGrid.
  * @param		rowIndex		A row in \c aTableGrid.
  *
  * @see			tableGrid:objectValueForColumn:row:
+ * @see         tableGrid:setObjectValueForColumns:rows:
+
  */
 - (void)tableGrid:(MBTableGrid *)aTableGrid setObjectValue:(id)anObject forColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
+
+@optional
+
+/**
+ * @brief        Bulk-replace a single value for all items in the given rows and columns.
+ *
+ * @details      Although this method is optional, either it or the singular form \c setObjectValue:forColumn:row:
+ *               must be implemented in order to enable grid editing, Find/Replace, and deletions.
+ *
+ * @param        aTableGrid        The table grid that sent the message.
+ * @param        anObject        The new value for the items, or \c nil for deletions.
+ * @param        columnIndexes        The affected columns in \c aTableGrid.
+ * @param        rowIndexes        The affected rows in \c aTableGrid.
+ *
+ * @see            tableGrid:objectValueForColumn:row:
+ * @see            tableGrid:setObjectValue:forColumn:row:
+ */
+- (void)tableGrid:(MBTableGrid *)aTableGrid setObjectValue:(id)anObject forColumns:(NSIndexSet *)columnIndexes rows:(NSIndexSet *)rowIndexes;
 
 
 @optional

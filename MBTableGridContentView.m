@@ -38,6 +38,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 - (NSCell *)_cellForColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 - (id)_objectValueForColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 - (void)_setObjectValue:(id)value forColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
+- (void)_setObjectValue:(id)value forColumns:(NSIndexSet *)columnIndexes rows:(NSIndexSet *)rowIndexes;
 - (BOOL)_canEditCellAtColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 - (void)_setStickyColumn:(MBHorizontalEdge)stickyColumn row:(MBVerticalEdge)stickyRow;
 - (float)_widthForColumn:(NSUInteger)columnIndex;
@@ -460,9 +461,9 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 	if (isFilling) {
 		id value = [self.tableGrid _objectValueForColumn:mouseDownColumn row:mouseDownRow];
 		
-		[self.tableGrid.selectedRowIndexes enumerateIndexesUsingBlock:^(NSUInteger idx, BOOL *stop) {
-			[self.tableGrid _setObjectValue:[value copy] forColumn:mouseDownColumn row:idx];
-		}];
+        [self.tableGrid _setObjectValue:[value copy]
+                             forColumns:[NSIndexSet indexSetWithIndex:mouseDownColumn]
+                                   rows:self.tableGrid.selectedRowIndexes];
 		
         NSInteger numberOfRows = self.tableGrid.numberOfRows;
         

@@ -49,6 +49,7 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 - (NSString *)_headerStringForColumn:(NSUInteger)columnIndex;
 - (NSString *)_headerStringForRow:(NSUInteger)rowIndex;
 - (void)_setObjectValue:(id)value forColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
+- (void)_setObjectValue:(id)value forColumns:(NSIndexSet *)columnIndexes rows:(NSIndexSet *)rowIndexes;
 - (float)_widthForColumn:(NSUInteger)columnIndex;
 - (void)_setWidth:(float) width forColumn:(NSUInteger)columnIndex;
 - (BOOL)_canEditCellAtColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
@@ -915,15 +916,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 - (void)deleteBackward:(id)sender {
 	// Clear the contents of every selected cell
-	NSUInteger column = self.selectedColumnIndexes.firstIndex;
-	while (column <= self.selectedColumnIndexes.lastIndex) {
-		NSUInteger row = self.selectedRowIndexes.firstIndex;
-		while (row <= self.selectedRowIndexes.lastIndex) {
-			[self _setObjectValue:nil forColumn:column row:row];
-			row++;
-		}
-		column++;
-	}
+    [self _setObjectValue:nil forColumns:self.selectedColumnIndexes rows:self.selectedRowIndexes];
 	[self reloadData];
 }
 
@@ -1558,9 +1551,29 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 	return [NSString stringWithFormat:@"%lu", (rowIndex + 1)];
 }
 
+// This form prefers the singular form of the setObjectValue: data source method,
+// but will fall back to the plural form
 - (void)_setObjectValue:(id)value forColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex {
-	if ([self.dataSource respondsToSelector:@selector(tableGrid:setObjectValue:forColumn:row:)]) {
-		[self.dataSource tableGrid:self setObjectValue:value forColumn:columnIndex row:rowIndex];
+    if ([self.dataSource respondsToSelector:@selector(tableGrid:setObjectValue:forColumn:row:)]) {
+        [self.dataSource tableGrid:self setObjectValue:value forColumn:columnIndex row:rowIndex];
+    } else if ([self.dataSource respondsToSelector:@selector(tableGrid:setObjectValue:forColumns:rows:)]) {
+        [self.dataSource tableGrid:self setObjectValue:value
+                        forColumns:[NSIndexSet indexSetWithIndex:columnIndex]
+                              rows:[NSIndexSet indexSetWithIndex:rowIndex]];
+    }
+}
+
+// This form prefers the plural form of the setObjectValue: data source method,
+// but if not implemented will fall back to the singular form (potentially very slow)
+- (void)_setObjectValue:(id)value forColumns:(NSIndexSet *)columnIndexes rows:(NSIndexSet *)rowIndexes {
+	if ([self.dataSource respondsToSelector:@selector(tableGrid:setObjectValue:forColumns:rows:)]) {
+		[self.dataSource tableGrid:self setObjectValue:value forColumns:columnIndexes rows:rowIndexes];
+    } else if ([self.dataSource respondsToSelector:@selector(tableGrid:setObjectValue:forColumn:row:)]) {
+        [columnIndexes enumerateIndexesUsingBlock:^(NSUInteger columnIndex, BOOL *stopColumns) {
+            [rowIndexes enumerateIndexesUsingBlock:^(NSUInteger rowIndex, BOOL *stopRows) {
+                [self.dataSource tableGrid:self setObjectValue:value forColumn:columnIndex row:rowIndex];
+            }];
+        }];
 	}
 }
 
@@ -1584,7 +1597,8 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 - (BOOL)_canEditCellAtColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex {
 	// Can't edit if the data source doesn't implement the method
-	if (![self.dataSource respondsToSelector:@selector(tableGrid:setObjectValue:forColumn:row:)]) {
+	if (![self.dataSource respondsToSelector:@selector(tableGrid:setObjectValue:forColumn:row:)] &&
+        ![self.dataSource respondsToSelector:@selector(tableGrid:setObjectValue:forColumns:rows:)]) {
 		return NO;
 	}
 
