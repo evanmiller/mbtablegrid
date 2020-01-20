@@ -28,6 +28,8 @@
 #import "MBTableGridFooterView.h"
 #import "MBTableGridHeaderCell.h"
 #import "MBTableGridContentView.h"
+#import "MBTableGridContentScrollView.h"
+#import "MBTableGridTextFinderClient.h"
 #import "MBTableGridCell.h"
 
 #pragma mark -
@@ -49,6 +51,7 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 - (NSString *)_headerStringForColumn:(NSUInteger)columnIndex;
 - (NSString *)_headerStringForRow:(NSUInteger)rowIndex;
 - (void)_setObjectValue:(id)value forColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
+- (void)_setObjectValue:(id)value forColumns:(NSIndexSet *)columnIndexes rows:(NSIndexSet *)rowIndexes;
 - (float)_widthForColumn:(NSUInteger)columnIndex;
 - (void)_setWidth:(float) width forColumn:(NSUInteger)columnIndex;
 - (BOOL)_canEditCellAtColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
@@ -189,7 +192,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		NSRect contentFrame = NSMakeRect(MBTableGridRowHeaderWidth, MBTableGridColumnHeaderHeight,
 										 self.frame.size.width - MBTableGridRowHeaderWidth,
 										 self.frame.size.height - MBTableGridColumnHeaderHeight - MBTableGridColumnFooterHeight);
-		contentScrollView = [[NSScrollView alloc] initWithFrame:contentFrame];
+		contentScrollView = [[MBTableGridContentScrollView alloc] initWithFrame:contentFrame];
 		contentView = [[MBTableGridContentView alloc] initWithFrame:NSMakeRect(0, 0, contentFrame.size.width, contentFrame.size.height)
 													   andTableGrid:self];
 		contentScrollView.documentView = contentView;
@@ -269,6 +272,15 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		
 		self.columnRects = [NSMutableDictionary dictionary];
         [self registerForDraggedTypes:@[MBTableGridColumnDataType, MBTableGridRowDataType]];
+        
+        _textFinder = [[NSTextFinder alloc] init];
+        _textFinder.findBarContainer = contentScrollView;
+        _textFinder.incrementalSearchingEnabled = YES;
+        _textFinder.incrementalSearchingShouldDimContentView = YES;
+        
+        _textFinderClient = [[MBTableGridTextFinderClient alloc] initWithTableGrid:self];
+        _textFinder.client = _textFinderClient;
+
         self.wantsLayer = YES;
 	}
 	return self;
@@ -403,7 +415,9 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 	BOOL isBeneathContentView = FALSE;
 	NSView* parent = v;
 	while(parent != nil) {
-		if(parent == self.contentView || parent == self.rowHeaderView || parent == self.columnHeaderView || parent == self.columnFooterView) {
+        if(parent == self.contentView || parent == self.rowHeaderView ||
+           parent == self.columnHeaderView || parent == self.columnFooterView ||
+           parent == contentScrollView.findBarView) {
 			isBeneathContentView = TRUE;
 			break;
 		}
@@ -915,15 +929,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 - (void)deleteBackward:(id)sender {
 	// Clear the contents of every selected cell
-	NSUInteger column = self.selectedColumnIndexes.firstIndex;
-	while (column <= self.selectedColumnIndexes.lastIndex) {
-		NSUInteger row = self.selectedRowIndexes.firstIndex;
-		while (row <= self.selectedRowIndexes.lastIndex) {
-			[self _setObjectValue:nil forColumn:column row:row];
-			row++;
-		}
-		column++;
-	}
+    [self _setObjectValue:nil forColumns:self.selectedColumnIndexes rows:self.selectedRowIndexes];
 	[self reloadData];
 }
 
@@ -944,6 +950,40 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		[contentView textDidBeginEditingWithEditor:fieldEditor];
 	}
 	self.needsDisplay = YES;
+}
+
+#pragma mark -
+#pragma mark Find Bar Support
+
+- (IBAction)performTextFinderAction:(NSControl *)sender {
+    [_textFinder performAction:sender.tag];
+}
+
+- (BOOL)validateUserInterfaceItem:(id<NSValidatedUserInterfaceItem>)item {
+    if (item.action == @selector(performTextFinderAction:)) {
+        return [_textFinder validateAction:item.tag];
+    }
+    return YES;
+}
+
+- (BOOL)_shouldAbortFindOperation {
+    if (NSThread.isMainThread)
+        return self.isHiddenOrHasHiddenAncestor || !contentScrollView.findBarVisible;
+    
+    __block BOOL return_value = NO;
+    NSOperation *operation = [NSBlockOperation blockOperationWithBlock:^{
+        return_value = self.isHiddenOrHasHiddenAncestor || !self->contentScrollView.findBarVisible;
+    }];
+    [NSOperationQueue.mainQueue addOperations:@[ operation ] waitUntilFinished:YES];
+    return return_value;
+}
+
+- (BOOL)isFindBarVisible {
+    return contentScrollView.isFindBarVisible;
+}
+
+- (void)setFindBarVisible:(BOOL)findBarVisible {
+    contentScrollView.findBarVisible = findBarVisible;
 }
 
 #pragma mark -
@@ -1339,8 +1379,10 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 	// Restore original visible rectangle of scroller
 	[self scrollToArea:visibleRect animate:NO];
+    
+    [_textFinder noteClientStringWillChange];
 
-	[self setNeedsDisplay:YES];
+	self.needsDisplay = YES;
 }
 
 #pragma mark Layout Support
@@ -1558,9 +1600,29 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 	return [NSString stringWithFormat:@"%lu", (rowIndex + 1)];
 }
 
+// This form prefers the singular form of the setObjectValue: data source method,
+// but will fall back to the plural form
 - (void)_setObjectValue:(id)value forColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex {
-	if ([self.dataSource respondsToSelector:@selector(tableGrid:setObjectValue:forColumn:row:)]) {
-		[self.dataSource tableGrid:self setObjectValue:value forColumn:columnIndex row:rowIndex];
+    if ([self.dataSource respondsToSelector:@selector(tableGrid:setObjectValue:forColumn:row:)]) {
+        [self.dataSource tableGrid:self setObjectValue:value forColumn:columnIndex row:rowIndex];
+    } else if ([self.dataSource respondsToSelector:@selector(tableGrid:setObjectValue:forColumns:rows:)]) {
+        [self.dataSource tableGrid:self setObjectValue:value
+                        forColumns:[NSIndexSet indexSetWithIndex:columnIndex]
+                              rows:[NSIndexSet indexSetWithIndex:rowIndex]];
+    }
+}
+
+// This form prefers the plural form of the setObjectValue: data source method,
+// but if not implemented will fall back to the singular form (potentially very slow)
+- (void)_setObjectValue:(id)value forColumns:(NSIndexSet *)columnIndexes rows:(NSIndexSet *)rowIndexes {
+	if ([self.dataSource respondsToSelector:@selector(tableGrid:setObjectValue:forColumns:rows:)]) {
+		[self.dataSource tableGrid:self setObjectValue:value forColumns:columnIndexes rows:rowIndexes];
+    } else if ([self.dataSource respondsToSelector:@selector(tableGrid:setObjectValue:forColumn:row:)]) {
+        [columnIndexes enumerateIndexesUsingBlock:^(NSUInteger columnIndex, BOOL *stopColumns) {
+            [rowIndexes enumerateIndexesUsingBlock:^(NSUInteger rowIndex, BOOL *stopRows) {
+                [self.dataSource tableGrid:self setObjectValue:value forColumn:columnIndex row:rowIndex];
+            }];
+        }];
 	}
 }
 
@@ -1584,7 +1646,8 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 - (BOOL)_canEditCellAtColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex {
 	// Can't edit if the data source doesn't implement the method
-	if (![self.dataSource respondsToSelector:@selector(tableGrid:setObjectValue:forColumn:row:)]) {
+	if (![self.dataSource respondsToSelector:@selector(tableGrid:setObjectValue:forColumn:row:)] &&
+        ![self.dataSource respondsToSelector:@selector(tableGrid:setObjectValue:forColumns:rows:)]) {
 		return NO;
 	}
 
@@ -1629,6 +1692,20 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
     if ([self.dataSource respondsToSelector:@selector(tableGrid:setFooterValue:forColumn:)]) {
         [self.dataSource tableGrid:self setFooterValue:value forColumn:columnIndex];
     }
+}
+
+@end
+
+@implementation MBTableGrid (DoubleClick)
+
+- (void)_didDoubleClickColumn:(NSUInteger)columnIndex {
+    if ([self.delegate respondsToSelector:@selector(tableGrid:didDoubleClickColumn:)])
+        [self.delegate tableGrid:self didDoubleClickColumn:columnIndex];
+}
+
+- (void)_didDoubleClickRow:(NSUInteger)rowIndex {
+    if ([self.delegate respondsToSelector:@selector(tableGrid:didDoubleClickRow:)])
+        [self.delegate tableGrid:self didDoubleClickRow:rowIndex];
 }
 
 @end
