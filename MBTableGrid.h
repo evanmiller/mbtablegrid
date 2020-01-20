@@ -1091,12 +1091,24 @@ cells. A cell can individually override this behavior. */
  *
  * @param		aTableGrid		The table grid object informing the delegate
  *								about the double-click event
- * @param		columnIndex		The selected column in \c aTableGrid.
+ * @param		columnIndex		The double-clicked column in \c aTableGrid.
  *
  *
- * @see			tableGrid:willSelectColumnsAtIndexPath:
+ * @see			tableGrid:didDoubleClickRow:
  */
 - (void)tableGrid:(MBTableGrid *)aTableGrid didDoubleClickColumn:(NSUInteger)columnIndex;
+
+/**
+ * @brief        Tells the delegate that the specified row header was double-clicked
+ *
+ * @param        aTableGrid        The table grid object informing the delegate
+ *                                about the double-click event
+ * @param        columnIndex        The double-clicked row in \c aTableGrid.
+ *
+ *
+ * @see            tableGrid:didDoubleClickColumn:
+ */
+- (void)tableGrid:(MBTableGrid *)aTableGrid didDoubleClickRow:(NSUInteger)rowIndex;
 
 
 /**
