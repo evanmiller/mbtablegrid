@@ -1851,3 +1851,17 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 }
 
 @end
+
+@implementation MBTableGrid (HeaderMenus)
+
+- (void)_willDisplayHeaderMenu:(NSMenu *)menu forColumn:(NSUInteger)columnIndex {
+    if ([self.delegate respondsToSelector:@selector(tableGrid:willDisplayHeaderMenu:forColumn:)])
+        [self.delegate tableGrid:self willDisplayHeaderMenu:menu forColumn:columnIndex];
+}
+
+- (void)_willDisplayHeaderMenu:(NSMenu *)menu forRow:(NSUInteger)rowIndex {
+    if ([self.delegate respondsToSelector:@selector(tableGrid:willDisplayHeaderMenu:forRow:)])
+        [self.delegate tableGrid:self willDisplayHeaderMenu:menu forRow:rowIndex];
+}
+
+@end

@@ -1251,4 +1251,39 @@ cells. A cell can individually override this behavior. */
 
 - (void)tableGrid:(MBTableGrid*)aTableGrid footerCellClicked:(NSCell*)cell forColumn:(NSUInteger)columnIndex withEvent:(NSEvent*)theEvent;
 
+#pragma mark Displaying Menus
+
+/**
+ * @brief   Informs the delegate that the column header's contextual menu is about to be displayed.
+ *          The menu items can then be customized for the particular column.
+ *          (The column header menu can be set via the \c menu property of the table grid's \c columnHeaderView.)
+ *
+ *  @param  aTableGrid      The table grid object that will display the menu
+ *
+ *  @param  menu                    The menu about to be displayed
+ *
+ *  @param  columnIndex     The column that was clicked (right-clicked or Control-clicked)
+ *
+ *  @see    tableGrid:willDisplayHeaderMenu:forRow:
+ */
+
+- (void)tableGrid:(MBTableGrid *)aTableGrid willDisplayHeaderMenu:(NSMenu *)menu forColumn:(NSUInteger)columnIndex;
+
+/**
+ * @brief   Informs the delegate that the row header's contextual menu is about to be displayed.
+ *          The menu items can then be customized for the particular row.
+ *          (The row header menu can be set via the \c menu property of the table grid's \c rowHeaderView.)
+ *
+ *  @param  aTableGrid      The table grid object that will display the menu
+ *
+ *  @param  menu                    The menu about to be displayed
+ *
+ *  @param  rowIndex            The row that was clicked (right-clicked or Control-clicked)
+ *
+ *  @see    tableGrid:willDisplayHeaderMenu:forColumn:
+ */
+
+- (void)tableGrid:(MBTableGrid *)aTableGrid willDisplayHeaderMenu:(NSMenu *)menu forRow:(NSUInteger)rowIndex;
+
+
 @end
