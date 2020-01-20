@@ -224,7 +224,7 @@ typedef NS_ENUM(NSUInteger, MBVerticalEdge) {
 @property (nonatomic, strong) NSMutableDictionary<NSNumber *, NSValue *> *columnRects;
 
 
-- (void) resizeColumnWithIndex:(NSUInteger)columnIndex width:(float)w;
+- (void)resizeColumnWithIndex:(NSUInteger)columnIndex width:(float)w;
 
 /**
  * @}
@@ -1008,6 +1008,26 @@ cells. A cell can individually override this behavior. */
  */
 - (BOOL)tableGrid:(MBTableGrid *)aTableGrid removeRows:(NSIndexSet *)rowIndexes;
 
+
+#pragma mark Sorting
+
+/**
+ * @brief        Returns an index set indicating which columns in the table grid can be sorted.
+ *
+ * @details      The data source is responsible for sorting the data. The current sort specification
+ *               can be accessed via the table grid's \c sortColumnIndex and \c isSortColumnAscending
+ *               properties.
+ *
+ * @param        aTableGrid        The table grid that sent the message.
+ *
+ * @return       The index set of columns that will have a sort indicator appear in the table grid's
+ *              colunm header, or \c nil if no  if no columns should be sortable.
+ *
+ * @see          tableGrid:didSortByColumn:ascending:
+*/
+
+- (NSIndexSet *)sortableColumnIndexesInTableGrid:(MBTableGrid*)aTableGrid;
+
 /**
  * @}
  */
@@ -1218,7 +1238,14 @@ cells. A cell can individually override this behavior. */
 
 #pragma mark Sorting
 
-- (NSIndexSet *)sortableColumnIndexesInTableGrid:(MBTableGrid*)aTableGrid;
+/**
+ * @brief        Tells the delegate that the table grid's sort specification has changed.
+ *
+ * @param        aTableGrid        The table grid that sent the message.
+ * @param        columnIndex      The column that should be sorted by, or \c NSNotFound if no sorting should occur.
+ * @param        isAscending      \c YES if the items should be sorted in ascending order; \c NO otherwise
+ *
+*/
 
 - (void)tableGrid:(MBTableGrid*)aTableGrid didSortByColumn:(NSUInteger)columnIndex ascending:(BOOL)isAscending;
 

@@ -25,6 +25,9 @@
 
 #import "MBTableGridHeaderCell.h"
 
+extern CGFloat MBTableHeaderSortIndicatorWidth;
+extern CGFloat MBTableHeaderSortIndicatorMargin;
+
 #define kSortIndicatorXInset        4.0      /* Number of pixels to inset the drawing of the indicator from the right edge */
 
 @interface MBTableGridHeaderCell ()
@@ -61,9 +64,9 @@
 
 - (NSRect)imageRectForBounds:(NSRect)rect {
     NSRect indicatorRect = NSZeroRect;
-    NSSize sortImageSize = NSMakeSize(10.0, 10.0);
+    NSSize sortImageSize = NSMakeSize(MBTableHeaderSortIndicatorWidth, MBTableHeaderSortIndicatorWidth);
     indicatorRect.size = sortImageSize;
-    indicatorRect.origin.x = NSMaxX(rect) - (sortImageSize.width + kSortIndicatorXInset);
+    indicatorRect.origin.x = NSMaxX(rect) - (sortImageSize.width + MBTableHeaderSortIndicatorMargin);
     indicatorRect.origin.y = NSMinY(rect) + roundf((NSHeight(rect) - sortImageSize.height) / 2.0);
     return indicatorRect;
 }

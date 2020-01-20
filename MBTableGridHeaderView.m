@@ -31,8 +31,6 @@ NSString* kAutosavedColumnWidthKey = @"AutosavedColumnWidth";
 NSString* kAutosavedColumnIndexKey = @"AutosavedColumnIndex";
 NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 
-#define kSortIndicatorXInset		4.0  	/* Number of pixels to inset the drawing of the indicator from the right edge */
-
 @interface MBTableGrid (Private)
 - (NSString *)_headerStringForColumn:(NSUInteger)columnIndex;
 - (NSString *)_headerStringForRow:(NSUInteger)rowIndex;
@@ -213,13 +211,13 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
         draggingColumnIndex = [self.tableGrid columnAtPoint:[self convertPoint:NSMakePoint(loc.x - 3, loc.y) toView:self.tableGrid]];
         lastMouseDraggingLocation = loc;
         isResizing = YES;
+    } else if (!rightMouse && self.orientation == MBTableHeaderHorizontalOrientation &&
+               NSPointInRect(loc, [self sortImageRectOfColumn:column])) {
+        // Clicked the sort indicator
+        [self.tableGrid _sortButtonClickedForColumn:column];
     } else if (theEvent.clickCount == 1) {
         // For single clicks,
-        if (!rightMouse && self.orientation == MBTableHeaderHorizontalOrientation &&
-            NSPointInRect(loc, [self sortImageRectOfColumn:column])) {
-            // Clicked the sort indicator
-            [self.tableGrid _sortButtonClickedForColumn:column];
-        } else if ((theEvent.modifierFlags & NSEventModifierFlagShift) && self.tableGrid.allowsMultipleSelection) {
+        if ((theEvent.modifierFlags & NSEventModifierFlagShift) && self.tableGrid.allowsMultipleSelection) {
             // If the shift key was held down, extend the selection
             if(self.orientation == MBTableHeaderHorizontalOrientation) {
                 if (self.tableGrid.selectedColumnIndexes.count && column != NSNotFound) {

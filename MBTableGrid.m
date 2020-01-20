@@ -38,6 +38,8 @@ NSString *MBTableGridDidChangeSelectionNotification     = @"MBTableGridDidChange
 NSString *MBTableGridDidMoveColumnsNotification         = @"MBTableGridDidMoveColumnsNotification";
 NSString *MBTableGridDidMoveRowsNotification            = @"MBTableGridDidMoveRowsNotification";
 CGFloat MBTableHeaderMinimumColumnWidth = 60.0f;
+CGFloat MBTableHeaderSortIndicatorWidth = 10.0;
+CGFloat MBTableHeaderSortIndicatorMargin = 4.0;
 
 #define MBTableGridColumnHeaderHeight 24.0
 #define MBTableGridColumnFooterHeight 24.0
@@ -56,8 +58,9 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 - (NSString *)_headerStringForRow:(NSUInteger)rowIndex;
 - (void)_setObjectValue:(id)value forColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 - (void)_setObjectValue:(id)value forColumns:(NSIndexSet *)columnIndexes rows:(NSIndexSet *)rowIndexes;
-- (float)_widthForColumn:(NSUInteger)columnIndex;
-- (void)_setWidth:(float) width forColumn:(NSUInteger)columnIndex;
+- (CGFloat)_minimumWidthForColumn:(NSUInteger)columnIndex;
+- (CGFloat)_widthForColumn:(NSUInteger)columnIndex;
+- (void)_setWidth:(CGFloat) width forColumn:(NSUInteger)columnIndex;
 - (BOOL)_canEditCellAtColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 - (void)_userDidEnterInvalidStringInColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex errorDescription:(NSString *)errorDescription;
 - (NSCell *)_footerCellForColumn:(NSUInteger)columnIndex;
@@ -372,13 +375,13 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 #pragma mark Resize scrollview content size
 
-- (void) resizeColumnWithIndex:(NSUInteger)columnIndex width:(float)w {
+- (void)resizeColumnWithIndex:(NSUInteger)columnIndex width:(float)w {
 	// Set new width of column
-	float currentWidth = w;
+	CGFloat currentWidth = w;
 	
 	[self.columnRects removeAllObjects];
-	if (currentWidth < MBTableHeaderMinimumColumnWidth) {
-		currentWidth = MBTableHeaderMinimumColumnWidth;
+	if (currentWidth < [self _minimumWidthForColumn:columnIndex]) {
+		currentWidth = [self _minimumWidthForColumn:columnIndex];
 	}
 	[self _setWidth:currentWidth forColumn:columnIndex];
 	
@@ -435,11 +438,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 	// Set new width of column
 	CGFloat currentWidth = [self _widthForColumn:columnIndex];
     CGFloat offset = 0.0;
-    CGFloat minColumnWidth = MBTableHeaderMinimumColumnWidth;
-    
-    if ([columnHeaderView.indicatorImageColumns containsIndex:columnIndex]) {
-        minColumnWidth += [columnHeaderView sortImageRectOfColumn:columnIndex].size.width + 2.0f;
-    }
+    CGFloat minColumnWidth = [self _minimumWidthForColumn:columnIndex];
 
     if (currentWidth + distance <= minColumnWidth) {
         distance = -(currentWidth - minColumnWidth);
@@ -1419,8 +1418,8 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		_numberOfRows = 0;
 	}
         
-    if ([self.delegate respondsToSelector:@selector(sortableColumnIndexesInTableGrid:)])
-        columnHeaderView.indicatorImageColumns = [self.delegate sortableColumnIndexesInTableGrid:self];
+    if ([self.dataSource respondsToSelector:@selector(sortableColumnIndexesInTableGrid:)])
+        columnHeaderView.indicatorImageColumns = [self.dataSource sortableColumnIndexesInTableGrid:self];
     
 	// Update the content view's size
     NSUInteger lastColumn = (_numberOfColumns>0) ? _numberOfColumns-1 : 0;
@@ -1739,16 +1738,26 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 	}
 }
 
-- (float)_widthForColumn:(NSUInteger)columnIndex {
+- (CGFloat)_minimumWidthForColumn:(NSUInteger)columnIndex {
+    CGFloat minColumnWidth = MBTableHeaderMinimumColumnWidth;
+    
+    if ([columnHeaderView.indicatorImageColumns containsIndex:columnIndex]) {
+        minColumnWidth += MBTableHeaderSortIndicatorWidth + MBTableHeaderSortIndicatorMargin;
+    }
+    
+    return minColumnWidth;
+}
+
+- (CGFloat)_widthForColumn:(NSUInteger)columnIndex {
     if (columnIndex < _numberOfColumns) {
         if (_columnWidths[@(columnIndex)])
             return _columnWidths[@(columnIndex)].doubleValue;
-        return MBTableHeaderMinimumColumnWidth;
+        return [self _minimumWidthForColumn:columnIndex];
     }
     return 0.0;
 }
 
-- (void) _setWidth:(float)width forColumn:(NSUInteger)columnIndex
+- (void)_setWidth:(CGFloat)width forColumn:(NSUInteger)columnIndex
 {
     _columnWidths[@(columnIndex)] = @(width);
 	
