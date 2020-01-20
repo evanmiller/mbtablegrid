@@ -1696,6 +1696,20 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 @end
 
+@implementation MBTableGrid (DoubleClick)
+
+- (void)_didDoubleClickColumn:(NSUInteger)columnIndex {
+    if ([self.delegate respondsToSelector:@selector(tableGrid:didDoubleClickColumn:)])
+        [self.delegate tableGrid:self didDoubleClickColumn:columnIndex];
+}
+
+- (void)_didDoubleClickRow:(NSUInteger)rowIndex {
+    if ([self.delegate respondsToSelector:@selector(tableGrid:didDoubleClickRow:)])
+        [self.delegate tableGrid:self didDoubleClickRow:rowIndex];
+}
+
+@end
+
 @implementation MBTableGrid (PrivateAccessors)
 
 - (MBTableGridContentView *)_contentView {

@@ -39,6 +39,8 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 - (MBTableGridContentView *)_contentView;
 - (void)_dragColumnsWithEvent:(NSEvent *)theEvent;
 - (void)_dragRowsWithEvent:(NSEvent *)theEvent;
+- (void)_didDoubleClickColumn:(NSUInteger)columnIndex;
+- (void)_didDoubleClickRow:(NSUInteger)rowIndex;
 @end
 
 @implementation MBTableGridHeaderView
@@ -249,8 +251,11 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 	NSInteger row = [self.tableGrid rowAtPoint:[self convertPoint:loc toView:self.tableGrid]];
 
 	if([theEvent clickCount] == 2 && !rightMouse) {
-        if ([self.tableGrid.delegate respondsToSelector:@selector(tableGrid:didDoubleClickColumn:)])
-            [self.tableGrid.delegate tableGrid:self.tableGrid didDoubleClickColumn:column];
+        if (self.orientation == MBTableHeaderHorizontalOrientation) {
+            [self.tableGrid _didDoubleClickColumn:column];
+        } else {
+            [self.tableGrid _didDoubleClickRow:row];
+        }
 	}
 	else {
 		if (canResize) {
