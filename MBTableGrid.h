@@ -142,10 +142,13 @@ typedef NS_ENUM(NSUInteger, MBVerticalEdge) {
 	MBVerticalEdge stickyRowEdge;
 	NSMutableArray<NSString *> *columnIndexNames;
 	NSMutableDictionary<NSNumber *, NSNumber *>* _columnWidths;
-	
+
+    NSTextFinder *_textFinder;
+    id<NSTextFinderClient> _textFinderClient;
 }
 
 @property (nonatomic, assign) BOOL showsGrabHandles;
+@property (getter=isFindBarVisible) BOOL findBarVisible;
 
 @property (nonatomic, readonly) MBTableGridHeaderView* columnHeaderView;
 @property (nonatomic, readonly) MBTableGridFooterView* columnFooterView;
