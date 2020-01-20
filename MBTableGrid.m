@@ -28,6 +28,8 @@
 #import "MBTableGridFooterView.h"
 #import "MBTableGridHeaderCell.h"
 #import "MBTableGridContentView.h"
+#import "MBTableGridContentScrollView.h"
+#import "MBTableGridTextFinderClient.h"
 #import "MBTableGridCell.h"
 
 #pragma mark -
@@ -53,6 +55,7 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 - (NSString *)_headerStringForColumn:(NSUInteger)columnIndex;
 - (NSString *)_headerStringForRow:(NSUInteger)rowIndex;
 - (void)_setObjectValue:(id)value forColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
+- (void)_setObjectValue:(id)value forColumns:(NSIndexSet *)columnIndexes rows:(NSIndexSet *)rowIndexes;
 - (float)_widthForColumn:(NSUInteger)columnIndex;
 - (void)_setWidth:(float) width forColumn:(NSUInteger)columnIndex;
 - (BOOL)_canEditCellAtColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
@@ -193,7 +196,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		NSRect contentFrame = NSMakeRect(MBTableGridRowHeaderWidth, MBTableGridColumnHeaderHeight,
 										 self.frame.size.width - MBTableGridRowHeaderWidth,
 										 self.frame.size.height - MBTableGridColumnHeaderHeight - MBTableGridColumnFooterHeight);
-		contentScrollView = [[NSScrollView alloc] initWithFrame:contentFrame];
+		contentScrollView = [[MBTableGridContentScrollView alloc] initWithFrame:contentFrame];
 		contentView = [[MBTableGridContentView alloc] initWithFrame:NSMakeRect(0, 0, contentFrame.size.width, contentFrame.size.height)
 													   andTableGrid:self];
 		contentScrollView.documentView = contentView;
@@ -265,7 +268,6 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		stickyColumnEdge = MBHorizontalEdgeLeft;
 		stickyRowEdge = MBVerticalEdgeTop;
 
-		shouldOverrideModifiers = NO;
 		singleClickCellEdit = NO;
 
         self.previousVerticalSelectionDirection = MBVerticalEdgeTop;
@@ -273,6 +275,15 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		
 		self.columnRects = [NSMutableDictionary dictionary];
         [self registerForDraggedTypes:@[MBTableGridColumnDataType, MBTableGridRowDataType]];
+        
+        _textFinder = [[NSTextFinder alloc] init];
+        _textFinder.findBarContainer = contentScrollView;
+        _textFinder.incrementalSearchingEnabled = YES;
+        _textFinder.incrementalSearchingShouldDimContentView = YES;
+        
+        _textFinderClient = [[MBTableGridTextFinderClient alloc] initWithTableGrid:self];
+        _textFinder.client = _textFinderClient;
+
         self.wantsLayer = YES;
 	}
 	return self;
@@ -407,7 +418,9 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 	BOOL isBeneathContentView = FALSE;
 	NSView* parent = v;
 	while(parent != nil) {
-		if(parent == self.contentView || parent == self.rowHeaderView || parent == self.columnHeaderView || parent == self.columnFooterView) {
+        if(parent == self.contentView || parent == self.rowHeaderView ||
+           parent == self.columnHeaderView || parent == self.columnFooterView ||
+           parent == contentScrollView.findBarView) {
 			isBeneathContentView = TRUE;
 			break;
 		}
@@ -533,9 +546,6 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 }
 
 - (void)insertBacktab:(id)sender {
-	// We want to change the selection, not expand it
-	shouldOverrideModifiers = YES;
-
 	// Pressing Shift+Tab moves to the previous column
 	[self moveLeft:sender];
 
@@ -547,7 +557,6 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 - (void)insertNewline:(id)sender {
     if (NSApp.currentEvent.modifierFlags & NSEventModifierFlagShift) {
 		// Pressing Shift+Return moves to the previous row
-		shouldOverrideModifiers = YES;
 		[self moveUp:sender];
 	}
 	else {
@@ -578,19 +587,9 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 	self.selectedRowIndexes = [NSIndexSet indexSetWithIndex:(row - 1)];
 
     [self scrollSelectionToVisible];
-
-	if(self.singleClickCellEdit) {
-		[self.contentView editSelectedCell:nil text:@""];
-	}
 }
 
 - (void)moveUpAndModifySelection:(id)sender {
-	if (shouldOverrideModifiers) {
-		[self moveLeft:sender];
-		shouldOverrideModifiers = NO;
-		return;
-	}
-
 	NSUInteger firstRow = self.selectedRowIndexes.firstIndex;
 	NSUInteger lastRow = self.selectedRowIndexes.lastIndex;
 
@@ -599,7 +598,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		stickyRowEdge = MBVerticalEdgeBottom;
 	}
 
-	// We can't expand past the last row
+	// We can't expand past the first row
 	if (stickyRowEdge == MBVerticalEdgeBottom && firstRow <= 0) { return; }
 
 	if (stickyRowEdge == MBVerticalEdgeTop) {
@@ -607,7 +606,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		lastRow--;
 	}
 	else if (stickyRowEdge == MBVerticalEdgeBottom) {
-		// If the bottom edge is sticky, expand the contraction
+		// If the bottom edge is sticky, expand the selection
 		firstRow--;
 	}
 	self.selectedRowIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(firstRow, lastRow - firstRow + 1)];
@@ -636,12 +635,6 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 }
 
 - (void)moveDownAndModifySelection:(id)sender {
-	if (shouldOverrideModifiers) {
-		[self moveDown:sender];
-		shouldOverrideModifiers = NO;
-		return;
-	}
-
 	NSUInteger firstRow = self.selectedRowIndexes.firstIndex;
 	NSUInteger lastRow = self.selectedRowIndexes.lastIndex;
 
@@ -679,26 +672,16 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		row = self.selectedRowIndexes.lastIndex;
 	}
 
-	if (column == 0) {
-        if (row <= 0) { return; }
+    if (column == 0)
+        return;
 
-        self.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:MAX(0, _numberOfColumns - 1)];
-        self.selectedRowIndexes = [NSIndexSet indexSetWithIndex:row - 1];
-    } else {
-        self.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:(column - 1)];
-        self.selectedRowIndexes = [NSIndexSet indexSetWithIndex:row];
-    }
+    self.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:(column - 1)];
+    self.selectedRowIndexes = [NSIndexSet indexSetWithIndex:row];
 
     [self scrollSelectionToVisible];
 }
 
 - (void)moveLeftAndModifySelection:(id)sender {
-	if (shouldOverrideModifiers) {
-		[self moveLeft:sender];
-		shouldOverrideModifiers = NO;
-		return;
-	}
-
 	NSUInteger firstColumn = self.selectedColumnIndexes.firstIndex;
 	NSUInteger lastColumn = self.selectedColumnIndexes.lastIndex;
 
@@ -735,32 +718,20 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		row = self.selectedRowIndexes.lastIndex;
 	}
 
-	// If we're already at the last column, move down and to the leftmost column
-	if (column >= (_numberOfColumns - 1)) {
-		if(row < (_numberOfRows - 1)) {
-			self.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:0];
-			self.selectedRowIndexes = [NSIndexSet indexSetWithIndex:(row + 1)];
-		}
-	}
-	else {
-		self.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:(column + 1)];
-		self.selectedRowIndexes = [NSIndexSet indexSetWithIndex:row];
-	}
+    if (column >= (_numberOfColumns - 1))
+        return;
+
+    self.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:(column + 1)];
+    self.selectedRowIndexes = [NSIndexSet indexSetWithIndex:row];
 
     [self scrollSelectionToVisible];
 }
 
 - (void)moveRightAndModifySelection:(id)sender {
-    if (shouldOverrideModifiers) {
-        [self moveRight:sender];
-        shouldOverrideModifiers = NO;
-        return;
-    }
-
     NSUInteger firstColumn = self.selectedColumnIndexes.firstIndex;
     NSUInteger lastColumn = self.selectedColumnIndexes.lastIndex;
 
-    // If there is only one column selected, change the sticky edge to the right
+    // If there is only one column selected, change the sticky edge to the left
     if (self.selectedColumnIndexes.count == 1) {
         stickyColumnEdge = MBHorizontalEdgeLeft;
     }
@@ -769,13 +740,137 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
     if (stickyColumnEdge == MBHorizontalEdgeLeft && lastColumn >= (_numberOfColumns - 1)) { return; }
 
     if (stickyColumnEdge == MBHorizontalEdgeLeft) {
-        // If the top edge is sticky, contract the selection
+        // If the left edge is sticky, expand the selection
         lastColumn++;
     }
     else if (stickyColumnEdge == MBHorizontalEdgeRight) {
-        // If the bottom edge is sticky, expand the contraction
+        // If the right edge is sticky, contract the selection
         firstColumn++;
     }
+    self.selectedColumnIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(firstColumn, lastColumn - firstColumn + 1)];
+
+    [self scrollSelectionToVisibleShowingHorizontalEdge:MBOppositeHorizontalEdge(stickyColumnEdge)];
+}
+
+- (void)moveToBeginningOfDocument:(id)sender {
+    NSUInteger column = self.selectedColumnIndexes.firstIndex;
+
+    // Accomodate for the sticky edges
+    if (stickyColumnEdge == MBHorizontalEdgeRight) {
+        column = self.selectedColumnIndexes.lastIndex;
+    }
+
+    self.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:column];
+    self.selectedRowIndexes = [NSIndexSet indexSetWithIndex:0];
+
+    [self scrollSelectionToVisible];
+}
+
+- (void)moveToBeginningOfDocumentAndModifySelection:(id)sender {
+    NSUInteger firstRow = self.selectedRowIndexes.firstIndex;
+    NSUInteger lastRow = self.selectedRowIndexes.lastIndex;
+
+    if (stickyRowEdge == MBVerticalEdgeTop) {
+        // If the top edge is sticky, contract the selection and switch stickiness
+        lastRow = firstRow;
+        stickyRowEdge = MBVerticalEdgeBottom;
+    }
+
+    firstRow = 0;
+
+    self.selectedRowIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(firstRow, lastRow - firstRow + 1)];
+
+    [self scrollSelectionToVisibleShowingVerticalEdge:MBOppositeVerticalEdge(stickyRowEdge)];
+}
+
+- (void)moveToEndOfDocument:(id)sender {
+    NSUInteger column = self.selectedColumnIndexes.firstIndex;
+
+    // Accomodate for the sticky edges
+    if (stickyColumnEdge == MBHorizontalEdgeRight) {
+        column = self.selectedColumnIndexes.lastIndex;
+    }
+
+    self.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:column];
+    self.selectedRowIndexes = [NSIndexSet indexSetWithIndex:_numberOfRows - 1];
+
+    [self scrollSelectionToVisible];
+}
+
+- (void)moveToEndOfDocumentAndModifySelection:(id)sender {
+    NSUInteger firstRow = self.selectedRowIndexes.firstIndex;
+    NSUInteger lastRow = self.selectedRowIndexes.lastIndex;
+
+    if (stickyRowEdge == MBVerticalEdgeBottom) {
+        // If the bottom edge is sticky, contract the selection and switch stickiness
+        firstRow = lastRow;
+        stickyRowEdge = MBVerticalEdgeTop;
+    }
+
+    lastRow = (_numberOfRows - 1);
+
+    self.selectedRowIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(firstRow, lastRow - firstRow + 1)];
+
+    [self scrollSelectionToVisibleShowingVerticalEdge:MBOppositeVerticalEdge(stickyRowEdge)];
+}
+
+- (void)moveToBeginningOfLine:(id)sender {
+    NSUInteger row = self.selectedRowIndexes.firstIndex;
+
+    // Accomodate for the sticky edges
+    if (stickyRowEdge == MBVerticalEdgeBottom) {
+        row = self.selectedRowIndexes.lastIndex;
+    }
+
+    self.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:0];
+    self.selectedRowIndexes = [NSIndexSet indexSetWithIndex:row];
+
+    [self scrollSelectionToVisible];
+}
+
+- (void)moveToBeginningOfLineAndModifySelection:(id)sender {
+    NSUInteger firstColumn = self.selectedColumnIndexes.firstIndex;
+    NSUInteger lastColumn = self.selectedColumnIndexes.lastIndex;
+
+    if (stickyColumnEdge == MBHorizontalEdgeLeft) {
+        // If the left edge is sticky, contract the selection and switch stickiness
+        lastColumn = firstColumn;
+        stickyColumnEdge = MBHorizontalEdgeRight;
+    }
+
+    firstColumn = 0;
+
+    self.selectedColumnIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(firstColumn, lastColumn - firstColumn + 1)];
+
+    [self scrollSelectionToVisibleShowingHorizontalEdge:MBOppositeHorizontalEdge(stickyColumnEdge)];
+}
+
+- (void)moveToEndOfLine:(id)sender {
+    NSUInteger row = self.selectedRowIndexes.firstIndex;
+
+    // Accomodate for the sticky edges
+    if (stickyRowEdge == MBVerticalEdgeBottom) {
+        row = self.selectedRowIndexes.lastIndex;
+    }
+
+    self.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:_numberOfColumns-1];
+    self.selectedRowIndexes = [NSIndexSet indexSetWithIndex:row];
+
+    [self scrollSelectionToVisible];
+}
+
+- (void)moveToEndOfLineAndModifySelection:(id)sender {
+    NSUInteger firstColumn = self.selectedColumnIndexes.firstIndex;
+    NSUInteger lastColumn = self.selectedColumnIndexes.lastIndex;
+
+    if (stickyColumnEdge == MBHorizontalEdgeRight) {
+        // If the right edge is sticky, contract the selection and switch stickiness
+        firstColumn = lastColumn;
+        stickyColumnEdge = MBHorizontalEdgeLeft;
+    }
+
+    lastColumn = (_numberOfColumns - 1);
+
     self.selectedColumnIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(firstColumn, lastColumn - firstColumn + 1)];
 
     [self scrollSelectionToVisibleShowingHorizontalEdge:MBOppositeHorizontalEdge(stickyColumnEdge)];
@@ -919,15 +1014,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 - (void)deleteBackward:(id)sender {
 	// Clear the contents of every selected cell
-	NSUInteger column = self.selectedColumnIndexes.firstIndex;
-	while (column <= self.selectedColumnIndexes.lastIndex) {
-		NSUInteger row = self.selectedRowIndexes.firstIndex;
-		while (row <= self.selectedRowIndexes.lastIndex) {
-			[self _setObjectValue:nil forColumn:column row:row];
-			row++;
-		}
-		column++;
-	}
+    [self _setObjectValue:nil forColumns:self.selectedColumnIndexes rows:self.selectedRowIndexes];
 	[self reloadData];
 }
 
@@ -948,6 +1035,40 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		[contentView textDidBeginEditingWithEditor:fieldEditor];
 	}
 	self.needsDisplay = YES;
+}
+
+#pragma mark -
+#pragma mark Find Bar Support
+
+- (IBAction)performTextFinderAction:(NSControl *)sender {
+    [_textFinder performAction:sender.tag];
+}
+
+- (BOOL)validateUserInterfaceItem:(id<NSValidatedUserInterfaceItem>)item {
+    if (item.action == @selector(performTextFinderAction:)) {
+        return [_textFinder validateAction:item.tag];
+    }
+    return YES;
+}
+
+- (BOOL)_shouldAbortFindOperation {
+    if (NSThread.isMainThread)
+        return self.isHiddenOrHasHiddenAncestor || !contentScrollView.findBarVisible;
+    
+    __block BOOL return_value = NO;
+    NSOperation *operation = [NSBlockOperation blockOperationWithBlock:^{
+        return_value = self.isHiddenOrHasHiddenAncestor || !self->contentScrollView.findBarVisible;
+    }];
+    [NSOperationQueue.mainQueue addOperations:@[ operation ] waitUntilFinished:YES];
+    return return_value;
+}
+
+- (BOOL)isFindBarVisible {
+    return contentScrollView.isFindBarVisible;
+}
+
+- (void)setFindBarVisible:(BOOL)findBarVisible {
+    contentScrollView.findBarVisible = findBarVisible;
 }
 
 #pragma mark -
@@ -1343,8 +1464,10 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 	// Restore original visible rectangle of scroller
 	[self scrollToArea:visibleRect animate:NO];
+    
+    [_textFinder noteClientStringWillChange];
 
-	[self setNeedsDisplay:YES];
+	self.needsDisplay = YES;
 }
 
 #pragma mark Layout Support
@@ -1613,9 +1736,29 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 	return [NSString stringWithFormat:@"%lu", (rowIndex + 1)];
 }
 
+// This form prefers the singular form of the setObjectValue: data source method,
+// but will fall back to the plural form
 - (void)_setObjectValue:(id)value forColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex {
-	if ([self.dataSource respondsToSelector:@selector(tableGrid:setObjectValue:forColumn:row:)]) {
-		[self.dataSource tableGrid:self setObjectValue:value forColumn:columnIndex row:rowIndex];
+    if ([self.dataSource respondsToSelector:@selector(tableGrid:setObjectValue:forColumn:row:)]) {
+        [self.dataSource tableGrid:self setObjectValue:value forColumn:columnIndex row:rowIndex];
+    } else if ([self.dataSource respondsToSelector:@selector(tableGrid:setObjectValue:forColumns:rows:)]) {
+        [self.dataSource tableGrid:self setObjectValue:value
+                        forColumns:[NSIndexSet indexSetWithIndex:columnIndex]
+                              rows:[NSIndexSet indexSetWithIndex:rowIndex]];
+    }
+}
+
+// This form prefers the plural form of the setObjectValue: data source method,
+// but if not implemented will fall back to the singular form (potentially very slow)
+- (void)_setObjectValue:(id)value forColumns:(NSIndexSet *)columnIndexes rows:(NSIndexSet *)rowIndexes {
+	if ([self.dataSource respondsToSelector:@selector(tableGrid:setObjectValue:forColumns:rows:)]) {
+		[self.dataSource tableGrid:self setObjectValue:value forColumns:columnIndexes rows:rowIndexes];
+    } else if ([self.dataSource respondsToSelector:@selector(tableGrid:setObjectValue:forColumn:row:)]) {
+        [columnIndexes enumerateIndexesUsingBlock:^(NSUInteger columnIndex, BOOL *stopColumns) {
+            [rowIndexes enumerateIndexesUsingBlock:^(NSUInteger rowIndex, BOOL *stopRows) {
+                [self.dataSource tableGrid:self setObjectValue:value forColumn:columnIndex row:rowIndex];
+            }];
+        }];
 	}
 }
 
@@ -1639,7 +1782,8 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 - (BOOL)_canEditCellAtColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex {
 	// Can't edit if the data source doesn't implement the method
-	if (![self.dataSource respondsToSelector:@selector(tableGrid:setObjectValue:forColumn:row:)]) {
+	if (![self.dataSource respondsToSelector:@selector(tableGrid:setObjectValue:forColumn:row:)] &&
+        ![self.dataSource respondsToSelector:@selector(tableGrid:setObjectValue:forColumns:rows:)]) {
 		return NO;
 	}
 
@@ -1684,6 +1828,20 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
     if ([self.dataSource respondsToSelector:@selector(tableGrid:setFooterValue:forColumn:)]) {
         [self.dataSource tableGrid:self setFooterValue:value forColumn:columnIndex];
     }
+}
+
+@end
+
+@implementation MBTableGrid (DoubleClick)
+
+- (void)_didDoubleClickColumn:(NSUInteger)columnIndex {
+    if ([self.delegate respondsToSelector:@selector(tableGrid:didDoubleClickColumn:)])
+        [self.delegate tableGrid:self didDoubleClickColumn:columnIndex];
+}
+
+- (void)_didDoubleClickRow:(NSUInteger)rowIndex {
+    if ([self.delegate respondsToSelector:@selector(tableGrid:didDoubleClickRow:)])
+        [self.delegate tableGrid:self didDoubleClickRow:rowIndex];
 }
 
 @end
@@ -1826,6 +1984,20 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 	}
 
 	return row;
+}
+
+@end
+
+@implementation MBTableGrid (HeaderMenus)
+
+- (void)_willDisplayHeaderMenu:(NSMenu *)menu forColumn:(NSUInteger)columnIndex {
+    if ([self.delegate respondsToSelector:@selector(tableGrid:willDisplayHeaderMenu:forColumn:)])
+        [self.delegate tableGrid:self willDisplayHeaderMenu:menu forColumn:columnIndex];
+}
+
+- (void)_willDisplayHeaderMenu:(NSMenu *)menu forRow:(NSUInteger)rowIndex {
+    if ([self.delegate respondsToSelector:@selector(tableGrid:willDisplayHeaderMenu:forRow:)])
+        [self.delegate tableGrid:self willDisplayHeaderMenu:menu forRow:rowIndex];
 }
 
 @end

@@ -39,6 +39,10 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 - (MBTableGridContentView *)_contentView;
 - (void)_dragColumnsWithEvent:(NSEvent *)theEvent;
 - (void)_dragRowsWithEvent:(NSEvent *)theEvent;
+- (void)_willDisplayHeaderMenu:(NSMenu *)menu forColumn:(NSUInteger)columnIndex;
+- (void)_willDisplayHeaderMenu:(NSMenu *)menu forRow:(NSUInteger)rowIndex;
+- (void)_didDoubleClickColumn:(NSUInteger)columnIndex;
+- (void)_didDoubleClickRow:(NSUInteger)rowIndex;
 @end
 
 @implementation MBTableGridHeaderView
@@ -240,6 +244,20 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 	return YES;
 }
 
+- (NSMenu *)menuForEvent:(NSEvent *)theEvent {
+    NSPoint event_location = theEvent.locationInWindow;
+    NSPoint local_point = [self convertPoint:event_location fromView:nil];
+    if (self.orientation == MBTableHeaderHorizontalOrientation) {
+        NSInteger column = [self.tableGrid columnAtPoint:[self convertPoint:local_point toView:self.tableGrid]];
+        [self.tableGrid _willDisplayHeaderMenu:self.menu forColumn:column];
+    } else {
+        NSInteger row = [self.tableGrid rowAtPoint:[self convertPoint:local_point toView:self.tableGrid]];
+        [self.tableGrid _willDisplayHeaderMenu:self.menu forRow:row];
+    }
+
+    return self.menu;
+}
+
 - (void)_mouseDown:(NSEvent *)theEvent right:(BOOL)rightMouse
 {
 	// Get the location of the click
@@ -249,8 +267,11 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 	NSInteger row = [self.tableGrid rowAtPoint:[self convertPoint:loc toView:self.tableGrid]];
 
 	if([theEvent clickCount] == 2 && !rightMouse) {
-        if ([self.tableGrid.delegate respondsToSelector:@selector(tableGrid:didDoubleClickColumn:)])
-            [self.tableGrid.delegate tableGrid:self.tableGrid didDoubleClickColumn:column];
+        if (self.orientation == MBTableHeaderHorizontalOrientation) {
+            [self.tableGrid _didDoubleClickColumn:column];
+        } else {
+            [self.tableGrid _didDoubleClickRow:row];
+        }
 	}
 	else {
 		if (canResize) {
@@ -326,10 +347,6 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 
 - (void) rightMouseDown:(NSEvent *)theEvent {
 	[self _mouseDown:theEvent right:TRUE];
-}
-
-- (void) rightMouseUp:(NSEvent *)theEvent {
-	[NSMenu popUpContextMenu:self.menu withEvent:theEvent forView:self];
 }
 
 - (void)mouseDragged:(NSEvent *)theEvent
