@@ -135,7 +135,6 @@ typedef NS_ENUM(NSUInteger, MBVerticalEdge) {
 	
 	/* Behavior */
 	BOOL allowsMultipleSelection;
-	BOOL shouldOverrideModifiers;
 	
 	/* Sticky Edges (for Shift+Arrow expansions) */
 	MBHorizontalEdge stickyColumnEdge;

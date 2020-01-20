@@ -261,7 +261,6 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		stickyColumnEdge = MBHorizontalEdgeLeft;
 		stickyRowEdge = MBVerticalEdgeTop;
 
-		shouldOverrideModifiers = NO;
 		singleClickCellEdit = NO;
 
         self.previousVerticalSelectionDirection = MBVerticalEdgeTop;
@@ -529,9 +528,6 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 }
 
 - (void)insertBacktab:(id)sender {
-	// We want to change the selection, not expand it
-	shouldOverrideModifiers = YES;
-
 	// Pressing Shift+Tab moves to the previous column
 	[self moveLeft:sender];
 
@@ -543,7 +539,6 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 - (void)insertNewline:(id)sender {
     if (NSApp.currentEvent.modifierFlags & NSEventModifierFlagShift) {
 		// Pressing Shift+Return moves to the previous row
-		shouldOverrideModifiers = YES;
 		[self moveUp:sender];
 	}
 	else {
@@ -574,19 +569,9 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 	self.selectedRowIndexes = [NSIndexSet indexSetWithIndex:(row - 1)];
 
     [self scrollSelectionToVisible];
-
-	if(self.singleClickCellEdit) {
-		[self.contentView editSelectedCell:nil text:@""];
-	}
 }
 
 - (void)moveUpAndModifySelection:(id)sender {
-	if (shouldOverrideModifiers) {
-		[self moveLeft:sender];
-		shouldOverrideModifiers = NO;
-		return;
-	}
-
 	NSUInteger firstRow = self.selectedRowIndexes.firstIndex;
 	NSUInteger lastRow = self.selectedRowIndexes.lastIndex;
 
@@ -595,7 +580,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		stickyRowEdge = MBVerticalEdgeBottom;
 	}
 
-	// We can't expand past the last row
+	// We can't expand past the first row
 	if (stickyRowEdge == MBVerticalEdgeBottom && firstRow <= 0) { return; }
 
 	if (stickyRowEdge == MBVerticalEdgeTop) {
@@ -603,7 +588,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		lastRow--;
 	}
 	else if (stickyRowEdge == MBVerticalEdgeBottom) {
-		// If the bottom edge is sticky, expand the contraction
+		// If the bottom edge is sticky, expand the selection
 		firstRow--;
 	}
 	self.selectedRowIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(firstRow, lastRow - firstRow + 1)];
@@ -632,12 +617,6 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 }
 
 - (void)moveDownAndModifySelection:(id)sender {
-	if (shouldOverrideModifiers) {
-		[self moveDown:sender];
-		shouldOverrideModifiers = NO;
-		return;
-	}
-
 	NSUInteger firstRow = self.selectedRowIndexes.firstIndex;
 	NSUInteger lastRow = self.selectedRowIndexes.lastIndex;
 
@@ -675,26 +654,16 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		row = self.selectedRowIndexes.lastIndex;
 	}
 
-	if (column == 0) {
-        if (row <= 0) { return; }
+    if (column == 0)
+        return;
 
-        self.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:MAX(0, _numberOfColumns - 1)];
-        self.selectedRowIndexes = [NSIndexSet indexSetWithIndex:row - 1];
-    } else {
-        self.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:(column - 1)];
-        self.selectedRowIndexes = [NSIndexSet indexSetWithIndex:row];
-    }
+    self.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:(column - 1)];
+    self.selectedRowIndexes = [NSIndexSet indexSetWithIndex:row];
 
     [self scrollSelectionToVisible];
 }
 
 - (void)moveLeftAndModifySelection:(id)sender {
-	if (shouldOverrideModifiers) {
-		[self moveLeft:sender];
-		shouldOverrideModifiers = NO;
-		return;
-	}
-
 	NSUInteger firstColumn = self.selectedColumnIndexes.firstIndex;
 	NSUInteger lastColumn = self.selectedColumnIndexes.lastIndex;
 
@@ -731,32 +700,20 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		row = self.selectedRowIndexes.lastIndex;
 	}
 
-	// If we're already at the last column, move down and to the leftmost column
-	if (column >= (_numberOfColumns - 1)) {
-		if(row < (_numberOfRows - 1)) {
-			self.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:0];
-			self.selectedRowIndexes = [NSIndexSet indexSetWithIndex:(row + 1)];
-		}
-	}
-	else {
-		self.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:(column + 1)];
-		self.selectedRowIndexes = [NSIndexSet indexSetWithIndex:row];
-	}
+    if (column >= (_numberOfColumns - 1))
+        return;
+
+    self.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:(column + 1)];
+    self.selectedRowIndexes = [NSIndexSet indexSetWithIndex:row];
 
     [self scrollSelectionToVisible];
 }
 
 - (void)moveRightAndModifySelection:(id)sender {
-    if (shouldOverrideModifiers) {
-        [self moveRight:sender];
-        shouldOverrideModifiers = NO;
-        return;
-    }
-
     NSUInteger firstColumn = self.selectedColumnIndexes.firstIndex;
     NSUInteger lastColumn = self.selectedColumnIndexes.lastIndex;
 
-    // If there is only one column selected, change the sticky edge to the right
+    // If there is only one column selected, change the sticky edge to the left
     if (self.selectedColumnIndexes.count == 1) {
         stickyColumnEdge = MBHorizontalEdgeLeft;
     }
@@ -765,13 +722,137 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
     if (stickyColumnEdge == MBHorizontalEdgeLeft && lastColumn >= (_numberOfColumns - 1)) { return; }
 
     if (stickyColumnEdge == MBHorizontalEdgeLeft) {
-        // If the top edge is sticky, contract the selection
+        // If the left edge is sticky, expand the selection
         lastColumn++;
     }
     else if (stickyColumnEdge == MBHorizontalEdgeRight) {
-        // If the bottom edge is sticky, expand the contraction
+        // If the right edge is sticky, contract the selection
         firstColumn++;
     }
+    self.selectedColumnIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(firstColumn, lastColumn - firstColumn + 1)];
+
+    [self scrollSelectionToVisibleShowingHorizontalEdge:MBOppositeHorizontalEdge(stickyColumnEdge)];
+}
+
+- (void)moveToBeginningOfDocument:(id)sender {
+    NSUInteger column = self.selectedColumnIndexes.firstIndex;
+
+    // Accomodate for the sticky edges
+    if (stickyColumnEdge == MBHorizontalEdgeRight) {
+        column = self.selectedColumnIndexes.lastIndex;
+    }
+
+    self.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:column];
+    self.selectedRowIndexes = [NSIndexSet indexSetWithIndex:0];
+
+    [self scrollSelectionToVisible];
+}
+
+- (void)moveToBeginningOfDocumentAndModifySelection:(id)sender {
+    NSUInteger firstRow = self.selectedRowIndexes.firstIndex;
+    NSUInteger lastRow = self.selectedRowIndexes.lastIndex;
+
+    if (stickyRowEdge == MBVerticalEdgeTop) {
+        // If the top edge is sticky, contract the selection and switch stickiness
+        lastRow = firstRow;
+        stickyRowEdge = MBVerticalEdgeBottom;
+    }
+
+    firstRow = 0;
+
+    self.selectedRowIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(firstRow, lastRow - firstRow + 1)];
+
+    [self scrollSelectionToVisibleShowingVerticalEdge:MBOppositeVerticalEdge(stickyRowEdge)];
+}
+
+- (void)moveToEndOfDocument:(id)sender {
+    NSUInteger column = self.selectedColumnIndexes.firstIndex;
+
+    // Accomodate for the sticky edges
+    if (stickyColumnEdge == MBHorizontalEdgeRight) {
+        column = self.selectedColumnIndexes.lastIndex;
+    }
+
+    self.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:column];
+    self.selectedRowIndexes = [NSIndexSet indexSetWithIndex:_numberOfRows - 1];
+
+    [self scrollSelectionToVisible];
+}
+
+- (void)moveToEndOfDocumentAndModifySelection:(id)sender {
+    NSUInteger firstRow = self.selectedRowIndexes.firstIndex;
+    NSUInteger lastRow = self.selectedRowIndexes.lastIndex;
+
+    if (stickyRowEdge == MBVerticalEdgeBottom) {
+        // If the bottom edge is sticky, contract the selection and switch stickiness
+        firstRow = lastRow;
+        stickyRowEdge = MBVerticalEdgeTop;
+    }
+
+    lastRow = (_numberOfRows - 1);
+
+    self.selectedRowIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(firstRow, lastRow - firstRow + 1)];
+
+    [self scrollSelectionToVisibleShowingVerticalEdge:MBOppositeVerticalEdge(stickyRowEdge)];
+}
+
+- (void)moveToBeginningOfLine:(id)sender {
+    NSUInteger row = self.selectedRowIndexes.firstIndex;
+
+    // Accomodate for the sticky edges
+    if (stickyRowEdge == MBVerticalEdgeBottom) {
+        row = self.selectedRowIndexes.lastIndex;
+    }
+
+    self.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:0];
+    self.selectedRowIndexes = [NSIndexSet indexSetWithIndex:row];
+
+    [self scrollSelectionToVisible];
+}
+
+- (void)moveToBeginningOfLineAndModifySelection:(id)sender {
+    NSUInteger firstColumn = self.selectedColumnIndexes.firstIndex;
+    NSUInteger lastColumn = self.selectedColumnIndexes.lastIndex;
+
+    if (stickyColumnEdge == MBHorizontalEdgeLeft) {
+        // If the left edge is sticky, contract the selection and switch stickiness
+        lastColumn = firstColumn;
+        stickyColumnEdge = MBHorizontalEdgeRight;
+    }
+
+    firstColumn = 0;
+
+    self.selectedColumnIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(firstColumn, lastColumn - firstColumn + 1)];
+
+    [self scrollSelectionToVisibleShowingHorizontalEdge:MBOppositeHorizontalEdge(stickyColumnEdge)];
+}
+
+- (void)moveToEndOfLine:(id)sender {
+    NSUInteger row = self.selectedRowIndexes.firstIndex;
+
+    // Accomodate for the sticky edges
+    if (stickyRowEdge == MBVerticalEdgeBottom) {
+        row = self.selectedRowIndexes.lastIndex;
+    }
+
+    self.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:_numberOfColumns-1];
+    self.selectedRowIndexes = [NSIndexSet indexSetWithIndex:row];
+
+    [self scrollSelectionToVisible];
+}
+
+- (void)moveToEndOfLineAndModifySelection:(id)sender {
+    NSUInteger firstColumn = self.selectedColumnIndexes.firstIndex;
+    NSUInteger lastColumn = self.selectedColumnIndexes.lastIndex;
+
+    if (stickyColumnEdge == MBHorizontalEdgeRight) {
+        // If the right edge is sticky, contract the selection and switch stickiness
+        firstColumn = lastColumn;
+        stickyColumnEdge = MBHorizontalEdgeLeft;
+    }
+
+    lastColumn = (_numberOfColumns - 1);
+
     self.selectedColumnIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(firstColumn, lastColumn - firstColumn + 1)];
 
     [self scrollSelectionToVisibleShowingHorizontalEdge:MBOppositeHorizontalEdge(stickyColumnEdge)];
