@@ -521,7 +521,7 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 - (NSRect)headerRectOfColumn:(NSUInteger)columnIndex
 {
 	NSRect rect = [self.tableGrid._contentView rectOfColumn:columnIndex];
-	rect.size.height = MBTableGridColumnHeaderHeight;
+	rect.size.height = NSHeight(self.bounds);
 	
 	return rect;
 }
@@ -529,7 +529,7 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 - (NSRect)headerRectOfRow:(NSUInteger)rowIndex
 {
 	NSRect rect = [self.tableGrid._contentView rectOfRow:rowIndex];
-	rect.size.width = MBTableGridRowHeaderWidth;
+	rect.size.width = NSWidth(self.bounds);
 	
 	return rect;
 }
