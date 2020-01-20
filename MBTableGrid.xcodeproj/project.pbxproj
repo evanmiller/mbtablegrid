@@ -22,6 +22,12 @@
 		C6BF26891A4AC502008EB93F /* MBTableGridFooterView.h in Headers */ = {isa = PBXBuildFile; fileRef = C6BF26881A4AC502008EB93F /* MBTableGridFooterView.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		C9412A5F0D8AE98C00E9E614 /* MBTableGridController.m in Sources */ = {isa = PBXBuildFile; fileRef = C9412A5E0D8AE98C00E9E614 /* MBTableGridController.m */; };
 		CA46E3621A09726A00C43B4B /* MBTableGridEditable.h in Headers */ = {isa = PBXBuildFile; fileRef = CA46E3611A09726A00C43B4B /* MBTableGridEditable.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DC7EBF4123D2157B00F75351 /* MBTableGridContentScrollView.h in Headers */ = {isa = PBXBuildFile; fileRef = DC7EBF3F23D2157B00F75351 /* MBTableGridContentScrollView.h */; };
+		DC7EBF4223D2157B00F75351 /* MBTableGridContentScrollView.m in Sources */ = {isa = PBXBuildFile; fileRef = DC7EBF4023D2157B00F75351 /* MBTableGridContentScrollView.m */; };
+		DC7EBF4523D217DC00F75351 /* MBTableGridVirtualString.h in Headers */ = {isa = PBXBuildFile; fileRef = DC7EBF4323D217DC00F75351 /* MBTableGridVirtualString.h */; };
+		DC7EBF4623D217DC00F75351 /* MBTableGridVirtualString.m in Sources */ = {isa = PBXBuildFile; fileRef = DC7EBF4423D217DC00F75351 /* MBTableGridVirtualString.m */; };
+		DC7EBF4923D21AE800F75351 /* MBTableGridTextFinderClient.h in Headers */ = {isa = PBXBuildFile; fileRef = DC7EBF4723D21AE800F75351 /* MBTableGridTextFinderClient.h */; };
+		DC7EBF4A23D21AE800F75351 /* MBTableGridTextFinderClient.m in Sources */ = {isa = PBXBuildFile; fileRef = DC7EBF4823D21AE800F75351 /* MBTableGridTextFinderClient.m */; };
 		DCDB6EDB23C905C200F348EB /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = DCDB6EDA23C905C200F348EB /* MainMenu.xib */; };
 		E2E62BAC1781C33500F36275 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2E62BAB1781C33400F36275 /* Cocoa.framework */; };
 		E2E62BBA1781C37300F36275 /* MBTableGrid.m in Sources */ = {isa = PBXBuildFile; fileRef = C9412A3E0D8A061C00E9E614 /* MBTableGrid.m */; };
@@ -69,6 +75,12 @@
 		C9412D7B0D8B5AB900E9E614 /* MBTableGridCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MBTableGridCell.h; sourceTree = SOURCE_ROOT; };
 		C9412D7C0D8B5AB900E9E614 /* MBTableGridCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MBTableGridCell.m; sourceTree = SOURCE_ROOT; };
 		CA46E3611A09726A00C43B4B /* MBTableGridEditable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MBTableGridEditable.h; sourceTree = SOURCE_ROOT; };
+		DC7EBF3F23D2157B00F75351 /* MBTableGridContentScrollView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MBTableGridContentScrollView.h; sourceTree = SOURCE_ROOT; };
+		DC7EBF4023D2157B00F75351 /* MBTableGridContentScrollView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MBTableGridContentScrollView.m; sourceTree = SOURCE_ROOT; };
+		DC7EBF4323D217DC00F75351 /* MBTableGridVirtualString.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MBTableGridVirtualString.h; sourceTree = SOURCE_ROOT; };
+		DC7EBF4423D217DC00F75351 /* MBTableGridVirtualString.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MBTableGridVirtualString.m; sourceTree = SOURCE_ROOT; };
+		DC7EBF4723D21AE800F75351 /* MBTableGridTextFinderClient.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MBTableGridTextFinderClient.h; sourceTree = SOURCE_ROOT; };
+		DC7EBF4823D21AE800F75351 /* MBTableGridTextFinderClient.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MBTableGridTextFinderClient.m; sourceTree = SOURCE_ROOT; };
 		DCDB6EDA23C905C200F348EB /* MainMenu.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = MainMenu.xib; sourceTree = "<group>"; };
 		E2E62BAA1781C33400F36275 /* MBTableGrid.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = MBTableGrid.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		E2E62BAB1781C33400F36275 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
@@ -189,6 +201,12 @@
 				C9412A3E0D8A061C00E9E614 /* MBTableGrid.m */,
 				C9412B200D8B2C5E00E9E614 /* MBTableGridContentView.h */,
 				C9412B210D8B2C5E00E9E614 /* MBTableGridContentView.m */,
+				DC7EBF3F23D2157B00F75351 /* MBTableGridContentScrollView.h */,
+				DC7EBF4023D2157B00F75351 /* MBTableGridContentScrollView.m */,
+				DC7EBF4323D217DC00F75351 /* MBTableGridVirtualString.h */,
+				DC7EBF4423D217DC00F75351 /* MBTableGridVirtualString.m */,
+				DC7EBF4723D21AE800F75351 /* MBTableGridTextFinderClient.h */,
+				DC7EBF4823D21AE800F75351 /* MBTableGridTextFinderClient.m */,
 				C6BF26881A4AC502008EB93F /* MBTableGridFooterView.h */,
 				C6BF26861A4AC4EE008EB93F /* MBTableGridFooterView.m */,
 				C9412B380D8B2F5400E9E614 /* MBTableGridHeaderView.h */,
@@ -214,11 +232,14 @@
 				173D292D1AA1779F009945FC /* MBFooterTextCell.h in Headers */,
 				E2E62BFB1781C53800F36275 /* MBTableGridCell.h in Headers */,
 				CA46E3621A09726A00C43B4B /* MBTableGridEditable.h in Headers */,
+				DC7EBF4123D2157B00F75351 /* MBTableGridContentScrollView.h in Headers */,
 				E2E62BFA1781C53800F36275 /* MBTableGridHeaderCell.h in Headers */,
+				DC7EBF4923D21AE800F75351 /* MBTableGridTextFinderClient.h in Headers */,
 				E2E62BF71781C53800F36275 /* MBTableGrid.h in Headers */,
 				E2E62BF81781C53800F36275 /* MBTableGridContentView.h in Headers */,
 				E2E62BF91781C53800F36275 /* MBTableGridHeaderView.h in Headers */,
 				C6BF26891A4AC502008EB93F /* MBTableGridFooterView.h in Headers */,
+				DC7EBF4523D217DC00F75351 /* MBTableGridVirtualString.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -323,8 +344,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				E2E62BBA1781C37300F36275 /* MBTableGrid.m in Sources */,
+				DC7EBF4A23D21AE800F75351 /* MBTableGridTextFinderClient.m in Sources */,
 				C6BF26871A4AC4EE008EB93F /* MBTableGridFooterView.m in Sources */,
+				DC7EBF4623D217DC00F75351 /* MBTableGridVirtualString.m in Sources */,
 				E2E62BBB1781C37600F36275 /* MBTableGridContentView.m in Sources */,
+				DC7EBF4223D2157B00F75351 /* MBTableGridContentScrollView.m in Sources */,
 				E2E62BBC1781C37800F36275 /* MBTableGridHeaderView.m in Sources */,
 				173D292E1AA1779F009945FC /* MBFooterTextCell.m in Sources */,
 				E2E62BBD1781C37B00F36275 /* MBTableGridHeaderCell.m in Sources */,

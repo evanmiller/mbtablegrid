@@ -112,7 +112,7 @@
 - (NSRect)footerRectOfColumn:(NSUInteger)columnIndex
 {
 	NSRect rect = [[self.tableGrid _contentView] rectOfColumn:columnIndex];
-	rect.size.height = MBTableGridColumnHeaderHeight;
+	rect.size.height = NSHeight(self.bounds);
 	
 	return rect;
 }

@@ -135,20 +135,26 @@ typedef NS_ENUM(NSUInteger, MBVerticalEdge) {
 	
 	/* Behavior */
 	BOOL allowsMultipleSelection;
-	BOOL shouldOverrideModifiers;
 	
 	/* Sticky Edges (for Shift+Arrow expansions) */
 	MBHorizontalEdge stickyColumnEdge;
 	MBVerticalEdge stickyRowEdge;
 	NSMutableDictionary<NSNumber *, NSNumber *>* _columnWidths;
-	
+
+    NSTextFinder *_textFinder;
+    id<NSTextFinderClient> _textFinderClient;
 }
 
 @property (nonatomic, assign) BOOL showsGrabHandles;
+@property (getter=isFindBarVisible) BOOL findBarVisible;
 
 @property (nonatomic, readonly) MBTableGridHeaderView* columnHeaderView;
 @property (nonatomic, readonly) MBTableGridFooterView* columnFooterView;
 @property (nonatomic, readonly) MBTableGridHeaderView* rowHeaderView;
+
+@property (getter=isColumnHeaderVisible, nonatomic, assign) BOOL columnHeaderVisible;
+@property (getter=isColumnFooterVisible, nonatomic, assign) BOOL columnFooterVisible;
+@property (getter=isRowHeaderVisible, nonatomic, assign) BOOL rowHeaderVisible;
 
 @property (nonatomic, assign) NSUInteger sortColumnIndex; // NSNotFound for none
 @property (getter=isSortColumnAscending, nonatomic, assign) BOOL sortColumnAscending;
@@ -628,7 +634,8 @@ cells. A cell can individually override this behavior. */
  *
  * @return		The object for the specified cell of the view.
  *
- * @see			tableGrid:setObjectValue:forColumn:row:
+ * @see            tableGrid:setObjectValue:forColumn:row:
+ * @see            tableGrid:setObjectValue:forColumns:rows:
  */
 - (id) tableGrid:(MBTableGrid *)aTableGrid objectValueForColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 
@@ -647,19 +654,39 @@ cells. A cell can individually override this behavior. */
 @optional
 
 /**
- * @brief		Sets the sata object for an item in a given row in a given column.
+ * @brief		Sets the data object for an item in a given row in a given column.
  *
- * @details		Although this method is optional, it must be implemented in order
- *				to enable grid editing.
+ * @details		Although this method is optional, either it or the plural form \c setObjectValue:forColumns:rows:
+ *              must be implemented in order to enable grid editing, Find/Replace, and deletions.
  *
  * @param		aTableGrid		The table grid that sent the message.
- * @param		anObject		The new value for the item.
+ * @param		anObject		The new value for the item, or \c nil for deletions.
  * @param		columnIndex		A column in \c aTableGrid.
  * @param		rowIndex		A row in \c aTableGrid.
  *
  * @see			tableGrid:objectValueForColumn:row:
+ * @see         tableGrid:setObjectValueForColumns:rows:
+
  */
 - (void)tableGrid:(MBTableGrid *)aTableGrid setObjectValue:(id)anObject forColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
+
+@optional
+
+/**
+ * @brief        Bulk-replace a single value for all items in the given rows and columns.
+ *
+ * @details      Although this method is optional, either it or the singular form \c setObjectValue:forColumn:row:
+ *               must be implemented in order to enable grid editing, Find/Replace, and deletions.
+ *
+ * @param        aTableGrid        The table grid that sent the message.
+ * @param        anObject        The new value for the items, or \c nil for deletions.
+ * @param        columnIndexes        The affected columns in \c aTableGrid.
+ * @param        rowIndexes        The affected rows in \c aTableGrid.
+ *
+ * @see            tableGrid:objectValueForColumn:row:
+ * @see            tableGrid:setObjectValue:forColumn:row:
+ */
+- (void)tableGrid:(MBTableGrid *)aTableGrid setObjectValue:(id)anObject forColumns:(NSIndexSet *)columnIndexes rows:(NSIndexSet *)rowIndexes;
 
 
 @optional
@@ -1053,12 +1080,24 @@ cells. A cell can individually override this behavior. */
  *
  * @param		aTableGrid		The table grid object informing the delegate
  *								about the double-click event
- * @param		columnIndex		The selected column in \c aTableGrid.
+ * @param		columnIndex		The double-clicked column in \c aTableGrid.
  *
  *
- * @see			tableGrid:willSelectColumnsAtIndexPath:
+ * @see			tableGrid:didDoubleClickRow:
  */
 - (void)tableGrid:(MBTableGrid *)aTableGrid didDoubleClickColumn:(NSUInteger)columnIndex;
+
+/**
+ * @brief        Tells the delegate that the specified row header was double-clicked
+ *
+ * @param        aTableGrid        The table grid object informing the delegate
+ *                                about the double-click event
+ * @param        columnIndex        The double-clicked row in \c aTableGrid.
+ *
+ *
+ * @see            tableGrid:didDoubleClickColumn:
+ */
+- (void)tableGrid:(MBTableGrid *)aTableGrid didDoubleClickRow:(NSUInteger)rowIndex;
 
 
 /**
@@ -1182,5 +1221,39 @@ cells. A cell can individually override this behavior. */
 - (NSIndexSet *)sortableColumnIndexesInTableGrid:(MBTableGrid*)aTableGrid;
 
 - (void)tableGrid:(MBTableGrid*)aTableGrid didSortByColumn:(NSUInteger)columnIndex ascending:(BOOL)isAscending;
+
+#pragma mark Displaying Menus
+
+/**
+ * @brief   Informs the delegate that the column header's contextual menu is about to be displayed.
+ *          The menu items can then be customized for the particular column.
+ *          (The column header menu can be set via the \c menu property of the table grid's \c columnHeaderView.)
+ *
+ *  @param  aTableGrid      The table grid object that will display the menu
+ *
+ *  @param  menu                    The menu about to be displayed
+ *
+ *  @param  columnIndex     The column that was clicked (right-clicked or Control-clicked)
+ *
+ *  @see    tableGrid:willDisplayHeaderMenu:forRow:
+ */
+
+- (void)tableGrid:(MBTableGrid *)aTableGrid willDisplayHeaderMenu:(NSMenu *)menu forColumn:(NSUInteger)columnIndex;
+
+/**
+ * @brief   Informs the delegate that the row header's contextual menu is about to be displayed.
+ *          The menu items can then be customized for the particular row.
+ *          (The row header menu can be set via the \c menu property of the table grid's \c rowHeaderView.)
+ *
+ *  @param  aTableGrid      The table grid object that will display the menu
+ *
+ *  @param  menu                    The menu about to be displayed
+ *
+ *  @param  rowIndex            The row that was clicked (right-clicked or Control-clicked)
+ *
+ *  @see    tableGrid:willDisplayHeaderMenu:forColumn:
+ */
+
+- (void)tableGrid:(MBTableGrid *)aTableGrid willDisplayHeaderMenu:(NSMenu *)menu forRow:(NSUInteger)rowIndex;
 
 @end
