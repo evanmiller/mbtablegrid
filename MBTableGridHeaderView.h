@@ -92,7 +92,7 @@
 /**
  * @brief		The autosave name for this grid
  */
-@property (nonatomic) NSString *autosaveName;
+@property (copy) NSString *autosaveName;
 
 
 /**
