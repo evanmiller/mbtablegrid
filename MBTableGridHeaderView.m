@@ -242,12 +242,8 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
                 if([self.tableGrid.selectedColumnIndexes containsIndex:column] && self.tableGrid.selectedRowIndexes.count == self.tableGrid.numberOfRows) {
                     // Allow the user to drag the column
                     shouldDragItems = YES;
-                }
-                else {
-                    if(column != NSNotFound) {
-                        self.tableGrid.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:column];
-                    }
-
+                } else if(column != NSNotFound) {
+                    self.tableGrid.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:column];
                     // Select every row
                     self.tableGrid.selectedRowIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0,self.tableGrid.numberOfRows)];
                 }
@@ -257,7 +253,7 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
                 if([self.tableGrid.selectedRowIndexes containsIndex:row] && self.tableGrid.selectedColumnIndexes.count == self.tableGrid.numberOfColumns) {
                     // Allow the user to drag the row
                     shouldDragItems = YES;
-                } else {
+                } else if (row != NSNotFound) {
                     self.tableGrid.selectedRowIndexes = [NSIndexSet indexSetWithIndex:row];
                     // Select every column
                     self.tableGrid.selectedColumnIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0,self.tableGrid.numberOfColumns)];
