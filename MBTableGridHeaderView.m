@@ -148,7 +148,7 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 			NSRect resizeRect = NSMakeRect(NSMinX(headerRect) + NSWidth(headerRect) - 2, NSMinY(headerRect), 5, NSHeight(headerRect));
 
 			if(CGRectIntersectsRect(resizeRect, self.visibleRect)) {
-				[self addCursorRect:resizeRect cursor:[NSCursor resizeLeftRightCursor]];
+				[self addCursorRect:resizeRect cursor:NSCursor.resizeLeftRightCursor];
 			}
 			column++;
 		}
@@ -352,13 +352,13 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 - (void)mouseDragged:(NSEvent *)theEvent
 {	
 	// Get the location of the mouse
-	NSPoint loc = [self convertPoint:[theEvent locationInWindow] fromView:nil];
+	NSPoint loc = [self convertPoint:theEvent.locationInWindow fromView:nil];
 	CGFloat deltaX = fabs(loc.x - mouseDownLocation.x);
 	CGFloat deltaY = fabs(loc.y - mouseDownLocation.y);
 	    
     if (canResize) {
-        [[NSCursor resizeLeftRightCursor] set];
-        [[self window] disableCursorRects];
+        [NSCursor.resizeLeftRightCursor set];
+        [self.window disableCursorRects];
         
         // Set drag distance
         CGFloat dragDistance = loc.x - lastMouseDraggingLocation.x;
@@ -371,9 +371,9 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
         lastMouseDraggingLocation.x += offset;
         
         if (offset != 0.0) {
-            [[NSCursor resizeRightCursor] set];
+            [NSCursor.resizeRightCursor set];
         } else {
-            [[NSCursor resizeLeftRightCursor] set];
+            [NSCursor.resizeLeftRightCursor set];
         }
                
     } else {
