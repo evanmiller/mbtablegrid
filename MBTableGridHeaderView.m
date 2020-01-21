@@ -212,7 +212,7 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
         lastMouseDraggingLocation = loc;
         isResizing = YES;
     } else if (!rightMouse && self.orientation == MBTableHeaderHorizontalOrientation &&
-               NSPointInRect(loc, [self sortImageRectOfColumn:column])) {
+               NSPointInRect(loc, [self sortIndicatorRectOfColumn:column])) {
         // Clicked the sort indicator
         [self.tableGrid _sortButtonClickedForColumn:column];
     } else if (theEvent.clickCount == 1) {
@@ -469,12 +469,12 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 	return rect;
 }
 
-- (NSRect)sortImageRectOfColumn:(NSUInteger)columnIndex
+- (NSRect)sortIndicatorRectOfColumn:(NSUInteger)columnIndex
 {
     if (![self.indicatorImageColumns containsIndex:columnIndex])
         return NSZeroRect;
     
-    return NSInsetRect([headerCell imageRectForBounds:[self headerRectOfColumn:columnIndex]], -2, -4);
+    return NSInsetRect([headerCell sortIndicatorRectForBounds:[self headerRectOfColumn:columnIndex]], -2, -4);
 }
 
 @end

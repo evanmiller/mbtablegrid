@@ -154,7 +154,7 @@
  */
 - (NSRect)headerRectOfRow:(NSUInteger)rowIndex;
 
-- (NSRect)sortImageRectOfColumn:(NSUInteger)columnIndex;
+- (NSRect)sortIndicatorRectOfColumn:(NSUInteger)columnIndex;
 
 /**
  * @}
