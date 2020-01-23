@@ -1563,19 +1563,11 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 }
 
 - (NSRect)headerRectOfCorner {
-    NSRect rect = NSMakeRect(NSMinX(rowHeaderScrollView.frame),
-                             NSMinY(columnHeaderScrollView.frame),
-                             NSWidth(rowHeaderScrollView.frame),
-                             NSHeight(columnHeaderScrollView.frame));
-	return rect;
+    return headerCornerView.frame;
 }
 
 - (NSRect)footerRectOfCorner {
-    NSRect rect = NSMakeRect(NSMinX(rowHeaderScrollView.frame),
-                             NSMinY(columnFooterScrollView.frame),
-                             NSWidth(rowHeaderScrollView.frame),
-                             NSHeight(columnFooterScrollView.frame));
-	return rect;
+    return footerCornerView.frame;
 }
 
 - (NSInteger)columnAtPoint:(NSPoint)aPoint {
