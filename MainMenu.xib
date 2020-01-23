@@ -675,59 +675,70 @@
         <window title="Window" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" frameAutosaveName="" animationBehavior="default" id="v2q-IV-t0S">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
-            <rect key="contentRect" x="213" y="227" width="498" height="270"/>
+            <rect key="contentRect" x="213" y="227" width="693" height="372"/>
             <rect key="screenRect" x="0.0" y="0.0" width="2048" height="1129"/>
             <view key="contentView" id="Hs4-fn-RAG">
-                <rect key="frame" x="0.0" y="0.0" width="498" height="270"/>
+                <rect key="frame" x="0.0" y="0.0" width="693" height="372"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
                     <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="BaF-l2-x7N" customClass="MBTableGrid">
-                        <rect key="frame" x="0.0" y="32" width="498" height="238"/>
+                        <rect key="frame" x="0.0" y="0.0" width="693" height="372"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <connections>
                             <outlet property="dataSource" destination="Cmj-KX-obJ" id="14y-Nz-LEb"/>
                             <outlet property="delegate" destination="Cmj-KX-obJ" id="VlG-Mn-qdl"/>
                         </connections>
                     </customView>
-                    <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="r9J-vK-SVT">
-                        <rect key="frame" x="3" y="-1" width="179" height="32"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                        <buttonCell key="cell" type="push" title="Toggle Column Header" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="cE8-mf-gAC">
-                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                            <font key="font" metaFont="system"/>
-                        </buttonCell>
-                        <connections>
-                            <action selector="toggleColumnHeaderVisible:" target="Cmj-KX-obJ" id="FAq-It-xlm"/>
-                        </connections>
-                    </button>
-                    <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="3A8-nU-0hC">
-                        <rect key="frame" x="174" y="-1" width="158" height="32"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                        <buttonCell key="cell" type="push" title="Toggle Row Header" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="iiq-YU-4D7">
-                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                            <font key="font" metaFont="system"/>
-                        </buttonCell>
-                        <connections>
-                            <action selector="toggleRowHeaderVisible:" target="Cmj-KX-obJ" id="gIP-Wq-kRx"/>
-                        </connections>
-                    </button>
-                    <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Tdy-eS-MBW">
-                        <rect key="frame" x="323" y="-1" width="174" height="32"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                        <buttonCell key="cell" type="push" title="Toggle Column Footer" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="0xo-17-mo4">
-                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                            <font key="font" metaFont="system"/>
-                        </buttonCell>
-                        <connections>
-                            <action selector="toggleColumnFooterVisible:" target="Cmj-KX-obJ" id="hhR-5M-2ij"/>
-                        </connections>
-                    </button>
+                    <visualEffectView fixedFrame="YES" blendingMode="withinWindow" material="sidebar" state="followsWindowActiveState" translatesAutoresizingMaskIntoConstraints="NO" id="V7p-XO-TDK">
+                        <rect key="frame" x="0.0" y="0.0" width="693" height="33"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
+                        <subviews>
+                            <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Tdy-eS-MBW">
+                                <rect key="frame" x="505" y="-2" width="174" height="32"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
+                                <buttonCell key="cell" type="push" title="Toggle Column Footer" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="0xo-17-mo4">
+                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="toggleColumnFooterVisible:" target="Cmj-KX-obJ" id="hhR-5M-2ij"/>
+                                </connections>
+                            </button>
+                            <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="3A8-nU-0hC">
+                                <rect key="frame" x="273" y="-2" width="158" height="32"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <buttonCell key="cell" type="push" title="Toggle Row Header" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="iiq-YU-4D7">
+                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="toggleRowHeaderVisible:" target="Cmj-KX-obJ" id="gIP-Wq-kRx"/>
+                                </connections>
+                            </button>
+                            <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="r9J-vK-SVT">
+                                <rect key="frame" x="14" y="-2" width="179" height="32"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <buttonCell key="cell" type="push" title="Toggle Column Header" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="cE8-mf-gAC">
+                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="toggleColumnHeaderVisible:" target="Cmj-KX-obJ" id="FAq-It-xlm"/>
+                                </connections>
+                            </button>
+                            <box verticalHuggingPriority="750" fixedFrame="YES" boxType="separator" translatesAutoresizingMaskIntoConstraints="NO" id="Dcn-KS-kyS">
+                                <rect key="frame" x="0.0" y="30" width="693" height="5"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
+                            </box>
+                        </subviews>
+                    </visualEffectView>
                 </subviews>
             </view>
-            <point key="canvasLocation" x="-3" y="393"/>
+            <point key="canvasLocation" x="49.5" y="289"/>
         </window>
         <customObject id="Cmj-KX-obJ" customClass="MBTableGridController">
             <connections>
+                <outlet property="controls_view" destination="V7p-XO-TDK" id="3LJ-1E-G5h"/>
                 <outlet property="tableGrid" destination="BaF-l2-x7N" id="Xdu-Qe-QzR"/>
             </connections>
         </customObject>

@@ -128,6 +128,10 @@ typedef NS_ENUM(NSUInteger, MBVerticalEdge) {
 	/* Content */
 	NSScrollView *contentScrollView;
 	MBTableGridContentView *contentView;
+
+    /* Corners */
+    NSVisualEffectView *headerCornerView;
+    NSVisualEffectView *footerCornerView;
 	
 	/* Selections */
 	NSIndexSet *selectedColumnIndexes;
@@ -156,6 +160,8 @@ typedef NS_ENUM(NSUInteger, MBVerticalEdge) {
 @property (getter=isColumnHeaderVisible, nonatomic, assign) BOOL columnHeaderVisible;
 @property (getter=isColumnFooterVisible, nonatomic, assign) BOOL columnFooterVisible;
 @property (getter=isRowHeaderVisible, nonatomic, assign) BOOL rowHeaderVisible;
+
+@property (nonatomic) NSEdgeInsets contentInsets;
 
 - (void)setSelectedRowIndexes:(NSIndexSet *)anIndexSet notify:(BOOL)notify;
 - (void)setSelectedColumnIndexes:(NSIndexSet *)anIndexSet notify:(BOOL)notify;

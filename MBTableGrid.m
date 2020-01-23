@@ -151,10 +151,25 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		defaultCell.scrollable = YES;
 		defaultCell.lineBreakMode = NSLineBreakByTruncatingTail;
 		self.cell = defaultCell;
+        
+        // Setup the content view
+        NSRect contentFrame = NSMakeRect(0, 0,
+                                         self.frame.size.width,
+                                         self.frame.size.height);
+        contentScrollView = [[MBTableGridContentScrollView alloc] initWithFrame:contentFrame];
+        contentView = [[MBTableGridContentView alloc] initWithFrame:NSMakeRect(0, 0, contentFrame.size.width, contentFrame.size.height)
+                                                       andTableGrid:self];
+        contentScrollView.documentView = contentView;
+        contentScrollView.hasHorizontalScroller = YES;
+        contentScrollView.hasVerticalScroller = YES;
+        contentScrollView.autohidesScrollers = YES;
+        contentScrollView.automaticallyAdjustsContentInsets = NO;
+        contentScrollView.translatesAutoresizingMaskIntoConstraints = NO;
+        [self addSubview:contentScrollView];
 
 		// Setup the column headers
-		NSRect columnHeaderFrame = NSMakeRect(MBTableGridRowHeaderWidth, 0,
-											  frameRect.size.width - MBTableGridRowHeaderWidth,
+		NSRect columnHeaderFrame = NSMakeRect(0, 0,
+											  frameRect.size.width,
 											  MBTableGridColumnHeaderHeight);
 
 		columnHeaderScrollView = [[NSScrollView alloc] initWithFrame:columnHeaderFrame];
@@ -166,87 +181,57 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		columnHeaderView.orientation = MBTableHeaderHorizontalOrientation;
 		columnHeaderScrollView.documentView = columnHeaderView;
 		columnHeaderScrollView.drawsBackground = NO;
+        columnHeaderScrollView.automaticallyAdjustsContentInsets = NO;
+        columnHeaderScrollView.translatesAutoresizingMaskIntoConstraints = NO;
 		[self addSubview:columnHeaderScrollView];
+        
+        // Setup the footer view
+        NSRect columnFooterFrame = NSMakeRect(0, frameRect.size.height - MBTableGridColumnFooterHeight,
+                                              frameRect.size.width, MBTableGridColumnFooterHeight);
+        
+        columnFooterScrollView = [[NSScrollView alloc] initWithFrame:columnFooterFrame];
+        columnFooterView = [[MBTableGridFooterView alloc] initWithFrame:NSMakeRect(0, 0,
+                                                                                   columnFooterFrame.size.width,
+                                                                                   columnFooterFrame.size.height)
+                                                           andTableGrid:self];
+        columnFooterScrollView.documentView = columnFooterView;
+        columnFooterScrollView.drawsBackground = YES;
+        columnFooterScrollView.automaticallyAdjustsContentInsets = NO;
+        columnFooterScrollView.translatesAutoresizingMaskIntoConstraints = NO;
+        [self addSubview:columnFooterScrollView];
 
 		// Setup the row headers
-		NSRect rowHeaderFrame = NSMakeRect(0, MBTableGridColumnHeaderHeight, MBTableGridRowHeaderWidth,
-                                           self.frame.size.height - MBTableGridColumnHeaderHeight - MBTableGridColumnFooterHeight);
+		NSRect rowHeaderFrame = NSMakeRect(0, 0, MBTableGridRowHeaderWidth,
+                                           self.frame.size.height);
 		rowHeaderScrollView = [[NSScrollView alloc] initWithFrame:rowHeaderFrame];
 		rowHeaderView = [[MBTableGridHeaderView alloc] initWithFrame:NSMakeRect(0, 0, rowHeaderFrame.size.width, rowHeaderFrame.size.height)
 														andTableGrid:self];
 		rowHeaderView.orientation = MBTableHeaderVerticalOrientation;
 		rowHeaderScrollView.documentView = rowHeaderView;
 		rowHeaderScrollView.drawsBackground = NO;
-		[self addSubview:rowHeaderScrollView];
-		
-		// Setup the footer view
-		NSRect columnFooterFrame = NSMakeRect(MBTableGridRowHeaderWidth, frameRect.size.height - MBTableGridColumnFooterHeight,
-                                              frameRect.size.width - MBTableGridRowHeaderWidth, MBTableGridColumnFooterHeight);
-		
-		columnFooterScrollView = [[NSScrollView alloc] initWithFrame:columnFooterFrame];
-		columnFooterView = [[MBTableGridFooterView alloc] initWithFrame:NSMakeRect(0, 0,
-																				   columnFooterFrame.size.width,
-																				   columnFooterFrame.size.height)
-														   andTableGrid:self];
-		columnFooterScrollView.documentView = columnFooterView;
-		columnFooterScrollView.drawsBackground = NO;
-		[self addSubview:columnFooterScrollView];
-
-		// Setup the content view
-		NSRect contentFrame = NSMakeRect(MBTableGridRowHeaderWidth, MBTableGridColumnHeaderHeight,
-										 self.frame.size.width - MBTableGridRowHeaderWidth,
-										 self.frame.size.height - MBTableGridColumnHeaderHeight - MBTableGridColumnFooterHeight);
-		contentScrollView = [[MBTableGridContentScrollView alloc] initWithFrame:contentFrame];
-		contentView = [[MBTableGridContentView alloc] initWithFrame:NSMakeRect(0, 0, contentFrame.size.width, contentFrame.size.height)
-													   andTableGrid:self];
-		contentScrollView.documentView = contentView;
-		contentScrollView.hasHorizontalScroller = YES;
-		contentScrollView.hasVerticalScroller = YES;
-		contentScrollView.autohidesScrollers = YES;
-
-		[self addSubview:contentScrollView];
-
-        columnHeaderScrollView.translatesAutoresizingMaskIntoConstraints = NO;
-        [columnHeaderScrollView.topAnchor constraintEqualToAnchor:self.topAnchor].active = YES;
-        [columnHeaderScrollView.trailingAnchor constraintEqualToAnchor:self.trailingAnchor].active = YES;
-        [columnHeaderScrollView.leadingAnchor constraintEqualToAnchor:rowHeaderScrollView.trailingAnchor].active = YES;
-        [columnHeaderScrollView addConstraint:[NSLayoutConstraint constraintWithItem:columnHeaderScrollView
-                                                                           attribute:NSLayoutAttributeHeight
-                                                                           relatedBy:NSLayoutRelationEqual
-                                                                              toItem:nil
-                                                                           attribute:NSLayoutAttributeNotAnAttribute
-                                                                          multiplier:0.0
-                                                                            constant:MBTableGridColumnHeaderHeight]];
-
-        columnFooterScrollView.translatesAutoresizingMaskIntoConstraints = NO;
-        [columnFooterScrollView.bottomAnchor constraintEqualToAnchor:self.bottomAnchor].active = YES;
-        [columnFooterScrollView.trailingAnchor constraintEqualToAnchor:self.trailingAnchor].active = YES;
-        [columnFooterScrollView.leadingAnchor constraintEqualToAnchor:rowHeaderScrollView.trailingAnchor].active = YES;
-        [columnFooterScrollView addConstraint:[NSLayoutConstraint constraintWithItem:columnFooterScrollView
-                                                                           attribute:NSLayoutAttributeHeight
-                                                                           relatedBy:NSLayoutRelationEqual
-                                                                              toItem:nil
-                                                                           attribute:NSLayoutAttributeNotAnAttribute
-                                                                          multiplier:0.0
-                                                                            constant:MBTableGridColumnFooterHeight]];
-
-        contentScrollView.translatesAutoresizingMaskIntoConstraints = NO;
-        [contentScrollView.topAnchor constraintEqualToAnchor:columnHeaderScrollView.bottomAnchor].active = YES;
-        [contentScrollView.bottomAnchor constraintEqualToAnchor:columnFooterScrollView.topAnchor].active = YES;
-        [contentScrollView.leadingAnchor constraintEqualToAnchor:rowHeaderScrollView.trailingAnchor].active = YES;
-        [contentScrollView.trailingAnchor constraintEqualToAnchor:self.trailingAnchor].active = YES;
-
+        rowHeaderScrollView.automaticallyAdjustsContentInsets = NO;
         rowHeaderScrollView.translatesAutoresizingMaskIntoConstraints = NO;
-        [rowHeaderScrollView.leadingAnchor constraintEqualToAnchor:self.leadingAnchor].active = YES;
-        [rowHeaderScrollView.topAnchor constraintEqualToAnchor:contentScrollView.topAnchor].active = YES;
-        [rowHeaderScrollView.bottomAnchor constraintEqualToAnchor:contentScrollView.bottomAnchor].active = YES;
-        [rowHeaderScrollView addConstraint:[NSLayoutConstraint constraintWithItem:rowHeaderScrollView
-                                                                        attribute:NSLayoutAttributeWidth
-                                                                        relatedBy:NSLayoutRelationEqual
-                                                                           toItem:nil
-                                                                        attribute:NSLayoutAttributeNotAnAttribute
-                                                                       multiplier:0.0
-                                                                         constant:MBTableGridRowHeaderWidth]];
+		[self addSubview:rowHeaderScrollView];
+        
+        headerCornerView = [[NSVisualEffectView alloc] initWithFrame:NSMakeRect(0, 0, MBTableGridRowHeaderWidth, MBTableGridColumnHeaderHeight)];
+        headerCornerView.material = NSVisualEffectMaterialSidebar;
+        headerCornerView.blendingMode = NSVisualEffectBlendingModeWithinWindow;
+        headerCornerView.translatesAutoresizingMaskIntoConstraints = NO;
+        [self addSubview:headerCornerView];
+        
+        footerCornerView = [[NSVisualEffectView alloc] initWithFrame:NSMakeRect(0, self.frame.size.height - MBTableGridColumnFooterHeight,
+                                                                                MBTableGridRowHeaderWidth, MBTableGridColumnFooterHeight)];
+        footerCornerView.material = NSVisualEffectMaterialSidebar;
+        footerCornerView.blendingMode = NSVisualEffectBlendingModeWithinWindow;
+        footerCornerView.translatesAutoresizingMaskIntoConstraints = NO;
+        [self addSubview:footerCornerView];
+
+        self.columnHeaderVisible = YES;
+        self.rowHeaderVisible = YES;
+        self.columnFooterVisible = YES;
+        
+        [self updateSubviewConstraints];
+        [self updateSubviewInsets];
 
 		// We want to synchronize the scroll views
         for (NSScrollView *scrollView in @[ contentScrollView, columnHeaderScrollView, rowHeaderScrollView, columnFooterScrollView ]) {
@@ -1389,6 +1374,50 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
     }
 }
 
+// Called after updating the table grid's contentInsets
+- (void)updateSubviewConstraints {
+    [self removeConstraints:self.constraints];
+
+    [columnHeaderScrollView.topAnchor constraintEqualToAnchor:self.topAnchor constant:_contentInsets.top].active = YES;
+    [columnHeaderScrollView.trailingAnchor constraintEqualToAnchor:self.trailingAnchor].active = YES;
+    [columnHeaderScrollView.leadingAnchor constraintEqualToAnchor:self.leadingAnchor].active = YES;
+    
+    [columnFooterScrollView.bottomAnchor constraintEqualToAnchor:self.bottomAnchor constant:-_contentInsets.bottom].active = YES;
+    [columnFooterScrollView.trailingAnchor constraintEqualToAnchor:self.trailingAnchor].active = YES;
+    [columnFooterScrollView.leadingAnchor constraintEqualToAnchor:self.leadingAnchor].active = YES;
+    
+    [contentScrollView.topAnchor constraintEqualToAnchor:self.topAnchor].active = YES;
+    [contentScrollView.bottomAnchor constraintEqualToAnchor:self.bottomAnchor].active = YES;
+    [contentScrollView.leadingAnchor constraintEqualToAnchor:self.leadingAnchor].active = YES;
+    [contentScrollView.trailingAnchor constraintEqualToAnchor:self.trailingAnchor].active = YES;
+
+    [rowHeaderScrollView.leadingAnchor constraintEqualToAnchor:self.leadingAnchor constant:_contentInsets.left].active = YES;
+    [rowHeaderScrollView.topAnchor constraintEqualToAnchor:self.topAnchor].active = YES;
+    [rowHeaderScrollView.bottomAnchor constraintEqualToAnchor:self.bottomAnchor].active = YES;
+    
+    [headerCornerView.leadingAnchor constraintEqualToAnchor:rowHeaderScrollView.leadingAnchor].active = YES;
+    [headerCornerView.topAnchor constraintEqualToAnchor:columnHeaderScrollView.topAnchor].active = YES;
+    [headerCornerView.trailingAnchor constraintEqualToAnchor:rowHeaderScrollView.trailingAnchor].active = YES;
+    [headerCornerView.bottomAnchor constraintEqualToAnchor:columnHeaderScrollView.bottomAnchor].active = YES;
+    
+    [footerCornerView.leadingAnchor constraintEqualToAnchor:rowHeaderScrollView.leadingAnchor].active = YES;
+    [footerCornerView.bottomAnchor constraintEqualToAnchor:columnFooterScrollView.bottomAnchor].active = YES;
+    [footerCornerView.trailingAnchor constraintEqualToAnchor:rowHeaderScrollView.trailingAnchor].active = YES;
+    [footerCornerView.topAnchor constraintEqualToAnchor:columnFooterScrollView.topAnchor].active = YES;
+    
+}
+
+- (void)updateSubviewInsets {
+    [self layout];
+    columnHeaderScrollView.contentInsets = NSEdgeInsetsMake(0, rowHeaderScrollView.frame.size.width + _contentInsets.left, 0, 0);
+    columnFooterScrollView.contentInsets = NSEdgeInsetsMake(0, rowHeaderScrollView.frame.size.width + _contentInsets.left, 0, 0);
+    contentScrollView.contentInsets = NSEdgeInsetsMake(columnHeaderScrollView.frame.size.height + _contentInsets.top,
+                                                       rowHeaderScrollView.frame.size.width + _contentInsets.left,
+                                                       columnFooterScrollView.frame.size.height + _contentInsets.bottom, 0);
+    rowHeaderScrollView.contentInsets = NSEdgeInsetsMake(columnHeaderScrollView.frame.size.height + _contentInsets.top, 0,
+                                                         columnFooterScrollView.frame.size.height + _contentInsets.bottom, 0);
+}
+
 - (void)updateAuxiliaryViewSizes {
     NSRect contentRect = contentView.frame;
 
@@ -1585,6 +1614,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
                                  attribute:NSLayoutAttributeNotAnAttribute
                                 multiplier:0.0
                                   constant:isVisible ? MBTableGridColumnHeaderHeight : 0.0].active = YES;
+    [self updateSubviewInsets];
 }
 
 - (BOOL)isColumnFooterVisible {
@@ -1600,6 +1630,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
                                  attribute:NSLayoutAttributeNotAnAttribute
                                 multiplier:0.0
                                   constant:isVisible ? MBTableGridColumnFooterHeight : 0.0].active = YES;
+    [self updateSubviewInsets];
 }
 
 - (BOOL)isRowHeaderVisible {
@@ -1615,6 +1646,13 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
                                  attribute:NSLayoutAttributeNotAnAttribute
                                 multiplier:0.0
                                   constant:isVisible ? MBTableGridRowHeaderWidth : 0.0].active = YES;
+    [self updateSubviewInsets];
+}
+
+- (void)setContentInsets:(NSEdgeInsets)contentInsets {
+    _contentInsets = contentInsets;
+    [self updateSubviewConstraints];
+    [self updateSubviewInsets];
 }
 
 #pragma mark - Overridden Property Accessors
@@ -1703,6 +1741,8 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 	if ([delegate respondsToSelector:@selector(tableGridDidMoveRows:)]) {
 		[NSNotificationCenter.defaultCenter addObserver:delegate selector:@selector(tableGridDidMoveRows:) name:MBTableGridDidMoveRowsNotification object:self];
 	}
+    
+    self.columnFooterVisible = [delegate respondsToSelector:@selector(tableGrid:footerCellForColumn:)];
 }
 
 @end
