@@ -905,7 +905,14 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
     if (column > self.numberOfColumns) { return; }
 
-    NSRect visibleRect = self.contentView.visibleRect;
+    NSRect visibleRect = contentScrollView.documentVisibleRect;
+    // Account for contentInsets, e.g. if the enclosing view overlays an NSVisualEffectView
+    visibleRect.origin.y += contentScrollView.contentInsets.top;
+    visibleRect.size.height -= (contentScrollView.contentInsets.bottom + contentScrollView.contentInsets.top);
+
+    visibleRect.origin.x += contentScrollView.contentInsets.left;
+    visibleRect.size.width -= (contentScrollView.contentInsets.left + contentScrollView.contentInsets.right);
+    
     NSRect cellRect = [self frameOfCellAtColumn:column row:row];
     cellRect = [self convertRect:cellRect toView:contentScrollView.contentView];
 
