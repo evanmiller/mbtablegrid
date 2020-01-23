@@ -689,7 +689,7 @@
                             <outlet property="delegate" destination="Cmj-KX-obJ" id="VlG-Mn-qdl"/>
                         </connections>
                     </customView>
-                    <visualEffectView fixedFrame="YES" blendingMode="withinWindow" material="sidebar" state="followsWindowActiveState" translatesAutoresizingMaskIntoConstraints="NO" id="V7p-XO-TDK">
+                    <visualEffectView wantsLayer="YES" fixedFrame="YES" blendingMode="withinWindow" material="sidebar" state="followsWindowActiveState" translatesAutoresizingMaskIntoConstraints="NO" id="V7p-XO-TDK">
                         <rect key="frame" x="0.0" y="0.0" width="693" height="33"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
                         <subviews>
