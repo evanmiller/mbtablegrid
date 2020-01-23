@@ -494,6 +494,8 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
     
     if (self.orientation == MBTableHeaderHorizontalOrientation) {
         modifiedRect.origin.y = 0.0;
+    } else {
+        modifiedRect.origin.x = 0.0;
     }
     
     return modifiedRect;
