@@ -73,8 +73,6 @@ NSString * const PasteboardTypeColumnClass = @"pasteboardTypeColumnClass";
     
     tableGrid.contentInsets = NSEdgeInsetsMake(0, 0, self.controls_view.frame.size.height, 0);
 	
-	[tableGrid setIndicatorImage:[NSImage imageNamed:@"sort-asc"] reverseImage:[NSImage imageNamed:@"sort-desc"] inColumns:@[@1,@3]];
-	
 	[tableGrid reloadData];
 	
 	// Register to receive text strings
@@ -134,6 +132,13 @@ NSString * const PasteboardTypeColumnClass = @"pasteboardTypeColumnClass";
 - (NSUInteger)numberOfColumnsInTableGrid:(MBTableGrid *)aTableGrid
 {
 	return 10;
+}
+
+- (NSIndexSet *)sortableColumnIndexesInTableGrid:(MBTableGrid *)aTableGrid {
+    NSMutableIndexSet *sortableColumns = [NSMutableIndexSet indexSet];
+    [sortableColumns addIndex:1];
+    [sortableColumns addIndex:3];
+    return sortableColumns;
 }
 
 - (NSString *)tableGrid:(MBTableGrid *)aTableGrid headerStringForColumn:(NSUInteger)columnIndex {

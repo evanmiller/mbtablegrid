@@ -14,6 +14,7 @@
 - (NSCell *)_cellForColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 - (id)_objectValueForColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 - (void)_setObjectValue:(id)value forColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
+- (void)_setObjectValue:(id)value forColumns:(NSIndexSet *)columnIndexes rows:(NSIndexSet *)rowIndexes;
 - (BOOL)_canEditCellAtColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 - (void)scrollToArea:(NSRect)area animate:(BOOL)animate;
 @end
@@ -33,6 +34,7 @@
 - (id)initWithTableGrid:(MBTableGrid *)tableGrid {
     if (self = [super init]) {
         _tableGrid = tableGrid;
+        _pending_replacements = [[NSMutableDictionary alloc] init];
     }
     return self;
 }
@@ -194,17 +196,29 @@
     
     NSUInteger cellIndex = range.location;
     NSUInteger rowIndex = _row(cellIndex, rowCount, columnCount);
-    NSUInteger filteredIndex = _col(cellIndex, rowCount, columnCount);
+    NSUInteger columnIndex = _col(cellIndex, rowCount, columnCount);
+
+    if (!_pending_replacements[@(columnIndex)]) {
+        _pending_replacements[@(columnIndex)] = @{ @"string": string, @"indexes": [NSMutableIndexSet indexSet] };
+    }
     
-    [_tableGrid _setObjectValue:string forColumn:filteredIndex row:rowIndex];
+    [(NSMutableIndexSet *)_pending_replacements[@(columnIndex)][@"indexes"] addIndex:rowIndex];
 }
 
 - (BOOL)isEditable {
-    return [_tableGrid.dataSource respondsToSelector:@selector(tableGrid:setObjectValue:forColumn:row:)];
+    return ([_tableGrid.dataSource respondsToSelector:@selector(tableGrid:setObjectValue:forColumn:row:)] ||
+            [_tableGrid.dataSource respondsToSelector:@selector(tableGrid:setObjectValue:forColumns:rows:)]);
 }
 
 - (void)didReplaceCharacters {
-    // TODO store up replacements in a "Replace All" and blast them to the data source all at once
+    [_pending_replacements enumerateKeysAndObjectsUsingBlock:^(NSNumber *key, NSDictionary<NSString *, id> *replacement, BOOL *stop) {
+        [_tableGrid _setObjectValue:replacement[@"string"]
+                         forColumns:[NSIndexSet indexSetWithIndex:key.integerValue]
+                               rows:replacement[@"indexes"]];
+    }];
+
+    [_pending_replacements removeAllObjects];
+
     [_tableGrid reloadData];
 }
 

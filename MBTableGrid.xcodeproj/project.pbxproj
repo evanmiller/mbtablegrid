@@ -13,10 +13,6 @@
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
 		C63DB4CD1A19E2F70069BF5D /* QuickLook.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C63DB4CB1A19DA030069BF5D /* QuickLook.framework */; };
 		C63DB4CE1A19E3C40069BF5D /* Quartz.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C646837F18DB8634008700EF /* Quartz.framework */; };
-		C63F9EB6186AE60C00DB171F /* sort-asc.png in Resources */ = {isa = PBXBuildFile; fileRef = C63F9EB2186AE60C00DB171F /* sort-asc.png */; };
-		C63F9EB7186AE60C00DB171F /* sort-asc@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = C63F9EB3186AE60C00DB171F /* sort-asc@2x.png */; };
-		C63F9EB8186AE60C00DB171F /* sort-desc.png in Resources */ = {isa = PBXBuildFile; fileRef = C63F9EB4186AE60C00DB171F /* sort-desc.png */; };
-		C63F9EB9186AE60C00DB171F /* sort-desc@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = C63F9EB5186AE60C00DB171F /* sort-desc@2x.png */; };
 		C646838118DB8658008700EF /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C646837D18DB862A008700EF /* QuartzCore.framework */; };
 		C646838218DB8897008700EF /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C646837D18DB862A008700EF /* QuartzCore.framework */; };
 		C6AB1C291A15F0DF0092B29C /* rose.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C6AB1C281A15F0DF0092B29C /* rose.jpg */; };
@@ -61,10 +57,6 @@
 		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* MBTableGrid.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MBTableGrid.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C63DB4CB1A19DA030069BF5D /* QuickLook.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuickLook.framework; path = System/Library/Frameworks/QuickLook.framework; sourceTree = SDKROOT; };
-		C63F9EB2186AE60C00DB171F /* sort-asc.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "sort-asc.png"; sourceTree = "<group>"; };
-		C63F9EB3186AE60C00DB171F /* sort-asc@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "sort-asc@2x.png"; sourceTree = "<group>"; };
-		C63F9EB4186AE60C00DB171F /* sort-desc.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "sort-desc.png"; sourceTree = "<group>"; };
-		C63F9EB5186AE60C00DB171F /* sort-desc@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "sort-desc@2x.png"; sourceTree = "<group>"; };
 		C646837D18DB862A008700EF /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		C646837F18DB8634008700EF /* Quartz.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Quartz.framework; path = System/Library/Frameworks/Quartz.framework; sourceTree = SDKROOT; };
 		C6AB1C281A15F0DF0092B29C /* rose.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = rose.jpg; sourceTree = "<group>"; };
@@ -185,11 +177,7 @@
 			isa = PBXGroup;
 			children = (
 				8D1107310486CEB800E47090 /* Info.plist */,
-				C63F9EB2186AE60C00DB171F /* sort-asc.png */,
-				C63F9EB3186AE60C00DB171F /* sort-asc@2x.png */,
-				C63F9EB4186AE60C00DB171F /* sort-desc.png */,
 				DCDB6EDA23C905C200F348EB /* MainMenu.xib */,
-				C63F9EB5186AE60C00DB171F /* sort-desc@2x.png */,
 				C6AB1C281A15F0DF0092B29C /* rose.jpg */,
 				C6AB1C2C1A16B18B0092B29C /* acc-quicklook.png */,
 				C6AB1C2D1A16B18B0092B29C /* acc-quicklook@2x.png */,
@@ -332,14 +320,10 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C63F9EB7186AE60C00DB171F /* sort-asc@2x.png in Resources */,
 				DCDB6EDB23C905C200F348EB /* MainMenu.xib in Resources */,
 				C6AB1C2F1A16B18B0092B29C /* acc-quicklook@2x.png in Resources */,
-				C63F9EB8186AE60C00DB171F /* sort-desc.png in Resources */,
 				C6AB1C2E1A16B18B0092B29C /* acc-quicklook.png in Resources */,
-				C63F9EB6186AE60C00DB171F /* sort-asc.png in Resources */,
 				C6AB1C291A15F0DF0092B29C /* rose.jpg in Resources */,
-				C63F9EB9186AE60C00DB171F /* sort-desc@2x.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

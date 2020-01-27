@@ -32,14 +32,13 @@ NSString* kAutosavedColumnWidthKey = @"AutosavedColumnWidth";
 NSString* kAutosavedColumnIndexKey = @"AutosavedColumnIndex";
 NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 
-#define kSortIndicatorXInset		4.0  	/* Number of pixels to inset the drawing of the indicator from the right edge */
-
 @interface MBTableGrid (Private)
 - (NSString *)_headerStringForColumn:(NSUInteger)columnIndex;
 - (NSString *)_headerStringForRow:(NSUInteger)rowIndex;
 - (MBTableGridContentView *)_contentView;
 - (void)_dragColumnsWithEvent:(NSEvent *)theEvent;
 - (void)_dragRowsWithEvent:(NSEvent *)theEvent;
+- (void)_sortButtonClickedForColumn:(NSUInteger)column;
 - (void)_willDisplayHeaderMenu:(NSMenu *)menu forColumn:(NSUInteger)columnIndex;
 - (void)_willDisplayHeaderMenu:(NSMenu *)menu forRow:(NSUInteger)rowIndex;
 - (void)_didDoubleClickColumn:(NSUInteger)columnIndex;
@@ -73,71 +72,6 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 	return self;
 }
 
-- (void)placeSortButtons
-{
-	NSMutableArray<NSButton *> *capturingButtons = [NSMutableArray arrayWithCapacity:0];
-
-	NSButton *sortButton;
-
-	for (NSNumber *cellNumber in self.indicatorImageColumns)
-	{
-		sortButton = [[NSButton alloc] init];
-		sortButton.image = self.indicatorImage;
-		sortButton.alternateImage = self.indicatorReverseImage;
-		sortButton.bordered = NO;
-        sortButton.state = NSControlStateValueOn;
-		sortButton.tag = cellNumber.integerValue;
-		sortButton.target = self.tableGrid;
-		sortButton.action = @selector(sortButtonClicked:);
-
-		[self addSubview:sortButton];
-		
-		[sortButton setNextState];
-		
-		[capturingButtons addObject:sortButton];
-	}
-
-	self.tableGrid.sortButtons = [[NSArray alloc] initWithArray:capturingButtons];
-}
-
-- (void)toggleSortButtonIcon:(NSButton*)btn
-{
-	btn.image = (btn.image == self.indicatorImage) ? self.indicatorReverseImage : self.indicatorImage;
-}
-
-- (void)layoutSortButtonWithRect:(NSRect)rect forColumn:(NSInteger)column
-{
-	// Set the frames of the sort buttons here
-	NSRect indicatorRect = NSZeroRect;
-	NSSize sortImageSize = self.indicatorImage.size;
-	indicatorRect.size = sortImageSize;
-	indicatorRect.origin.x = NSMaxX(rect) - (sortImageSize.width + kSortIndicatorXInset);
-	indicatorRect.origin.y = NSMinY(rect) + roundf((NSHeight(rect) - sortImageSize.height) / 2.0);
-
-	MBTableGrid *tableGrid = self.tableGrid;
-	
-	for (NSButton *button in tableGrid.sortButtons)
-	{
-		if (button.tag == column)
-		{
-			button.frame = indicatorRect;
-		}
-	}
-}
-
-- (void)viewWillDraw
-{
-	[super viewWillDraw];
-	
-	for (NSNumber *columnNumber in self.indicatorImageColumns)
-	{
-		NSInteger column = [columnNumber integerValue];
-		NSRect headerRect = [self headerRectOfColumn:column];
-
-		[self layoutSortButtonWithRect:headerRect forColumn:column];
-	}
-}
-
 - (void) resetCursorRects {
 	if (self.orientation == MBTableHeaderHorizontalOrientation) {
         NSRect visibleRect = self.enclosingScrollView.insetDocumentVisibleRect;
@@ -150,7 +84,7 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 			NSRect resizeRect = NSMakeRect(NSMinX(headerRect) + NSWidth(headerRect) - 2, NSMinY(headerRect), 5, NSHeight(headerRect));
 
 			if(CGRectIntersectsRect(resizeRect, visibleRect)) {
-				[self addCursorRect:resizeRect cursor:[NSCursor resizeLeftRightCursor]];
+				[self addCursorRect:resizeRect cursor:NSCursor.resizeLeftRightCursor];
 			}
 			column++;
 		}
@@ -202,10 +136,16 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 				NSIndexSet *selectedColumns = [self.tableGrid selectedColumnIndexes];
                 headerCell.state = [selectedColumns containsIndex:column] ? NSControlStateValueOn : NSControlStateValueOff;
 				
-				if ([self.indicatorImageColumns containsObject:@(column)]) {
-					headerCell.sortIndicatorImage = self.indicatorImage;
+				if ([self.indicatorImageColumns containsIndex:column]) {
+                    if (_tableGrid.sortColumnIndex == column) {
+                        headerCell.sortIndicatorAscending = _tableGrid.isSortColumnAscending;
+                        headerCell.sortIndicatorColor = NSColor.labelColor;
+                    } else {
+                        headerCell.sortIndicatorAscending = NO;
+                        headerCell.sortIndicatorColor = NSColor.tertiaryLabelColor;
+                    }
 				} else {
-					headerCell.sortIndicatorImage = nil;
+					headerCell.sortIndicatorColor = nil;
 				}
 				
 				headerCell.stringValue = [self.tableGrid _headerStringForColumn:column];
@@ -268,79 +208,70 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 	NSInteger column = [self.tableGrid columnAtPoint:[self convertPoint:loc toView:self.tableGrid]];
 	NSInteger row = [self.tableGrid rowAtPoint:[self convertPoint:loc toView:self.tableGrid]];
 
-	if([theEvent clickCount] == 2 && !rightMouse) {
+    if (canResize) {
+        // Set resize column index
+        draggingColumnIndex = [self.tableGrid columnAtPoint:[self convertPoint:NSMakePoint(loc.x - 3, loc.y) toView:self.tableGrid]];
+        lastMouseDraggingLocation = loc;
+        isResizing = YES;
+    } else if (!rightMouse && self.orientation == MBTableHeaderHorizontalOrientation &&
+               NSPointInRect(loc, [self sortIndicatorRectOfColumn:column])) {
+        // Clicked the sort indicator
+        [self.tableGrid _sortButtonClickedForColumn:column];
+    } else if (theEvent.clickCount == 1) {
+        // For single clicks,
+        if ((theEvent.modifierFlags & NSEventModifierFlagShift) && self.tableGrid.allowsMultipleSelection) {
+            // If the shift key was held down, extend the selection
+            if(self.orientation == MBTableHeaderHorizontalOrientation) {
+                if (self.tableGrid.selectedColumnIndexes.count && column != NSNotFound) {
+                    NSInteger firstIndex = MIN(column, self.tableGrid.selectedColumnIndexes.firstIndex);
+                    NSInteger lastIndex = MAX(column, self.tableGrid.selectedColumnIndexes.lastIndex);
+                    self.tableGrid.selectedColumnIndexes = [NSIndexSet indexSetWithIndexesInRange:
+                        NSMakeRange(firstIndex, lastIndex - firstIndex + 1)];
+                }
+            } else {
+                if (self.tableGrid.selectedRowIndexes.count && row != NSNotFound) {
+                    NSInteger firstIndex = MIN(row, self.tableGrid.selectedRowIndexes.firstIndex);
+                    NSInteger lastIndex = MAX(row, self.tableGrid.selectedRowIndexes.lastIndex);
+                    self.tableGrid.selectedRowIndexes = [NSIndexSet indexSetWithIndexesInRange:
+                        NSMakeRange(firstIndex, lastIndex - firstIndex + 1)];
+                }
+            }
+        } else {
+            // No modifier keys, so change the selection
+            if(self.orientation == MBTableHeaderHorizontalOrientation) {
+                mouseDownItem = column;
+
+                if([self.tableGrid.selectedColumnIndexes containsIndex:column] && self.tableGrid.selectedRowIndexes.count == self.tableGrid.numberOfRows) {
+                    // Allow the user to drag the column
+                    shouldDragItems = YES;
+                } else if(column != NSNotFound) {
+                    self.tableGrid.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:column];
+                    // Select every row
+                    self.tableGrid.selectedRowIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0,self.tableGrid.numberOfRows)];
+                }
+            } else if(self.orientation == MBTableHeaderVerticalOrientation) {
+                mouseDownItem = row;
+
+                if([self.tableGrid.selectedRowIndexes containsIndex:row] && self.tableGrid.selectedColumnIndexes.count == self.tableGrid.numberOfColumns) {
+                    // Allow the user to drag the row
+                    shouldDragItems = YES;
+                } else if (row != NSNotFound) {
+                    self.tableGrid.selectedRowIndexes = [NSIndexSet indexSetWithIndex:row];
+                    // Select every column
+                    self.tableGrid.selectedColumnIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0,self.tableGrid.numberOfColumns)];
+                }
+            }
+        }
+    } else if (theEvent.clickCount == 2 && !rightMouse) {
         if (self.orientation == MBTableHeaderHorizontalOrientation) {
             [self.tableGrid _didDoubleClickColumn:column];
         } else {
             [self.tableGrid _didDoubleClickRow:row];
         }
-	}
-	else {
-		if (canResize) {
-			// Set resize column index
-			draggingColumnIndex = [self.tableGrid columnAtPoint:[self convertPoint:NSMakePoint(loc.x - 3, loc.y) toView:self.tableGrid]];
-			lastMouseDraggingLocation = loc;
-			isResizing = YES;
-		}
-		else {
-			// For single clicks,
-			if (theEvent.clickCount == 1) {
-                if ((theEvent.modifierFlags & NSEventModifierFlagShift) && self.tableGrid.allowsMultipleSelection) {
-					// If the shift key was held down, extend the selection
-                    if(self.orientation == MBTableHeaderHorizontalOrientation) {
-                        if (self.tableGrid.selectedColumnIndexes.count && column != NSNotFound) {
-                            NSInteger firstIndex = MIN(column, self.tableGrid.selectedColumnIndexes.firstIndex);
-                            NSInteger lastIndex = MAX(column, self.tableGrid.selectedColumnIndexes.lastIndex);
-                            self.tableGrid.selectedColumnIndexes = [NSIndexSet indexSetWithIndexesInRange:
-                                                                    NSMakeRange(firstIndex, lastIndex - firstIndex + 1)];
-                        }
-                    } else {
-                        if (self.tableGrid.selectedRowIndexes.count && row != NSNotFound) {
-                            NSInteger firstIndex = MIN(row, self.tableGrid.selectedRowIndexes.firstIndex);
-                            NSInteger lastIndex = MAX(row, self.tableGrid.selectedRowIndexes.lastIndex);
-                            self.tableGrid.selectedRowIndexes = [NSIndexSet indexSetWithIndexesInRange:
-                                                                 NSMakeRange(firstIndex, lastIndex - firstIndex + 1)];
-                        }
-                    }
-				} else {
-					// No modifier keys, so change the selection
-					if(self.orientation == MBTableHeaderHorizontalOrientation) {
-						mouseDownItem = column;
-						
-						if([self.tableGrid.selectedColumnIndexes containsIndex:column] && self.tableGrid.selectedRowIndexes.count == self.tableGrid.numberOfRows) {
-							// Allow the user to drag the column
-							shouldDragItems = YES;
-						}
-						else {
-							if(column != NSNotFound) {
-								self.tableGrid.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:column];
-							}
+    }
 
-							// Select every row
-							self.tableGrid.selectedRowIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0,self.tableGrid.numberOfRows)];
-						}
-					} else if(self.orientation == MBTableHeaderVerticalOrientation) {
-						mouseDownItem = row;
-						
-						if([self.tableGrid.selectedRowIndexes containsIndex:row] && self.tableGrid.selectedColumnIndexes.count == self.tableGrid.numberOfColumns) {
-							// Allow the user to drag the row
-							shouldDragItems = YES;
-						} else {
-							self.tableGrid.selectedRowIndexes = [NSIndexSet indexSetWithIndex:row];
-							// Select every column
-							self.tableGrid.selectedColumnIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0,self.tableGrid.numberOfColumns)];
-						}
-					}
-				}
-			} else if ([theEvent clickCount] == 2) {
-				
-			}
-			
-			// Pass the event back to the MBTableGrid (Used to give First Responder status)
-			[self.tableGrid mouseDown:theEvent];
-			
-		}
-	}
+    // Pass the event back to the MBTableGrid (Used to give First Responder status)
+    [self.tableGrid mouseDown:theEvent];
 }
 
 - (void) mouseDown:(NSEvent *)theEvent {
@@ -354,13 +285,13 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 - (void)mouseDragged:(NSEvent *)theEvent
 {	
 	// Get the location of the mouse
-	NSPoint loc = [self convertPoint:[theEvent locationInWindow] fromView:nil];
+	NSPoint loc = [self convertPoint:theEvent.locationInWindow fromView:nil];
 	CGFloat deltaX = fabs(loc.x - mouseDownLocation.x);
 	CGFloat deltaY = fabs(loc.y - mouseDownLocation.y);
 	    
     if (canResize) {
-        [[NSCursor resizeLeftRightCursor] set];
-        [[self window] disableCursorRects];
+        [NSCursor.resizeLeftRightCursor set];
+        [self.window disableCursorRects];
         
         // Set drag distance
         CGFloat dragDistance = loc.x - lastMouseDraggingLocation.x;
@@ -373,9 +304,9 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
         lastMouseDraggingLocation.x += offset;
         
         if (offset != 0.0) {
-            [[NSCursor resizeRightCursor] set];
+            [NSCursor.resizeRightCursor set];
         } else {
-            [[NSCursor resizeLeftRightCursor] set];
+            [NSCursor.resizeLeftRightCursor set];
         }
                
     } else {
@@ -496,6 +427,8 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
     
     if (self.orientation == MBTableHeaderHorizontalOrientation) {
         modifiedRect.origin.y = 0.0;
+    } else {
+        modifiedRect.origin.x = 0.0;
     }
     
     return modifiedRect;
@@ -534,6 +467,14 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 	rect.size.width = NSWidth(self.bounds);
 	
 	return rect;
+}
+
+- (NSRect)sortIndicatorRectOfColumn:(NSUInteger)columnIndex
+{
+    if (![self.indicatorImageColumns containsIndex:columnIndex])
+        return NSZeroRect;
+    
+    return NSInsetRect([headerCell sortIndicatorRectForBounds:[self headerRectOfColumn:columnIndex]], -2, -4);
 }
 
 @end

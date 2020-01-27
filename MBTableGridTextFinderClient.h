@@ -11,6 +11,8 @@
 
 @interface MBTableGridTextFinderClient : NSObject<NSTextFinderClient> {
     MBTableGrid *_tableGrid;
+    
+    NSMutableDictionary<NSNumber *, NSDictionary<NSString *, id> *> *_pending_replacements;
 }
 
 - (id)initWithTableGrid:(MBTableGrid *)tableGrid;

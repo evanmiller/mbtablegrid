@@ -32,6 +32,8 @@
 
 #define kGRAB_HANDLE_HALF_SIDE_LENGTH 3.0f
 #define kGRAB_HANDLE_SIDE_LENGTH 6.0f
+#define DROP_TARGET_BOX_THICKNESS 4.0
+#define DROP_TARGET_LINE_WIDTH    2.0
 
 NSString * const MBTableGridTrackingPartKey = @"part";
 
@@ -42,7 +44,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 - (void)_setObjectValue:(id)value forColumns:(NSIndexSet *)columnIndexes rows:(NSIndexSet *)rowIndexes;
 - (BOOL)_canEditCellAtColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 - (void)_setStickyColumn:(MBHorizontalEdge)stickyColumn row:(MBVerticalEdge)stickyRow;
-- (float)_widthForColumn:(NSUInteger)columnIndex;
+- (CGFloat)_widthForColumn:(NSUInteger)columnIndex;
 - (MBHorizontalEdge)_stickyColumn;
 - (MBVerticalEdge)_stickyRow;
 - (void)_userDidEnterInvalidStringInColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex errorDescription:(NSString *)errorDescription;
@@ -115,15 +117,16 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 	[[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
-
 - (void)drawRect:(NSRect)rect
 {
-    
     NSIndexSet *selectedColumns = _tableGrid.selectedColumnIndexes;
     NSIndexSet *selectedRows = _tableGrid.selectedRowIndexes;
 	NSUInteger numberOfColumns = _tableGrid.numberOfColumns;
 	NSUInteger numberOfRows = _tableGrid.numberOfRows;
-	
+    
+    if (numberOfColumns == 0 || numberOfRows == 0)
+        return;
+    
 	NSUInteger firstColumn = NSNotFound;
     NSUInteger lastColumn = (numberOfColumns==0) ? 0 : numberOfColumns - 1;
 	NSUInteger firstRow = MAX(0, floor(rect.origin.y / self.rowHeight));
@@ -158,15 +161,11 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 	}
 	
 	// Draw the selection rectangle
-	if(selectedColumns.count && selectedRows.count && _tableGrid.numberOfColumns > 0 && _tableGrid.numberOfRows > 0) {
+    if(selectedColumns.count && selectedRows.count) {
 		NSRect selectionTopLeft = [self frameOfCellAtColumn:selectedColumns.firstIndex row:selectedRows.firstIndex];
 		NSRect selectionBottomRight = [self frameOfCellAtColumn:selectedColumns.lastIndex row:selectedRows.lastIndex];
 		
-		NSRect selectionRect;
-		selectionRect.origin = selectionTopLeft.origin;
-		selectionRect.size.width = NSMaxX(selectionBottomRight)-selectionTopLeft.origin.x;
-		selectionRect.size.height = NSMaxY(selectionBottomRight)-selectionTopLeft.origin.y;
-		
+        NSRect selectionRect = NSUnionRect(selectionTopLeft, selectionBottomRight);
         NSRect selectionInsetRect = NSInsetRect(selectionRect, 0, 0);
 		NSBezierPath *selectionPath = [NSBezierPath bezierPathWithRect:selectionInsetRect];
 		NSAffineTransform *translate = [NSAffineTransform transform];
@@ -210,21 +209,17 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 		NSRect columnBorder;
 		if(dropColumn < _tableGrid.numberOfColumns) {
 			columnBorder = [self rectOfColumn:dropColumn];
-		}
-		else if(dropColumn == _tableGrid.numberOfColumns && dropColumn>0) {
+        } else {
 			columnBorder = [self rectOfColumn:dropColumn-1];
-		}
-		else {
-			columnBorder = [self rectOfColumn:0];
 			columnBorder.origin.x += columnBorder.size.width;
 		}
-		columnBorder.origin.x = NSMinX(columnBorder)-2.0;
-		columnBorder.size.width = 4.0;
+		columnBorder.origin.x = NSMinX(columnBorder)-DROP_TARGET_BOX_THICKNESS/2;
+		columnBorder.size.width = DROP_TARGET_BOX_THICKNESS;
 		
 		NSColor *selectionColor = NSColor.alternateSelectedControlColor;
 		
 		NSBezierPath *borderPath = [NSBezierPath bezierPathWithRect:columnBorder];
-		borderPath.lineWidth = 2.0;
+		borderPath.lineWidth = DROP_TARGET_LINE_WIDTH;
 		
 		[selectionColor set];
 		[borderPath stroke];
@@ -239,13 +234,13 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 			rowBorder = [self rectOfRow:dropRow-1];
 			rowBorder.origin.y += rowBorder.size.height;
 		}
-		rowBorder.origin.y = NSMinY(rowBorder)-2.0;
-		rowBorder.size.height = 4.0;
+		rowBorder.origin.y = NSMinY(rowBorder)-DROP_TARGET_BOX_THICKNESS/2;
+		rowBorder.size.height = DROP_TARGET_BOX_THICKNESS;
 		
 		NSColor *selectionColor = NSColor.alternateSelectedControlColor;
 		
 		NSBezierPath *borderPath = [NSBezierPath bezierPathWithRect:rowBorder];
-		borderPath.lineWidth = 2.0;
+		borderPath.lineWidth = DROP_TARGET_LINE_WIDTH;
 		
 		[selectionColor set];
 		[borderPath stroke];
@@ -363,8 +358,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 		// First click on a cell without shift key modifier
 		} else {
 			// No modifier keys, so change the selection
-			// Only notify observers once even though we change the selection twice
-			[self.tableGrid setSelectedColumnIndexes:[NSIndexSet indexSetWithIndex:mouseDownColumn] notify: NO];
+            self.tableGrid.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:mouseDownColumn];
 			self.tableGrid.selectedRowIndexes = [NSIndexSet indexSetWithIndex:mouseDownRow];
 			[self.tableGrid _setStickyColumn:MBHorizontalEdgeLeft row:MBVerticalEdgeTop];
 		}
@@ -375,8 +369,6 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 	if (cellEditsOnFirstClick) {
 		[self editSelectedCell:self text:nil];
 	}
-
-	self.needsDisplay = YES;
 }
 
 - (void)mouseDragged:(NSEvent *)theEvent
@@ -449,8 +441,6 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 		
 		// Set the sticky edges
 		[self.tableGrid _setStickyColumn:columnEdge row:rowEdge];
-		
-        self.needsDisplay = YES;
 	}
 }
 
@@ -514,19 +504,16 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 		NSRect selectionTopLeft = [self frameOfCellAtColumn:selectedColumns.firstIndex row:selectedRows.firstIndex];
         NSRect selectionBottomRight = [self frameOfCellAtColumn:selectedColumns.lastIndex row:selectedRows.lastIndex];
 
-		NSRect selectionRect;
-		selectionRect.origin = selectionTopLeft.origin;
-		selectionRect.size.width = NSMaxX(selectionBottomRight)-selectionTopLeft.origin.x;
-		selectionRect.size.height = NSMaxY(selectionBottomRight)-selectionTopLeft.origin.y;
-
-		selectionRect = CGRectIntersection(selectionRect, self.visibleRect);
-
+        NSRect selectionRect = NSUnionRect(selectionTopLeft, selectionBottomRight);
+        
 		// Update tracking areas here, to leverage the selection variables
 		for (NSTrackingArea *trackingArea in self.trackingAreas) {
 			[self removeTrackingArea:trackingArea];
 		}
 
 		if (selectedColumns.count == 1 && CGRectIntersectsRect(self.visibleRect, selectionRect)) {
+            selectionRect = CGRectIntersection(selectionRect, self.visibleRect);
+
 			NSRect fillTrackingRect = [self rectOfColumn:selectedColumns.firstIndex];
 			fillTrackingRect = CGRectIntersection(fillTrackingRect, self.visibleRect);
 			fillTrackingRect.size.height = self.frame.size.height;
@@ -581,7 +568,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 	// Give focus back to the table grid (the field editor took it)
 	[self.window makeFirstResponder:self.tableGrid];
 
-	if(movementType != NSCancelTextMovement) {
+	if(movementType != NSTextMovementCancel) {
 		NSString *stringValue = [[aNotification.object string] copy];
 		[self.tableGrid _setObjectValue:stringValue forColumn:editedColumn row:editedRow];
 	}
@@ -593,17 +580,16 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 	NSText* fe = [self.window fieldEditor:NO forObject:self];
 	[self.tableGrid.cell endEditing:fe];
 
-
 	switch (movementType) {
-		case NSBacktabTextMovement:
+		case NSTextMovementBacktab:
 			[self.tableGrid moveLeft:self];
 			break;
 
-		case NSTabTextMovement:
+		case NSTextMovementTab:
 			[self.tableGrid moveRight:self];
 			break;
 
-		case NSReturnTextMovement:
+		case NSTextMovementReturn:
             if(NSApp.currentEvent.modifierFlags & NSEventModifierFlagShift) {
 				[self.tableGrid moveUp:self];
 			}
@@ -612,7 +598,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 			}
 			break;
 
-		case NSUpTextMovement:
+		case NSTextMovementUp:
 			[self.tableGrid moveUp:self];
 			break;
 
@@ -747,14 +733,14 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 		}
 	
 		if (!foundRect) {
-			float width = [self.tableGrid _widthForColumn:columnIndex];
+			CGFloat width = [self.tableGrid _widthForColumn:columnIndex];
 			
 			rect = NSMakeRect(0, 0, width, self.frame.size.height);
 			//rect.origin.x += 60.0 * columnIndex;
 			
 			NSUInteger i = 0;
 			while(i < columnIndex) {
-				float headerWidth = [self.tableGrid _widthForColumn:i];
+				CGFloat headerWidth = [self.tableGrid _widthForColumn:i];
 				rect.origin.x += headerWidth;
 				i++;
 			}
@@ -906,7 +892,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 	NSImage *image = [[NSImage alloc] initWithSize:NSMakeSize(kGRAB_HANDLE_SIDE_LENGTH, kGRAB_HANDLE_SIDE_LENGTH)];
 	[image lockFocusFlipped:YES];
 	
-	NSGraphicsContext *gc = [NSGraphicsContext currentContext];
+	NSGraphicsContext *gc = NSGraphicsContext.currentContext;
 	
 	// Save the current graphics context
 	[gc saveGraphicsState];
@@ -944,14 +930,26 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 
 - (void)_setDropColumn:(NSInteger)columnIndex
 {
+    if (dropColumn != NSNotFound)
+        [self setNeedsDisplayInRect:NSInsetRect([self rectOfColumn:dropColumn == _tableGrid.numberOfColumns ? dropColumn -1 : dropColumn],
+                                                -(DROP_TARGET_LINE_WIDTH + DROP_TARGET_BOX_THICKNESS/2), 0)];
+    
 	dropColumn = columnIndex;
-	self.needsDisplay = YES;
+    
+    if (dropColumn != NSNotFound)
+        [self setNeedsDisplayInRect:NSInsetRect([self rectOfColumn:dropColumn == _tableGrid.numberOfColumns ? dropColumn -1 : dropColumn],
+                                                -(DROP_TARGET_LINE_WIDTH + DROP_TARGET_BOX_THICKNESS/2), 0)];
 }
 
 - (void)_setDropRow:(NSInteger)rowIndex
 {
+    if (dropRow != NSNotFound)
+        [self setNeedsDisplayInRect:NSInsetRect([self rectOfRow:dropRow == _tableGrid.numberOfRows ? dropRow -1 : dropRow], 0,
+                                                -(DROP_TARGET_LINE_WIDTH + DROP_TARGET_BOX_THICKNESS/2))];
 	dropRow = rowIndex;
-	self.needsDisplay = YES;
+    if (dropRow != NSNotFound)
+        [self setNeedsDisplayInRect:NSInsetRect([self rectOfRow:dropRow == _tableGrid.numberOfRows ? dropRow -1 : dropRow], 0,
+                                                -(DROP_TARGET_LINE_WIDTH + DROP_TARGET_BOX_THICKNESS/2))];
 }
 
 - (void)_timerAutoscrollCallback:(NSTimer *)aTimer
