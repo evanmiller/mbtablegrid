@@ -25,6 +25,11 @@
 
 #import "MBTableGridHeaderCell.h"
 
+extern CGFloat MBTableHeaderSortIndicatorWidth;
+extern CGFloat MBTableHeaderSortIndicatorMargin;
+
+#define kSortIndicatorXInset        4.0      /* Number of pixels to inset the drawing of the indicator from the right edge */
+
 @interface MBTableGridHeaderCell ()
 
 @end
@@ -55,6 +60,15 @@
 	if (_labelFont == nil)
 		_labelFont = [NSFont labelFontOfSize:NSFont.labelFontSize];
 	return _labelFont;
+}
+
+- (NSRect)sortIndicatorRectForBounds:(NSRect)rect {
+    NSRect indicatorRect = NSZeroRect;
+    NSSize sortImageSize = NSMakeSize(MBTableHeaderSortIndicatorWidth, MBTableHeaderSortIndicatorWidth);
+    indicatorRect.size = sortImageSize;
+    indicatorRect.origin.x = NSMaxX(rect) - (sortImageSize.width + MBTableHeaderSortIndicatorMargin);
+    indicatorRect.origin.y = NSMinY(rect) + roundf((NSHeight(rect) - sortImageSize.height) / 2.0);
+    return indicatorRect;
 }
 
 - (void)drawWithFrame:(NSRect)cellFrame inView:(NSView *)controlView
@@ -117,6 +131,30 @@
 	return [[NSAttributedString alloc] initWithString:self.stringValue attributes:attributes];
 }
 
+- (void)drawSortIndicatorWithFrame:(NSRect)cellFrame inView:(NSView *)controlView ascending:(BOOL)ascending priority:(NSInteger)priority {
+    if (!self.sortIndicatorColor)
+        return;
+    
+    NSRect indicatorRect = [self sortIndicatorRectForBounds:cellFrame];
+    NSBezierPath *path = [NSBezierPath bezierPath];
+    path.lineCapStyle = NSRoundLineCapStyle;
+    path.lineWidth = 1.5;
+    [self.sortIndicatorColor setStroke];
+    [path moveToPoint:NSMakePoint(NSMinX(indicatorRect) + path.lineWidth / 2,
+                                  indicatorRect.origin.y + 0.25 * indicatorRect.size.height)];
+    [path lineToPoint:NSMakePoint(NSMidX(indicatorRect),
+                                  indicatorRect.origin.y + 0.75 * indicatorRect.size.height)];
+    [path lineToPoint:NSMakePoint(NSMaxX(indicatorRect) - path.lineWidth / 2,
+                                  indicatorRect.origin.y + 0.25 * indicatorRect.size.height)];
+    if (ascending) {
+        NSAffineTransform *transform = [NSAffineTransform transform];
+        [transform translateXBy:0.0 yBy:2.5*indicatorRect.size.height];
+        [transform scaleXBy:1.0 yBy:-1.0];
+        [path transformUsingAffineTransform:transform];
+    }
+    [path stroke];
+}
+
 - (void)drawInteriorWithFrame:(NSRect)cellFrame inView:(NSView *)controlView
 {
 	NSRect cellFrameRect = cellFrame;
@@ -135,8 +173,8 @@
 							   stringSize.width,
 							   stringSize.height);
 	}
-
 	[self.attributedStringValue drawWithRect:textFrame options:NSStringDrawingTruncatesLastVisibleLine | NSStringDrawingUsesLineFragmentOrigin];
+    [self drawSortIndicatorWithFrame:cellFrame inView:controlView ascending:self.sortIndicatorAscending priority:0];
 }
 
 @end

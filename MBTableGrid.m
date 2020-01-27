@@ -38,6 +38,8 @@ NSString *MBTableGridDidChangeSelectionNotification     = @"MBTableGridDidChange
 NSString *MBTableGridDidMoveColumnsNotification         = @"MBTableGridDidMoveColumnsNotification";
 NSString *MBTableGridDidMoveRowsNotification            = @"MBTableGridDidMoveRowsNotification";
 CGFloat MBTableHeaderMinimumColumnWidth = 60.0f;
+CGFloat MBTableHeaderSortIndicatorWidth = 10.0;
+CGFloat MBTableHeaderSortIndicatorMargin = 4.0;
 
 #define MBTableGridColumnHeaderHeight 24.0
 #define MBTableGridColumnFooterHeight 24.0
@@ -56,8 +58,9 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 - (NSString *)_headerStringForRow:(NSUInteger)rowIndex;
 - (void)_setObjectValue:(id)value forColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 - (void)_setObjectValue:(id)value forColumns:(NSIndexSet *)columnIndexes rows:(NSIndexSet *)rowIndexes;
-- (float)_widthForColumn:(NSUInteger)columnIndex;
-- (void)_setWidth:(float) width forColumn:(NSUInteger)columnIndex;
+- (CGFloat)_minimumWidthForColumn:(NSUInteger)columnIndex;
+- (CGFloat)_widthForColumn:(NSUInteger)columnIndex;
+- (void)_setWidth:(CGFloat) width forColumn:(NSUInteger)columnIndex;
 - (BOOL)_canEditCellAtColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 - (void)_userDidEnterInvalidStringInColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex errorDescription:(NSString *)errorDescription;
 - (NSCell *)_footerCellForColumn:(NSUInteger)columnIndex;
@@ -125,7 +128,6 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 @synthesize delegate;
 @synthesize selectedColumnIndexes;
 @synthesize selectedRowIndexes;
-@synthesize sortButtons;
 @synthesize showsGrabHandles;
 @synthesize columnFooterView;
 @synthesize singleClickCellEdit;
@@ -139,7 +141,6 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 - (id)initWithFrame:(NSRect)frameRect {
 	if (self = [super initWithFrame:frameRect]) {
-		columnIndexNames = [NSMutableArray array];
 		_columnWidths = [NSMutableDictionary dictionary];
 
 		// Post frame changed notifications
@@ -294,9 +295,31 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 	[self.contentView setShowsGrabHandle:s];
 }
 
-- (void)sortButtonClicked:(id)sender
-{
-	[columnHeaderView toggleSortButtonIcon:(NSButton*)sender];
+- (void)_sortButtonClickedForColumn:(NSUInteger)column {
+    if (self.sortColumnIndex == column) {
+        if (self.isSortColumnAscending) {
+            self.sortColumnIndex = NSNotFound;
+        } else {
+            self.sortColumnAscending = YES;
+        }
+    } else {
+        self.sortColumnIndex = column;
+        self.sortColumnAscending = NO;
+    }
+    if ([self.delegate respondsToSelector:@selector(tableGrid:didSortByColumn:ascending:)]) {
+        [self.delegate tableGrid:self didSortByColumn:self.sortColumnIndex ascending:self.sortColumnAscending];
+    }
+    [self reloadData];
+}
+
+- (void)setSortColumnIndex:(NSUInteger)sortColumnIndex {
+    _sortColumnIndex = sortColumnIndex;
+    columnHeaderView.needsDisplay = YES;
+}
+
+- (void)setSortColumnAscending:(BOOL)sortColumnAscending {
+    _sortColumnAscending = sortColumnAscending;
+    columnHeaderView.needsDisplay = YES;
 }
 
 - (void)awakeFromNib {
@@ -340,41 +363,6 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 	return nil;
 }
 
-
-/**
- * @brief		Sets the indicator image for the specified column.
- *				This is used for indicating which direction the
- *				column is being sorted by.
- *
- * @param		anImage			The sort indicator image.
- * @param		reverseImage	The reversed sort indicator image.
- *
- * @return		The header value for the row.
- */
-- (void)setIndicatorImage:(NSImage *)anImage reverseImage:(NSImage*)reverseImg inColumns:(NSArray*)columns {
-	MBTableGridHeaderView *headerView = [self columnHeaderView];
-	headerView.indicatorImageColumns = columns;
-	headerView.indicatorImage = anImage;
-	headerView.indicatorReverseImage = reverseImg;
-
-
-	[headerView placeSortButtons];
-}
-
-/**
- * @brief		Returns the sort indicator image
- *				for the specified column.
- *
- * @param		columnIndex		The index of the column.
- *
- * @return		The sort indicator image for the column.
- */
-- (NSImage *)indicatorImageInColumn:(NSUInteger)columnIndex {
-	NSImage *indicatorImage = nil;
-
-	return indicatorImage;
-}
-
 - (void)setAutosaveName:(NSString *)autosaveName {
 	_autosaveName = autosaveName;
 	self.columnHeaderView.autosaveName = autosaveName;
@@ -387,13 +375,13 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 #pragma mark Resize scrollview content size
 
-- (void) resizeColumnWithIndex:(NSUInteger)columnIndex width:(float)w {
+- (void)resizeColumnWithIndex:(NSUInteger)columnIndex width:(float)w {
 	// Set new width of column
-	float currentWidth = w;
+	CGFloat currentWidth = w;
 	
 	[self.columnRects removeAllObjects];
-	if (currentWidth < MBTableHeaderMinimumColumnWidth) {
-		currentWidth = MBTableHeaderMinimumColumnWidth;
+	if (currentWidth < [self _minimumWidthForColumn:columnIndex]) {
+		currentWidth = [self _minimumWidthForColumn:columnIndex];
 	}
 	[self _setWidth:currentWidth forColumn:columnIndex];
 	
@@ -450,11 +438,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 	// Set new width of column
 	CGFloat currentWidth = [self _widthForColumn:columnIndex];
     CGFloat offset = 0.0;
-    CGFloat minColumnWidth = MBTableHeaderMinimumColumnWidth;
-    
-    if (columnHeaderView.indicatorImage && [columnHeaderView.indicatorImageColumns containsObject:@(columnIndex)]) {
-        minColumnWidth += columnHeaderView.indicatorImage.size.width + 2.0f;
-    }
+    CGFloat minColumnWidth = [self _minimumWidthForColumn:columnIndex];
 
     if (currentWidth + distance <= minColumnWidth) {
         distance = -(currentWidth - minColumnWidth);
@@ -1380,15 +1364,6 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 #pragma mark Reloading the Grid
 
-- (void)populateColumnInfo {
-    if (columnIndexNames.count < _numberOfColumns) {
-        for (NSUInteger columnIndex = columnIndexNames.count; columnIndex < _numberOfColumns; columnIndex++) {
-            NSString *column = [NSString stringWithFormat:@"column%lu", columnIndex];
-            columnIndexNames[columnIndex] = column;
-        }
-    }
-}
-
 - (void)updateAuxiliaryViewSizes {
     NSRect contentRect = contentView.frame;
 
@@ -1442,9 +1417,10 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 	else {
 		_numberOfRows = 0;
 	}
+        
+    if ([self.dataSource respondsToSelector:@selector(sortableColumnIndexesInTableGrid:)])
+        columnHeaderView.indicatorImageColumns = [self.dataSource sortableColumnIndexesInTableGrid:self];
     
-    [self populateColumnInfo];
-
 	// Update the content view's size
     NSUInteger lastColumn = (_numberOfColumns>0) ? _numberOfColumns-1 : 0;
     NSUInteger lastRow = (_numberOfRows>0) ? _numberOfRows-1 : 0;
@@ -1762,16 +1738,26 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 	}
 }
 
-- (float)_widthForColumn:(NSUInteger)columnIndex {
-	if (columnIndexNames.count > columnIndex) {
-		NSNumber* width = _columnWidths[@(columnIndex)];
-		return width == nil ? MBTableHeaderMinimumColumnWidth : width.floatValue;
-	}
-	
-	return 0.0f;
+- (CGFloat)_minimumWidthForColumn:(NSUInteger)columnIndex {
+    CGFloat minColumnWidth = MBTableHeaderMinimumColumnWidth;
+    
+    if ([columnHeaderView.indicatorImageColumns containsIndex:columnIndex]) {
+        minColumnWidth += MBTableHeaderSortIndicatorWidth + MBTableHeaderSortIndicatorMargin;
+    }
+    
+    return minColumnWidth;
 }
 
-- (void) _setWidth:(float)width forColumn:(NSUInteger)columnIndex
+- (CGFloat)_widthForColumn:(NSUInteger)columnIndex {
+    if (columnIndex < _numberOfColumns) {
+        if (_columnWidths[@(columnIndex)])
+            return _columnWidths[@(columnIndex)].doubleValue;
+        return [self _minimumWidthForColumn:columnIndex];
+    }
+    return 0.0;
+}
+
+- (void)_setWidth:(CGFloat)width forColumn:(NSUInteger)columnIndex
 {
     _columnWidths[@(columnIndex)] = @(width);
 	

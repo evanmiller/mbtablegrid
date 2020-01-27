@@ -139,7 +139,6 @@ typedef NS_ENUM(NSUInteger, MBVerticalEdge) {
 	/* Sticky Edges (for Shift+Arrow expansions) */
 	MBHorizontalEdge stickyColumnEdge;
 	MBVerticalEdge stickyRowEdge;
-	NSMutableArray<NSString *> *columnIndexNames;
 	NSMutableDictionary<NSNumber *, NSNumber *>* _columnWidths;
 
     NSTextFinder *_textFinder;
@@ -157,10 +156,11 @@ typedef NS_ENUM(NSUInteger, MBVerticalEdge) {
 @property (getter=isColumnFooterVisible, nonatomic, assign) BOOL columnFooterVisible;
 @property (getter=isRowHeaderVisible, nonatomic, assign) BOOL rowHeaderVisible;
 
+@property (nonatomic, assign) NSUInteger sortColumnIndex; // NSNotFound for none
+@property (getter=isSortColumnAscending, nonatomic, assign) BOOL sortColumnAscending;
+
 - (void)setSelectedRowIndexes:(NSIndexSet *)anIndexSet notify:(BOOL)notify;
 - (void)setSelectedColumnIndexes:(NSIndexSet *)anIndexSet notify:(BOOL)notify;
-
-- (void)sortButtonClicked:(id)sender;
 
 #pragma mark -
 #pragma mark Reloading the Grid
@@ -224,7 +224,7 @@ typedef NS_ENUM(NSUInteger, MBVerticalEdge) {
 @property (nonatomic, strong) NSMutableDictionary<NSNumber *, NSValue *> *columnRects;
 
 
-- (void) resizeColumnWithIndex:(NSUInteger)columnIndex width:(float)w;
+- (void)resizeColumnWithIndex:(NSUInteger)columnIndex width:(float)w;
 
 /**
  * @}
@@ -298,44 +298,6 @@ typedef NS_ENUM(NSUInteger, MBVerticalEdge) {
 
 @property (nonatomic, assign) NSUInteger numberOfColumns;
 
-#pragma mar -
-#pragma mark Sort Indicators
-
-/**
- * @brief		An array that holds the sort buttons that sort the colums.
- *
- * @return		A NSArray for use with the sort indicator.
- */
-
-@property (nonatomic, strong) NSArray<NSButton *> *sortButtons;
-
-/**
- * @brief		Sets the indicator image for the specified column.
- *				This is used for indicating which direction the
- *				column is being sorted by.
- *
- * @param		anImage			The sort indicator image.
- * @param		reverseImage	The reversed sort indicator image.
- * @param		inColumns		Array of columns.
- *
- * @return		The header value for the row.
- */
-- (void)setIndicatorImage:(NSImage *)anImage reverseImage:(NSImage*)reverseImg inColumns:(NSArray*)columns;
-
-/**
- * @brief		Returns the sort indicator image
- *				for the specified column.
- *
- * @param		columnIndex		The index of the column.
- *
- * @return		The sort indicator image for the column.
- */
-- (NSImage *)indicatorImageInColumn:(NSUInteger)columnIndex;
-
-
-/**
- * @}
- */
 
 #pragma mark -
 #pragma mark Configuring Behavior
@@ -1046,6 +1008,26 @@ cells. A cell can individually override this behavior. */
  */
 - (BOOL)tableGrid:(MBTableGrid *)aTableGrid removeRows:(NSIndexSet *)rowIndexes;
 
+
+#pragma mark Sorting
+
+/**
+ * @brief        Returns an index set indicating which columns in the table grid can be sorted.
+ *
+ * @details      The data source is responsible for sorting the data. The current sort specification
+ *               can be accessed via the table grid's \c sortColumnIndex and \c isSortColumnAscending
+ *               properties.
+ *
+ * @param        aTableGrid        The table grid that sent the message.
+ *
+ * @return       The index set of columns that will have a sort indicator appear in the table grid's
+ *              colunm header, or \c nil if no  if no columns should be sortable.
+ *
+ * @see          tableGrid:didSortByColumn:ascending:
+*/
+
+- (NSIndexSet *)sortableColumnIndexesInTableGrid:(MBTableGrid*)aTableGrid;
+
 /**
  * @}
  */
@@ -1254,6 +1236,19 @@ cells. A cell can individually override this behavior. */
 
 - (void)tableGrid:(MBTableGrid*)aTableGrid footerCellClicked:(NSCell*)cell forColumn:(NSUInteger)columnIndex withEvent:(NSEvent*)theEvent;
 
+#pragma mark Sorting
+
+/**
+ * @brief        Tells the delegate that the table grid's sort specification has changed.
+ *
+ * @param        aTableGrid        The table grid that sent the message.
+ * @param        columnIndex      The column that should be sorted by, or \c NSNotFound if no sorting should occur.
+ * @param        isAscending      \c YES if the items should be sorted in ascending order; \c NO otherwise
+ *
+*/
+
+- (void)tableGrid:(MBTableGrid*)aTableGrid didSortByColumn:(NSUInteger)columnIndex ascending:(BOOL)isAscending;
+
 #pragma mark Displaying Menus
 
 /**
@@ -1287,6 +1282,5 @@ cells. A cell can individually override this behavior. */
  */
 
 - (void)tableGrid:(MBTableGrid *)aTableGrid willDisplayHeaderMenu:(NSMenu *)menu forRow:(NSUInteger)rowIndex;
-
 
 @end

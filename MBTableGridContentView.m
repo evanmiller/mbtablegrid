@@ -41,7 +41,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 - (void)_setObjectValue:(id)value forColumns:(NSIndexSet *)columnIndexes rows:(NSIndexSet *)rowIndexes;
 - (BOOL)_canEditCellAtColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 - (void)_setStickyColumn:(MBHorizontalEdge)stickyColumn row:(MBVerticalEdge)stickyRow;
-- (float)_widthForColumn:(NSUInteger)columnIndex;
+- (CGFloat)_widthForColumn:(NSUInteger)columnIndex;
 - (MBHorizontalEdge)_stickyColumn;
 - (MBVerticalEdge)_stickyRow;
 - (void)_userDidEnterInvalidStringInColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex errorDescription:(NSString *)errorDescription;
@@ -745,14 +745,14 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 		}
 	
 		if (!foundRect) {
-			float width = [self.tableGrid _widthForColumn:columnIndex];
+			CGFloat width = [self.tableGrid _widthForColumn:columnIndex];
 			
 			rect = NSMakeRect(0, 0, width, self.frame.size.height);
 			//rect.origin.x += 60.0 * columnIndex;
 			
 			NSUInteger i = 0;
 			while(i < columnIndex) {
-				float headerWidth = [self.tableGrid _widthForColumn:i];
+				CGFloat headerWidth = [self.tableGrid _widthForColumn:i];
 				rect.origin.x += headerWidth;
 				i++;
 			}
