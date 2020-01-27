@@ -26,4 +26,8 @@
     return [self _insetRectForRect:self.documentVisibleRect];
 }
 
+- (NSRect)insetFrame {
+    return [self _insetRectForRect:self.frame];
+}
+
 @end

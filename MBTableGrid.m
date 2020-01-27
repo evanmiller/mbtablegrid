@@ -1085,12 +1085,12 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
         if (targetScrollView == scrollView)
             continue;
         
-        if (scrollView.documentView.frame.size.width > scrollView.frame.size.width &&
-            targetScrollView.documentView.frame.size.width > targetScrollView.frame.size.width) {
+        if (scrollView.documentView.frame.size.width > scrollView.insetFrame.size.width &&
+            targetScrollView.documentView.frame.size.width > targetScrollView.insetFrame.size.width) {
             [self synchronizeScrollView:targetScrollView withChangedBoundsOrigin:changedBoundsOrigin horizontal:YES];
         }
-        if (scrollView.documentView.frame.size.height > scrollView.frame.size.height &&
-            targetScrollView.documentView.frame.size.height > targetScrollView.frame.size.height) {
+        if (scrollView.documentView.frame.size.height > scrollView.insetFrame.size.height &&
+            targetScrollView.documentView.frame.size.height > targetScrollView.insetFrame.size.height) {
             [self synchronizeScrollView:targetScrollView withChangedBoundsOrigin:changedBoundsOrigin horizontal:NO];
         }
     }
@@ -1404,11 +1404,14 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 - (void)updateSubviewInsets {
     [self layout];
-    columnHeaderScrollView.contentInsets = NSEdgeInsetsMake(0, rowHeaderScrollView.frame.size.width + _contentInsets.left, 0, 0);
-    columnFooterScrollView.contentInsets = NSEdgeInsetsMake(0, rowHeaderScrollView.frame.size.width + _contentInsets.left, 0, 0);
+    columnHeaderScrollView.contentInsets = NSEdgeInsetsMake(0, rowHeaderScrollView.frame.size.width + _contentInsets.left,
+                                                            0, _contentInsets.right);
+    columnFooterScrollView.contentInsets = NSEdgeInsetsMake(0, rowHeaderScrollView.frame.size.width + _contentInsets.left,
+                                                            0, _contentInsets.right);
     contentScrollView.contentInsets = NSEdgeInsetsMake(columnHeaderScrollView.frame.size.height + _contentInsets.top,
                                                        rowHeaderScrollView.frame.size.width + _contentInsets.left,
-                                                       columnFooterScrollView.frame.size.height + _contentInsets.bottom, 0);
+                                                       columnFooterScrollView.frame.size.height + _contentInsets.bottom,
+                                                       _contentInsets.right);
     rowHeaderScrollView.contentInsets = NSEdgeInsetsMake(columnHeaderScrollView.frame.size.height + _contentInsets.top, 0,
                                                          columnFooterScrollView.frame.size.height + _contentInsets.bottom, 0);
 }

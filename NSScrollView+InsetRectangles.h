@@ -15,6 +15,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface NSScrollView (InsetRectangles)
 
 @property (nonatomic, readonly) NSRect insetDocumentVisibleRect;
+@property (nonatomic, readonly) NSRect insetFrame;
 
 @end
 
