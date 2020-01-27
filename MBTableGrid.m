@@ -450,19 +450,13 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 	
 	[self _setWidth:currentWidth forColumn:columnIndex];
     
-    // Update views with new sizes
-    [contentView setFrameSize:NSMakeSize(NSWidth(contentView.frame) + distance, NSHeight(contentView.frame))];
-    [columnHeaderView setFrameSize:NSMakeSize(NSWidth(columnHeaderView.frame) + distance, NSHeight(columnHeaderView.frame))];
-    [columnFooterView setFrameSize:NSMakeSize(NSWidth(columnFooterView.frame) + distance, NSHeight(columnFooterView.frame))];
-    
-    NSRect rectOfResizedAndVisibleRightwardColumns = NSMakeRect(columnRect.origin.x - rowHeaderView.bounds.size.width, 0, contentView.bounds.size.width - columnRect.origin.x, NSHeight(contentView.frame));
-    [contentView setNeedsDisplayInRect:rectOfResizedAndVisibleRightwardColumns];
-    
-    NSRect rectOfResizedAndVisibleRightwardHeaders = NSMakeRect(columnRect.origin.x - rowHeaderView.bounds.size.width, 0, contentView.bounds.size.width - columnRect.origin.x, NSHeight(columnHeaderView.frame));
-    [columnHeaderView setNeedsDisplayInRect:rectOfResizedAndVisibleRightwardHeaders];
-    
-    NSRect rectOfResizedAndVisibleRightwardFooters = NSMakeRect(columnRect.origin.x - rowHeaderView.bounds.size.width, 0, contentView.bounds.size.width - columnRect.origin.x, NSHeight(columnFooterView.frame));
-    [columnFooterView setNeedsDisplayInRect:rectOfResizedAndVisibleRightwardFooters];
+    // Update views with new sizes and mark the rightward columns as dirty
+    for (NSView *horizontalView in @[ contentView, columnHeaderView, columnFooterView ]) {
+        [horizontalView setFrameSize:NSMakeSize(NSWidth(horizontalView.frame) + distance, NSHeight(horizontalView.frame))];
+        [horizontalView setNeedsDisplayInRect:NSMakeRect(columnRect.origin.x, 0,
+                                                         NSWidth(horizontalView.bounds) - columnRect.origin.x,
+                                                         NSHeight(horizontalView.bounds))];
+    }
     
     return offset;
 }
@@ -920,7 +914,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
     if (column > self.numberOfColumns) { return; }
 
-    NSRect visibleRect = self.contentView.visibleRect;
+    NSRect visibleRect = contentScrollView.documentVisibleRect;
     NSRect cellRect = [self frameOfCellAtColumn:column row:row];
     cellRect = [self convertRect:cellRect toView:contentScrollView.contentView];
 
@@ -933,13 +927,13 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
     if (NSMinX(cellRect) < NSMinX(visibleRect)) {
         scrollDelta.x = NSMinX(cellRect) - NSMinX(visibleRect);
     } else if (NSMaxX(cellRect) > NSMaxX(visibleRect)) {
-        scrollDelta.x = NSMinX(cellRect) - NSMinX(visibleRect) - NSWidth(visibleRect) + NSWidth(cellRect);
+        scrollDelta.x = NSMaxX(cellRect) - NSMaxX(visibleRect);
     }
 
     if (NSMinY(cellRect) < NSMinY(visibleRect)) {
         scrollDelta.y = NSMinY(cellRect) - NSMinY(visibleRect);
     } else if (NSMaxY(cellRect) > NSMaxY(visibleRect)) {
-        scrollDelta.y = NSMinY(cellRect) - NSMinY(visibleRect) - NSHeight(visibleRect) + NSHeight(cellRect);
+        scrollDelta.y = NSMaxY(cellRect) - NSMaxY(visibleRect);
     }
 
     NSPoint scrollOffset = contentScrollView.contentView.bounds.origin;
@@ -1119,7 +1113,8 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 - (void)clipViewBoundsDidChange:(NSNotification *)aNotification {
     for (NSScrollView *scrollView in @[ contentScrollView, rowHeaderScrollView, columnHeaderScrollView, columnFooterScrollView ]) {
-        if (scrollView.contentView == aNotification.object) {
+        if (scrollView.contentView == aNotification.object &&
+            scrollView.frame.size.width * scrollView.frame.size.height > 0.0) {
             [self synchronizeScrollViewsWithScrollView:scrollView];
             return;
         }
@@ -1148,12 +1143,12 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 #pragma mark NSDraggingDestination
 
 - (NSDragOperation)draggingEntered:(id <NSDraggingInfo> )sender {
-	NSPasteboard *pboard = [sender draggingPasteboard];
+	NSPasteboard *pboard = sender.draggingPasteboard;
 	NSData *columnData = [pboard dataForType:MBTableGridColumnDataType];
 	NSData *rowData = [pboard dataForType:MBTableGridRowDataType];
 
 	// Do not accept drag if this doesn't come from us
-	if ([sender draggingSource] != self) {
+	if (sender.draggingSource != self) {
 		return NO;
 	}
 
@@ -1185,10 +1180,10 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 }
 
 - (NSDragOperation)draggingUpdated:(id <NSDraggingInfo> )sender {
-	NSPasteboard *pboard = [sender draggingPasteboard];
+	NSPasteboard *pboard = sender.draggingPasteboard;
 	NSData *columnData = [pboard dataForType:MBTableGridColumnDataType];
 	NSData *rowData = [pboard dataForType:MBTableGridRowDataType];
-	NSPoint mouseLocation = [self convertPoint:[sender draggingLocation] fromView:nil];
+	NSPoint mouseLocation = [self convertPoint:sender.draggingLocation fromView:nil];
 
 	if (columnData) {
 		// If we're dragging a column
@@ -1282,13 +1277,13 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 }
 
 - (BOOL)performDragOperation:(id <NSDraggingInfo> )sender {
-	NSPasteboard *pboard = [sender draggingPasteboard];
+	NSPasteboard *pboard = sender.draggingPasteboard;
 	NSData *columnData = [pboard dataForType:MBTableGridColumnDataType];
 	NSData *rowData = [pboard dataForType:MBTableGridRowDataType];
-	NSPoint mouseLocation = [self convertPoint:[sender draggingLocation] fromView:nil];
+	NSPoint mouseLocation = [self convertPoint:sender.draggingLocation fromView:nil];
 
 	// Do not accept drag if this doesn't come from us
-	if([sender draggingSource] != self) {
+	if(sender.draggingSource != self) {
 		return NO;
 	}
 
@@ -1308,9 +1303,11 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 				NSUInteger startIndex = dropColumn;
 				NSUInteger length = draggedColumns.count;
 
-				if (dropColumn > draggedColumns.firstIndex) {
-					startIndex -= draggedColumns.count;
-				}
+                if (dropColumn > draggedColumns.lastIndex) {
+                    startIndex -= length;
+                } else if (dropColumn >= draggedColumns.firstIndex) {
+                    startIndex = draggedColumns.firstIndex;
+                }
 
 				NSIndexSet *newColumns = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(startIndex, length)];
 
@@ -1387,34 +1384,31 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 #pragma mark Reloading the Grid
 
 - (void)updateAuxiliaryViewSizes {
-    NSRect contentRect = contentView.frame;
+    NSSize contentRectSize = contentView.frame.size;
 
 	// Update the column header view's size
-    NSRect columnHeaderFrame = columnHeaderView.frame;
-    columnHeaderFrame.size.width = contentRect.size.width;
+    NSSize columnHeaderSize = NSMakeSize(contentRectSize.width, NSHeight(columnHeaderView.frame));
     if (!contentScrollView.verticalScroller.isHidden && contentScrollView.scrollerStyle == NSScrollerStyleLegacy) {
-        columnHeaderFrame.size.width += [NSScroller scrollerWidthForControlSize:NSControlSizeRegular
-                                                                  scrollerStyle:contentScrollView.scrollerStyle];
+        columnHeaderSize.width += [NSScroller scrollerWidthForControlSize:NSControlSizeRegular
+                                                            scrollerStyle:contentScrollView.scrollerStyle];
     }
-    [columnHeaderView setFrameSize:columnHeaderFrame.size];
+    [columnHeaderView setFrameSize:columnHeaderSize];
 
     // Update the row header view's size
-    NSRect rowHeaderFrame = rowHeaderView.frame;
-    rowHeaderFrame.size.height = contentRect.size.height;
+    NSSize rowHeaderSize = NSMakeSize(NSWidth(rowHeaderView.frame), contentRectSize.height);
     if (!contentScrollView.horizontalScroller.isHidden && contentScrollView.scrollerStyle == NSScrollerStyleLegacy) {
-        columnHeaderFrame.size.height += [NSScroller scrollerWidthForControlSize:NSControlSizeRegular
-                                                                   scrollerStyle:contentScrollView.scrollerStyle];
+        rowHeaderSize.height += [NSScroller scrollerWidthForControlSize:NSControlSizeRegular
+                                                          scrollerStyle:contentScrollView.scrollerStyle];
     }
-    [rowHeaderView setFrameSize:rowHeaderFrame.size];
+    [rowHeaderView setFrameSize:rowHeaderSize];
 
     // Update the colunm footer view's size
-    NSRect columnFooterFrame = columnFooterView.frame;
-    columnFooterFrame.size.width = contentRect.size.width;
+    NSSize columnFooterSize = NSMakeSize(contentRectSize.width, NSHeight(columnFooterView.frame));
     if (!contentScrollView.verticalScroller.isHidden && contentScrollView.scrollerStyle == NSScrollerStyleLegacy) {
-        columnFooterFrame.size.width += [NSScroller scrollerWidthForControlSize:NSControlSizeRegular
-                                                                  scrollerStyle:contentScrollView.scrollerStyle];
+        columnFooterSize.width += [NSScroller scrollerWidthForControlSize:NSControlSizeRegular
+                                                            scrollerStyle:contentScrollView.scrollerStyle];
     }
-    [columnFooterView setFrameSize:columnHeaderFrame.size];
+    [columnFooterView setFrameSize:columnFooterSize];
 }
 
 - (void)preferredScrollerStyleDidChange:(NSNotification *)notification {
@@ -1448,15 +1442,15 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
     NSUInteger lastRow = (_numberOfRows>0) ? _numberOfRows-1 : 0;
 	NSRect bottomRightCellFrame = [contentView frameOfCellAtColumn:lastColumn row:lastRow];
 
-	NSRect contentRect = NSMakeRect(contentView.frame.origin.x, contentView.frame.origin.y, NSMaxX(bottomRightCellFrame), NSMaxY(bottomRightCellFrame));
-	[contentView setFrameSize:contentRect.size];
+	NSSize contentRectSize = NSMakeSize(NSMaxX(bottomRightCellFrame), NSMaxY(bottomRightCellFrame));
+	[contentView setFrameSize:contentRectSize];
 
     [self updateAuxiliaryViewSizes];
 
 	if(_numberOfRows > 0) {
-		if((visibleRect.size.height + visibleRect.origin.y) > contentRect.size.height) {
-			visibleRect.size.height = MIN(contentRect.size.height, visibleRect.size.height);
-			visibleRect.origin.y = MAX(0, contentRect.size.height - visibleRect.size.height);
+		if((visibleRect.size.height + visibleRect.origin.y) > contentRectSize.height) {
+			visibleRect.size.height = MIN(contentRectSize.height, visibleRect.size.height);
+			visibleRect.origin.y = MAX(0, contentRectSize.height - visibleRect.size.height);
 		}
 	}
 
@@ -1914,7 +1908,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 - (NSImage *)_imageForSelectedColumns {
 	NSRect firstColumnFrame = [self rectOfColumn:self.selectedColumnIndexes.firstIndex];
 	NSRect lastColumnFrame = [self rectOfColumn:self.selectedColumnIndexes.lastIndex];
-	NSRect columnsFrame = NSMakeRect(NSMinX(firstColumnFrame), NSMinY(firstColumnFrame), NSMaxX(lastColumnFrame) - NSMinX(firstColumnFrame), NSHeight(firstColumnFrame));
+    NSRect columnsFrame = NSUnionRect(firstColumnFrame, lastColumnFrame);
 	// Extend the frame to show the left border
 	columnsFrame.origin.x -= 1.0;
 	columnsFrame.size.width += 1.0;
@@ -1938,7 +1932,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 - (NSImage *)_imageForSelectedRows {
 	NSRect firstRowFrame = [self rectOfRow:self.selectedRowIndexes.firstIndex];
 	NSRect lastRowFrame = [self rectOfRow:self.selectedRowIndexes.lastIndex];
-	NSRect rowsFrame = NSMakeRect(NSMinX(firstRowFrame), NSMinY(firstRowFrame), NSWidth(firstRowFrame), NSMaxY(lastRowFrame) - NSMinY(firstRowFrame));
+    NSRect rowsFrame = NSUnionRect(firstRowFrame, lastRowFrame);
 	// Extend the frame to show the top border
 	rowsFrame.origin.y -= 1.0;
 	rowsFrame.size.height += 1.0;
