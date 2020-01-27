@@ -499,6 +499,22 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 #pragma mark NSResponder Event Handlers
 
+- (BOOL)respondsToSelector:(SEL)aSelector {
+    if (aSelector == @selector(paste:)) {
+        return ([self.delegate respondsToSelector:@selector(tableGrid:pasteCellsAtColumns:rows:)]);
+    }
+    if (aSelector == @selector(copy:)) {
+        return (self.selectedRowIndexes.count > 0 && self.selectedColumnIndexes.count > 0 &&
+                [self.delegate respondsToSelector:@selector(tableGrid:copyCellsAtColumns:rows:)]);
+    }
+    if (aSelector == @selector(delete:) || aSelector == @selector(deleteBackward:)) {
+        return (self.selectedRowIndexes.count > 0 && self.selectedColumnIndexes.count > 0 &&
+                ([self.dataSource respondsToSelector:@selector(tableGrid:setObjectValue:forColumn:row:)] ||
+                 [self.dataSource respondsToSelector:@selector(tableGrid:setObjectValue:forColumns:rows:)]));
+    }
+    return [super respondsToSelector:aSelector];
+}
+
 - (void)copy:(id)sender {
 	
 	NSIndexSet *selectedColumns = [self selectedColumnIndexes];
@@ -996,10 +1012,16 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 	self.selectedRowIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, _numberOfRows)];
 }
 
+// Interpreted by interpretKeyEvents:
 - (void)deleteBackward:(id)sender {
 	// Clear the contents of every selected cell
     [self _setObjectValue:nil forColumns:self.selectedColumnIndexes rows:self.selectedRowIndexes];
 	[self reloadData];
+}
+
+// From the Edit menu
+- (void)delete:(id)sender {
+    [self deleteBackward:sender];
 }
 
 - (void)insertText:(id)aString {
