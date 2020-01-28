@@ -389,22 +389,10 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 - (NSView*) hitTest:(NSPoint)point {
 	NSView* v = [super hitTest:point];
 
-	BOOL isBeneathContentView = FALSE;
-	NSView* parent = v;
-	while(parent != nil) {
-        if(parent == self.contentView || parent == self.rowHeaderView ||
-           parent == self.columnHeaderView || parent == self.columnFooterView ||
-           parent == contentScrollView.findBarView) {
-			isBeneathContentView = TRUE;
-			break;
-		}
-		parent = parent.superview;
-	}
-
-	if (v != nil && !isBeneathContentView) {
-		NSEvent* event = self.window.currentEvent;
-        if(event != nil && event.type == NSEventTypeLeftMouseDown) {
-			// Clear selection
+    // If a mouse click hit a clip view, clear the selection
+    if (v == contentScrollView.contentView || v == columnHeaderScrollView.contentView ||
+        v == rowHeaderScrollView.contentView || v == columnFooterScrollView.contentView) {
+        if (self.window.currentEvent.type == NSEventTypeLeftMouseDown) {
 			NSIndexSet* empty = [NSIndexSet indexSet];
 			[self setSelectedRowIndexes:empty notify:YES];
 			[self setSelectedColumnIndexes:empty notify:YES];
