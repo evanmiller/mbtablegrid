@@ -1789,12 +1789,24 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 }
 
 - (CGFloat)_widthForColumn:(NSUInteger)columnIndex {
-    if (columnIndex < _numberOfColumns) {
-        if (_columnWidths[@(columnIndex)])
-            return _columnWidths[@(columnIndex)].doubleValue;
-        return [self _minimumWidthForColumn:columnIndex];
+    if (columnIndex >= _numberOfColumns)
+        return 0.0;
+    
+    CGFloat width = 0.0;
+    CGFloat min_width = [self _minimumWidthForColumn:columnIndex];
+    
+    if ([self.dataSource respondsToSelector:@selector(tableGrid:widthForColumn:)]) {
+        width = [self.dataSource tableGrid:self widthForColumn:columnIndex];
+        if (width > min_width) {
+            _columnWidths[@(columnIndex)] = @(width);
+        }
     }
-    return 0.0;
+    
+    if (_columnWidths[@(columnIndex)]) {
+        return _columnWidths[@(columnIndex)].doubleValue;
+    }
+
+    return min_width;
 }
 
 - (void)_setWidth:(CGFloat)width forColumn:(NSUInteger)columnIndex
