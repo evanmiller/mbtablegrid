@@ -181,22 +181,8 @@ NSString * const PasteboardTypeColumnClass = @"pasteboardTypeColumnClass";
 
 }
 
-
-- (float)tableGrid:(MBTableGrid *)aTableGrid setWidthForColumn:(NSUInteger)columnIndex {
-    
-//    return (columnIndex < columnSampleWidths.count) ? [columnSampleWidths[columnIndex] floatValue] : 60;
-	
-	CGFloat width = 80;
-	
-	NSString *columnName = [NSString stringWithFormat:@"C-%lu", (long)columnIndex];
-	NSDictionary *columnProperty = self.columnWidths[columnName];
-	
-	if (columnProperty) {
-		width =  [columnProperty[kAutosavedColumnWidthKey] floatValue];
-	}
-	
-	return width;
-	
+- (float)tableGrid:(MBTableGrid *)aTableGrid widthForColumn:(NSUInteger)columnIndex {
+    return (columnIndex < columnSampleWidths.count) ? [columnSampleWidths[columnIndex] floatValue] : 60;
 }
 
 #pragma mark Footer
@@ -218,11 +204,6 @@ NSString * const PasteboardTypeColumnClass = @"pasteboardTypeColumnClass";
 
 #pragma mark Dragging
 
-- (BOOL)tableGrid:(MBTableGrid *)aTableGrid writeColumnsWithIndexes:(NSIndexSet *)columnIndexes toPasteboard:(NSPasteboard *)pboard
-{
-	return YES;
-}
-
 - (BOOL)tableGrid:(MBTableGrid *)aTableGrid canMoveColumns:(NSIndexSet *)columnIndexes toIndex:(NSUInteger)index
 {
 	// Allow any column movement
@@ -233,11 +214,6 @@ NSString * const PasteboardTypeColumnClass = @"pasteboardTypeColumnClass";
 {
 	[columns moveObjectsAtIndexes:columnIndexes toIndex:index];
     [self.columnIdentifiers moveObjectsAtIndexes:columnIndexes toIndex:index];
-	return YES;
-}
-
-- (BOOL)tableGrid:(MBTableGrid *)aTableGrid writeRowsWithIndexes:(NSIndexSet *)rowIndexes toPasteboard:(NSPasteboard *)pboard
-{
 	return YES;
 }
 
