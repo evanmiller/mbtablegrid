@@ -10,6 +10,14 @@ An NSControl subclass which provides a spreadsheet-style table grid, forked (ori
 * Extend selection with shift key
 * Autoscroll
 * Drag to re-arrange rows or columns
+* Clickable sort indicators
+* NEW Dark Mode compatible
+* NEW Show/hide the header and footer views
+* NEW Find/Replace via the standard Cocoa Find bar
+* NEW Scroll-under vibrancy effects with neighboring NSVisualEffectViews
+
+## Requirements
+* macOS 10.10 (Yosemite) or later
 
 ## Screenshots
 ![alt tag](https://raw.github.com/pixelspark/mbtablegrid/master/MBTableGrid%20Screenshot.png)
