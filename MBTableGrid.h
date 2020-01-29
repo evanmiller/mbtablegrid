@@ -692,7 +692,7 @@ cells. A cell can individually override this behavior. */
 @optional
 
 /**
- * @brief		Sets the column width for the given column.
+ * @brief		Sets the column width (in points) for the given column.
  *
  * @param		aTableGrid		The table grid that sent the message.
  * @param		columnIndex		A column in \c aTableGrid.
@@ -700,6 +700,18 @@ cells. A cell can individually override this behavior. */
   * @see			tableGrid:widthForColumn:
  */
 - (void) tableGrid:(MBTableGrid *)aTableGrid setWidth:(float)width forColumn:(NSUInteger)columnIndex;
+
+@optional
+
+/**
+ * @brief        Returns the column width (in points) for the given column.
+ *
+ * @param        aTableGrid        The table grid that sent the message.
+ * @param        columnIndex        A column in \c aTableGrid.
+ *
+ * @see          tableGrid:setWidth:forColumn:
+ */
+- (float) tableGrid:(MBTableGrid *)aTableGrid widthForColumn:(NSUInteger)columnIndex;
 
 /**
  * @}

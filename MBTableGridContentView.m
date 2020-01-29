@@ -734,15 +734,12 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 			CGFloat width = [self.tableGrid _widthForColumn:columnIndex];
 			
 			rect = NSMakeRect(0, 0, width, self.frame.size.height);
-			//rect.origin.x += 60.0 * columnIndex;
-			
-			NSUInteger i = 0;
-			while(i < columnIndex) {
-				CGFloat headerWidth = [self.tableGrid _widthForColumn:i];
-				rect.origin.x += headerWidth;
-				i++;
-			}
-		
+            
+            if (columnIndex > 0) {
+                NSRect previousRect = [self rectOfColumn:columnIndex-1];
+                rect.origin.x = previousRect.origin.x + previousRect.size.width;
+            }
+
 			self.tableGrid.columnRects[@(columnIndex)] = [NSValue valueWithRect:rect];
 
 		}
