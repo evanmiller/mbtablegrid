@@ -28,6 +28,7 @@
 #import "MBTableGrid.h"
 #import "MBTableGridCell.h"
 #import "MBTableGridEditable.h"
+#import "NSScrollView+InsetRectangles.h"
 
 #define kGRAB_HANDLE_HALF_SIDE_LENGTH 3.0f
 #define kGRAB_HANDLE_SIDE_LENGTH 6.0f
@@ -535,7 +536,8 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 }
 
 - (void) resetCursorRects {
-    [self addCursorRect:self.visibleRect cursor:[self _cellSelectionCursor]];
+    NSRect visibleRect = NSIntersectionRect(self.enclosingScrollView.insetDocumentVisibleRect, self.visibleRect);
+    [self addCursorRect:visibleRect cursor:[self _cellSelectionCursor]];
 }
 
 #pragma mark -

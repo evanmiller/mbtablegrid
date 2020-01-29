@@ -26,6 +26,7 @@
 #import "MBTableGridHeaderView.h"
 #import "MBTableGrid.h"
 #import "MBTableGridContentView.h"
+#import "NSScrollView+InsetRectangles.h"
 
 NSString* kAutosavedColumnWidthKey = @"AutosavedColumnWidth";
 NSString* kAutosavedColumnIndexKey = @"AutosavedColumnIndex";
@@ -73,6 +74,7 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 
 - (void) resetCursorRects {
 	if (self.orientation == MBTableHeaderHorizontalOrientation) {
+        NSRect visibleRect = self.enclosingScrollView.insetDocumentVisibleRect;
 		// Draw the column headers
 		NSUInteger numberOfColumns = self.tableGrid.numberOfColumns;
 		headerCell.orientation = self.orientation;
@@ -81,7 +83,7 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 			NSRect headerRect = [self headerRectOfColumn:column];
 			NSRect resizeRect = NSMakeRect(NSMinX(headerRect) + NSWidth(headerRect) - 2, NSMinY(headerRect), 5, NSHeight(headerRect));
 
-			if(CGRectIntersectsRect(resizeRect, self.visibleRect)) {
+			if(CGRectIntersectsRect(resizeRect, visibleRect)) {
 				[self addCursorRect:resizeRect cursor:NSCursor.resizeLeftRightCursor];
 			}
 			column++;

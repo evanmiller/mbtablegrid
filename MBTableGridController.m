@@ -70,6 +70,8 @@ NSString * const PasteboardTypeColumnClass = @"pasteboardTypeColumnClass";
 	// Add 10 columns & rows
     [self tableGrid:tableGrid addColumns:10 shouldReload:NO];
     [self tableGrid:tableGrid addRows:10 shouldReload:NO];
+    
+    tableGrid.contentInsets = NSEdgeInsetsMake(0, 0, self.controls_view.frame.size.height, 0);
 	
 	[tableGrid reloadData];
 	

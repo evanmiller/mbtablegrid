@@ -34,4 +34,6 @@
     NSArray *columnSampleWidths;
 }
 
+@property (nonatomic, assign) IBOutlet NSView *controls_view;
+
 @end

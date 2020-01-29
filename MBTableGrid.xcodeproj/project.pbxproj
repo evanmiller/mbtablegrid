@@ -28,6 +28,8 @@
 		DC7EBF4623D217DC00F75351 /* MBTableGridVirtualString.m in Sources */ = {isa = PBXBuildFile; fileRef = DC7EBF4423D217DC00F75351 /* MBTableGridVirtualString.m */; };
 		DC7EBF4923D21AE800F75351 /* MBTableGridTextFinderClient.h in Headers */ = {isa = PBXBuildFile; fileRef = DC7EBF4723D21AE800F75351 /* MBTableGridTextFinderClient.h */; };
 		DC7EBF4A23D21AE800F75351 /* MBTableGridTextFinderClient.m in Sources */ = {isa = PBXBuildFile; fileRef = DC7EBF4823D21AE800F75351 /* MBTableGridTextFinderClient.m */; };
+		DCAE58A523D9EC7300A3AAE0 /* NSScrollView+InsetRectangles.h in Headers */ = {isa = PBXBuildFile; fileRef = DCAE58A323D9EC7200A3AAE0 /* NSScrollView+InsetRectangles.h */; };
+		DCAE58A623D9EC7300A3AAE0 /* NSScrollView+InsetRectangles.m in Sources */ = {isa = PBXBuildFile; fileRef = DCAE58A423D9EC7200A3AAE0 /* NSScrollView+InsetRectangles.m */; };
 		DCDB6EDB23C905C200F348EB /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = DCDB6EDA23C905C200F348EB /* MainMenu.xib */; };
 		E2E62BAC1781C33500F36275 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2E62BAB1781C33400F36275 /* Cocoa.framework */; };
 		E2E62BBA1781C37300F36275 /* MBTableGrid.m in Sources */ = {isa = PBXBuildFile; fileRef = C9412A3E0D8A061C00E9E614 /* MBTableGrid.m */; };
@@ -81,6 +83,8 @@
 		DC7EBF4423D217DC00F75351 /* MBTableGridVirtualString.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MBTableGridVirtualString.m; sourceTree = SOURCE_ROOT; };
 		DC7EBF4723D21AE800F75351 /* MBTableGridTextFinderClient.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MBTableGridTextFinderClient.h; sourceTree = SOURCE_ROOT; };
 		DC7EBF4823D21AE800F75351 /* MBTableGridTextFinderClient.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MBTableGridTextFinderClient.m; sourceTree = SOURCE_ROOT; };
+		DCAE58A323D9EC7200A3AAE0 /* NSScrollView+InsetRectangles.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSScrollView+InsetRectangles.h"; sourceTree = SOURCE_ROOT; };
+		DCAE58A423D9EC7200A3AAE0 /* NSScrollView+InsetRectangles.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSScrollView+InsetRectangles.m"; sourceTree = SOURCE_ROOT; };
 		DCDB6EDA23C905C200F348EB /* MainMenu.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = MainMenu.xib; sourceTree = "<group>"; };
 		E2E62BAA1781C33400F36275 /* MBTableGrid.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = MBTableGrid.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		E2E62BAB1781C33400F36275 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
@@ -203,6 +207,8 @@
 				C9412B210D8B2C5E00E9E614 /* MBTableGridContentView.m */,
 				DC7EBF3F23D2157B00F75351 /* MBTableGridContentScrollView.h */,
 				DC7EBF4023D2157B00F75351 /* MBTableGridContentScrollView.m */,
+				DCAE58A323D9EC7200A3AAE0 /* NSScrollView+InsetRectangles.h */,
+				DCAE58A423D9EC7200A3AAE0 /* NSScrollView+InsetRectangles.m */,
 				DC7EBF4323D217DC00F75351 /* MBTableGridVirtualString.h */,
 				DC7EBF4423D217DC00F75351 /* MBTableGridVirtualString.m */,
 				DC7EBF4723D21AE800F75351 /* MBTableGridTextFinderClient.h */,
@@ -238,6 +244,7 @@
 				E2E62BF71781C53800F36275 /* MBTableGrid.h in Headers */,
 				E2E62BF81781C53800F36275 /* MBTableGridContentView.h in Headers */,
 				E2E62BF91781C53800F36275 /* MBTableGridHeaderView.h in Headers */,
+				DCAE58A523D9EC7300A3AAE0 /* NSScrollView+InsetRectangles.h in Headers */,
 				C6BF26891A4AC502008EB93F /* MBTableGridFooterView.h in Headers */,
 				DC7EBF4523D217DC00F75351 /* MBTableGridVirtualString.h in Headers */,
 			);
@@ -353,6 +360,7 @@
 				173D292E1AA1779F009945FC /* MBFooterTextCell.m in Sources */,
 				E2E62BBD1781C37B00F36275 /* MBTableGridHeaderCell.m in Sources */,
 				E2E62BBE1781C38000F36275 /* MBTableGridCell.m in Sources */,
+				DCAE58A623D9EC7300A3AAE0 /* NSScrollView+InsetRectangles.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -373,7 +381,7 @@
 				GCC_PREFIX_HEADER = MBTableGrid_Prefix.pch;
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				PRODUCT_BUNDLE_IDENTIFIER = com.yourcompany.MBTableGrid;
 				PRODUCT_NAME = MBTableGrid;
 				SDKROOT = macosx;
@@ -392,7 +400,7 @@
 				GCC_PREFIX_HEADER = MBTableGrid_Prefix.pch;
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				PRODUCT_BUNDLE_IDENTIFIER = com.yourcompany.MBTableGrid;
 				PRODUCT_NAME = MBTableGrid;
 				SDKROOT = macosx;
@@ -499,7 +507,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "@loader_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				PRODUCT_BUNDLE_IDENTIFIER = com.yourcompany.MBTableGrid;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -531,7 +539,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "@loader_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				PRODUCT_BUNDLE_IDENTIFIER = com.yourcompany.MBTableGrid;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
