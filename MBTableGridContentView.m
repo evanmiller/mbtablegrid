@@ -47,7 +47,6 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 - (CGFloat)_widthForColumn:(NSUInteger)columnIndex;
 - (MBHorizontalEdge)_stickyColumn;
 - (MBVerticalEdge)_stickyRow;
-- (void)_userDidEnterInvalidStringInColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex errorDescription:(NSString *)errorDescription;
 - (NSCell *)_footerCellForColumn:(NSUInteger)columnIndex;
 - (id)_footerValueForColumn:(NSUInteger)columnIndex;
 - (void)_setFooterValue:(id)value forColumn:(NSUInteger)columnIndex;

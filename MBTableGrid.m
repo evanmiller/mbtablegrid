@@ -63,7 +63,6 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 - (CGFloat)_widthForColumn:(NSUInteger)columnIndex;
 - (void)_setWidth:(CGFloat) width forColumn:(NSUInteger)columnIndex;
 - (BOOL)_canEditCellAtColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
-- (void)_userDidEnterInvalidStringInColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex errorDescription:(NSString *)errorDescription;
 - (NSCell *)_footerCellForColumn:(NSUInteger)columnIndex;
 - (id)_footerValueForColumn:(NSUInteger)columnIndex;
 - (void)_setFooterValue:(id)value forColumn:(NSUInteger)columnIndex;
@@ -1831,18 +1830,6 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 	}
 
 	return YES;
-}
-
-- (void)_userDidEnterInvalidStringInColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex errorDescription:(NSString *)errorDescription {
-    if ([self.delegate respondsToSelector:@selector(tableGrid:userDidEnterInvalidStringInColumn:row:errorDescription:)]) {
-        [self.delegate tableGrid:self userDidEnterInvalidStringInColumn:columnIndex row:rowIndex errorDescription:errorDescription];
-    }
-}
-
-- (void)_accessoryButtonClicked:(NSUInteger)columnIndex row:(NSUInteger)rowIndex {
-	if ([self.delegate respondsToSelector:@selector(tableGrid:accessoryButtonClicked:row:)]) {
-		[self.delegate tableGrid:self accessoryButtonClicked:columnIndex row:rowIndex];
-	}
 }
 
 #pragma mark Footer

@@ -823,31 +823,6 @@ cells. A cell can individually override this behavior. */
 #pragma mark Columns
 
 /**
- * @brief		Returns a Boolean value that indicates whether a column drag operation is allowed.
- *
- * @details		Invoked by \c aTableGrid after it has been determined that a drag should begin,
- *				but before the drag has been started.
- *
- *				To refuse the drag, return \c NO. To start a drag, return \c YES and place the
- *				drag data onto pboard.
- *
- *				If this method returns \c YES, the table grid will automatically place the
- *				relavent information onto the pasteboard for simply reordering columns. Therefore,
- *				you only need to place data onto the pasteboard if you want to enable some other
- *				kind of dragging behavior (such as dragging into the finder as a CSV file).
- *
- * @param		aTableGrid		The table grid that sent the message.
- * @param		columnIndexes	An index set of column numbers that will be participating
- *								in the drag.
- * @param		pboard			The pasteboard to which to write the drag data.
- *
- * @return		\c YES if the drag operation is allowed, \c NO otherwise.
- *
- * @see			tableGrid:writeColumnsWithIndexes:toPasteboard:
- */
-- (BOOL)tableGrid:(MBTableGrid *)aTableGrid writeColumnsWithIndexes:(NSIndexSet *)columnIndexes toPasteboard:(NSPasteboard *)pboard;
-
-/**
  * @brief		Returns a Boolean value indicating whether the proposed columns can be
  *				moved to the specified index.
  * 
@@ -886,31 +861,6 @@ cells. A cell can individually override this behavior. */
 - (BOOL)tableGrid:(MBTableGrid *)aTableGrid moveColumns:(NSIndexSet *)columnIndexes toIndex:(NSUInteger)index;
 
 #pragma mark Rows
-
-/**
- * @brief		Returns a Boolean value that indicates whether a row drag operation is allowed.
- *
- * @details		Invoked by \c aTableGrid after it has been determined that a drag should begin,
- *				but before the drag has been started.
- *
- *				To refuse the drag, return \c NO. To start a drag, return \c YES and place the
- *				drag data onto \c pboard.
- *
- *				If this method returns \c YES, the table grid will automatically place the
- *				relavent information onto the pasteboard for simply reordering rows. Therefore,
- *				you only need to place data onto the pasteboard if you want to enable some other
- *				kind of dragging behavior (such as dragging into the finder as a CSV).
- *
- * @param		aTableGrid		The table grid that sent the message.
- * @param		rowIndexes		An index set of row numbers that will be participating
- *								in the drag.
- * @param		pboard			The pasteboard to which to write the drag data.
- *
- * @return		\c YES if the drag operation is allowed, \c NO otherwise.
- *
- * @see			tableGrid:writeColumnsWithIndexes:toPasteboard:
- */
-- (BOOL)tableGrid:(MBTableGrid *)aTableGrid writeRowsWithIndexes:(NSIndexSet *)rowIndexes toPasteboard:(NSPasteboard *)pboard;
 
 /**
  * @brief		Returns a Boolean value indicating whether the proposed rows can be
@@ -1198,25 +1148,6 @@ cells. A cell can individually override this behavior. */
  * @return		\c YES to permit \c aTableGrid to edit the specified cell, \c NO to deny permission.
  */
 - (BOOL)tableGrid:(MBTableGrid *)aTableGrid shouldEditColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
-
-/**
- *  @brief      Informs the delegate that an invalid string was entered in a cell
- *
- *  @param      aTableGrid       The table grid that contains the cell
- *  @param      columnIndex      The column of the cell
- *  @param      rowIndex         The row of the cell
- *  @param      errorDescription The error description of why the string was invalid
- */
-- (void)tableGrid:(MBTableGrid *)aTableGrid userDidEnterInvalidStringInColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex errorDescription:(NSString *)errorDescription;
-
-/**
- *  @brief      Informs the delegate that an accessory button was clicked
- *
- *  @param      aTableGrid       The table grid that contains the cell
- *  @param      columnIndex      The column of the cell
- *  @param      rowIndex         The row of the cell
- */
-- (void)tableGrid:(MBTableGrid *)aTableGrid accessoryButtonClicked:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 
 /**
  *  @brief      Informs the delegate of the cells that should be copied to the clipboard.
