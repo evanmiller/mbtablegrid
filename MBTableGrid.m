@@ -44,7 +44,7 @@ CGFloat MBTableHeaderSortIndicatorMargin = 4.0;
 
 #define MBTableGridColumnHeaderHeight 24.0
 #define MBTableGridColumnFooterHeight 24.0
-#define MBTableGridRowHeaderWidth 40.0
+#define MBTableGridRowHeaderWidth 56.0
 
 #pragma mark -
 #pragma mark Drag Types
@@ -178,12 +178,12 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 																				   columnHeaderFrame.size.width,
 																				   columnHeaderFrame.size.height)
 														   andTableGrid:self];
-		//	[columnHeaderView setAutoresizingMask:NSViewWidthSizable];
 		columnHeaderView.orientation = MBTableHeaderHorizontalOrientation;
 		columnHeaderScrollView.documentView = columnHeaderView;
 		columnHeaderScrollView.drawsBackground = NO;
         columnHeaderScrollView.automaticallyAdjustsContentInsets = NO;
         columnHeaderScrollView.translatesAutoresizingMaskIntoConstraints = NO;
+        columnHeaderScrollView.verticalScrollElasticity = NSScrollElasticityNone;
 		[self addSubview:columnHeaderScrollView];
         
         // Setup the footer view
@@ -199,6 +199,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
         columnFooterScrollView.drawsBackground = YES;
         columnFooterScrollView.automaticallyAdjustsContentInsets = NO;
         columnFooterScrollView.translatesAutoresizingMaskIntoConstraints = NO;
+        columnFooterScrollView.verticalScrollElasticity = NSScrollElasticityNone;
         [self addSubview:columnFooterScrollView];
 
 		// Setup the row headers
@@ -212,6 +213,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		rowHeaderScrollView.drawsBackground = NO;
         rowHeaderScrollView.automaticallyAdjustsContentInsets = NO;
         rowHeaderScrollView.translatesAutoresizingMaskIntoConstraints = NO;
+        rowHeaderScrollView.horizontalScrollElasticity = NSScrollElasticityNone;
 		[self addSubview:rowHeaderScrollView];
         
         headerCornerView = [[NSVisualEffectView alloc] initWithFrame:NSMakeRect(0, 0, MBTableGridRowHeaderWidth, MBTableGridColumnHeaderHeight)];
@@ -1059,7 +1061,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
     }
     
     // If the synced position is different from our current position, reposition the view
-    if (!NSEqualPoints(curOffset, changedBoundsOrigin)) {
+    if (!NSEqualPoints(curOffset, newOffset)) {
         [scrollView.contentView scrollToPoint:newOffset];
         // We have to tell the NSScrollView to update its scrollers
         [scrollView reflectScrolledClipView:scrollView.contentView];
@@ -1086,8 +1088,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 - (void)clipViewBoundsDidChange:(NSNotification *)aNotification {
     for (NSScrollView *scrollView in @[ contentScrollView, rowHeaderScrollView, columnHeaderScrollView, columnFooterScrollView ]) {
-        if (scrollView.contentView == aNotification.object &&
-            scrollView.frame.size.width * scrollView.frame.size.height > 0.0) {
+        if (scrollView.contentView == aNotification.object) {
             [self synchronizeScrollViewsWithScrollView:scrollView];
             return;
         }
