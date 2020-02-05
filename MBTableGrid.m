@@ -1437,7 +1437,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 }
 
 - (void)reloadData {
-	CGRect visibleRect = [contentScrollView contentView].documentVisibleRect;
+	CGRect visibleRect = contentScrollView.insetDocumentVisibleRect;
 	
 	// Set number of columns
 	if ([self.dataSource respondsToSelector:@selector(numberOfColumnsInTableGrid:)]) {
