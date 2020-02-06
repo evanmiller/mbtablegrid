@@ -1391,7 +1391,8 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 }
 
 - (void)updateSubviewInsets {
-    [self layout];
+    self.needsLayout = YES;
+    [self layoutSubtreeIfNeeded];
     columnHeaderScrollView.contentInsets = NSEdgeInsetsMake(0, rowHeaderScrollView.frame.size.width + _contentInsets.left,
                                                             0, _contentInsets.right);
     columnFooterScrollView.contentInsets = NSEdgeInsetsMake(0, rowHeaderScrollView.frame.size.width + _contentInsets.left,
