@@ -1074,12 +1074,12 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
         if (targetScrollView == scrollView)
             continue;
         
-        if (scrollView.documentView.frame.size.width > scrollView.insetFrame.size.width &&
-            targetScrollView.documentView.frame.size.width > targetScrollView.insetFrame.size.width) {
+        if (NSWidth(scrollView.documentView.frame) > NSWidth(scrollView.insetFrame) && NSWidth(scrollView.frame) > 0.0 &&
+            NSWidth(targetScrollView.documentView.frame) > NSWidth(targetScrollView.insetFrame)) {
             [self synchronizeScrollView:targetScrollView withChangedBoundsOrigin:changedBoundsOrigin horizontal:YES];
         }
-        if (scrollView.documentView.frame.size.height > scrollView.insetFrame.size.height &&
-            targetScrollView.documentView.frame.size.height > targetScrollView.insetFrame.size.height) {
+        if (NSHeight(scrollView.documentView.frame) > NSHeight(scrollView.insetFrame) && NSHeight(scrollView.frame) > 0.0 &&
+            NSHeight(targetScrollView.documentView.frame) > NSHeight(targetScrollView.insetFrame)) {
             [self synchronizeScrollView:targetScrollView withChangedBoundsOrigin:changedBoundsOrigin horizontal:NO];
         }
     }
