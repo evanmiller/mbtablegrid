@@ -473,8 +473,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
         return ([self.delegate respondsToSelector:@selector(tableGrid:pasteCellsAtColumns:rows:)]);
     }
     if (aSelector == @selector(copy:)) {
-        return (self.selectedRowIndexes.count > 0 && self.selectedColumnIndexes.count > 0 &&
-                [self.delegate respondsToSelector:@selector(tableGrid:copyCellsAtColumns:rows:)]);
+        return (self.selectedRowIndexes.count > 0 && self.selectedColumnIndexes.count > 0);
     }
     if (aSelector == @selector(delete:) || aSelector == @selector(deleteBackward:)) {
         return (self.selectedRowIndexes.count > 0 && self.selectedColumnIndexes.count > 0 &&
@@ -485,13 +484,33 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 }
 
 - (void)copy:(id)sender {
-	
 	NSIndexSet *selectedColumns = [self selectedColumnIndexes];
 	NSIndexSet *selectedRows = [self selectedRowIndexes];
 
     if ([self.delegate respondsToSelector:@selector(tableGrid:copyCellsAtColumns:rows:)]) {
 		[self.delegate tableGrid:self copyCellsAtColumns:selectedColumns rows:selectedRows];
-	}
+    } else {
+        NSMutableString *string = [NSMutableString string];
+        for (NSInteger row=selectedRows.firstIndex; row<=selectedRows.lastIndex; row++) {
+            for (NSInteger columnIndex=selectedColumns.firstIndex; columnIndex<=selectedColumns.lastIndex; columnIndex++) {
+                NSString *value = [self.dataSource tableGrid:self objectValueForColumn:columnIndex row:row];
+                if (value)
+                    [string appendString:value];
+                if (columnIndex<selectedColumns.lastIndex)
+                    [string appendString:@"\t"];
+            }
+            if (row<selectedRows.lastIndex)
+                [string appendString:@"\n"];
+        }
+        
+        NSPasteboard *pboard = NSPasteboard.generalPasteboard;
+        
+        [pboard declareTypes:@[ NSPasteboardTypeTabularText, NSPasteboardTypeString ]
+                       owner:nil];
+        
+        [pboard setString:string forType:NSPasteboardTypeTabularText];
+        [pboard setString:string forType:NSPasteboardTypeString];
+    }
 }
 
 - (void)paste:(id)sender {
