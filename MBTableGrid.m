@@ -38,10 +38,10 @@
 NSString *MBTableGridDidChangeSelectionNotification     = @"MBTableGridDidChangeSelectionNotification";
 NSString *MBTableGridDidMoveColumnsNotification         = @"MBTableGridDidMoveColumnsNotification";
 NSString *MBTableGridDidMoveRowsNotification            = @"MBTableGridDidMoveRowsNotification";
-CGFloat MBTableHeaderMinimumColumnWidth = 60.0f;
 CGFloat MBTableHeaderSortIndicatorWidth = 10.0;
 CGFloat MBTableHeaderSortIndicatorMargin = 4.0;
 
+#define MBTableGridMinimumColumnWidth 60.0
 #define MBTableGridColumnHeaderHeight 24.0
 #define MBTableGridColumnFooterHeight 24.0
 #define MBTableGridRowHeaderWidth 56.0
@@ -123,17 +123,6 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 @implementation MBTableGrid
 
-@synthesize allowsMultipleSelection;
-@synthesize dataSource;
-@synthesize delegate;
-@synthesize selectedColumnIndexes;
-@synthesize selectedRowIndexes;
-@synthesize showsGrabHandles;
-@synthesize columnFooterView;
-@synthesize singleClickCellEdit;
-@synthesize previousHorizontalSelectionDirection;
-@synthesize previousVerticalSelectionDirection;
-
 #pragma mark -
 #pragma mark Initialization & Superclass Overrides
 
@@ -152,6 +141,9 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		defaultCell.scrollable = YES;
 		defaultCell.lineBreakMode = NSLineBreakByTruncatingTail;
 		self.cell = defaultCell;
+
+        _rowHeaderWidth = MBTableGridRowHeaderWidth;
+        _minimumColumnWidth = MBTableGridMinimumColumnWidth;
         
         // Setup the content view
         NSRect contentFrame = NSMakeRect(0, 0,
@@ -203,7 +195,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
         [self addSubview:columnFooterScrollView];
 
 		// Setup the row headers
-		NSRect rowHeaderFrame = NSMakeRect(0, 0, MBTableGridRowHeaderWidth,
+		NSRect rowHeaderFrame = NSMakeRect(0, 0, _rowHeaderWidth,
                                            self.frame.size.height);
 		rowHeaderScrollView = [[NSScrollView alloc] initWithFrame:rowHeaderFrame];
 		rowHeaderView = [[MBTableGridHeaderView alloc] initWithFrame:NSMakeRect(0, 0, rowHeaderFrame.size.width, rowHeaderFrame.size.height)
@@ -216,7 +208,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
         rowHeaderScrollView.horizontalScrollElasticity = NSScrollElasticityNone;
 		[self addSubview:rowHeaderScrollView];
         
-        headerCornerView = [[NSVisualEffectView alloc] initWithFrame:NSMakeRect(0, 0, MBTableGridRowHeaderWidth, MBTableGridColumnHeaderHeight)];
+        headerCornerView = [[NSVisualEffectView alloc] initWithFrame:NSMakeRect(0, 0, _rowHeaderWidth, MBTableGridColumnHeaderHeight)];
         headerCornerView.material = NSVisualEffectMaterialSidebar;
         headerCornerView.blendingMode = NSVisualEffectBlendingModeWithinWindow;
         headerCornerView.translatesAutoresizingMaskIntoConstraints = NO;
@@ -256,7 +248,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		stickyColumnEdge = MBHorizontalEdgeLeft;
 		stickyRowEdge = MBVerticalEdgeTop;
 
-		singleClickCellEdit = NO;
+		self.singleClickCellEdit = NO;
 
         self.previousVerticalSelectionDirection = MBVerticalEdgeTop;
         self.previousHorizontalSelectionDirection = MBHorizontalEdgeLeft;
@@ -277,9 +269,9 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 	return self;
 }
 
-- (void) setShowsGrabHandles:(BOOL)s {
-	showsGrabHandles = s;
-	[self.contentView setShowsGrabHandle:s];
+- (void)setShowsGrabHandles:(BOOL)s {
+    _showsGrabHandles = s;
+	self.contentView.showsGrabHandle = s;
 }
 
 - (void)_sortButtonClickedForColumn:(NSUInteger)column {
@@ -484,8 +476,8 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 }
 
 - (void)copy:(id)sender {
-	NSIndexSet *selectedColumns = [self selectedColumnIndexes];
-	NSIndexSet *selectedRows = [self selectedRowIndexes];
+	NSIndexSet *selectedColumns = self.selectedColumnIndexes;
+	NSIndexSet *selectedRows = self.selectedRowIndexes;
 
     if ([self.delegate respondsToSelector:@selector(tableGrid:copyCellsAtColumns:rows:)]) {
 		[self.delegate tableGrid:self copyCellsAtColumns:selectedColumns rows:selectedRows];
@@ -1436,7 +1428,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
     [columnHeaderView setFrameSize:columnHeaderSize];
 
     // Update the row header view's size
-    NSSize rowHeaderSize = NSMakeSize(NSWidth(rowHeaderView.frame), contentRectSize.height);
+    NSSize rowHeaderSize = NSMakeSize(_rowHeaderWidth, contentRectSize.height);
     if (!contentScrollView.horizontalScroller.isHidden && contentScrollView.scrollerStyle == NSScrollerStyleLegacy) {
         rowHeaderSize.height += [NSScroller scrollerWidthForControlSize:NSControlSizeRegular
                                                           scrollerStyle:contentScrollView.scrollerStyle];
@@ -1467,6 +1459,10 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		_numberOfColumns = 0;
 	}
 
+    _selectedColumnIndexes = [_selectedColumnIndexes indexesPassingTest:^(NSUInteger idx, BOOL * stop) {
+        return (BOOL)(idx < _numberOfColumns);
+    }];
+
 	// Set number of rows
 	if ([self.dataSource respondsToSelector:@selector(numberOfRowsInTableGrid:)]) {
 		_numberOfRows =  [self.dataSource numberOfRowsInTableGrid:self];
@@ -1475,6 +1471,10 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		_numberOfRows = 0;
 	}
         
+    _selectedRowIndexes = [_selectedRowIndexes indexesPassingTest:^(NSUInteger idx, BOOL * stop) {
+        return (BOOL)(idx < _numberOfRows);
+    }];
+
     if ([self.dataSource respondsToSelector:@selector(sortableColumnIndexesInTableGrid:)])
         columnHeaderView.indicatorImageColumns = [self.dataSource sortableColumnIndexesInTableGrid:self];
     
@@ -1532,17 +1532,19 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 - (NSRect)rectOfSelectionRelativeToContentView {
     NSRect dirtyRect = NSZeroRect;
-    if (selectedRowIndexes.count) {
-        dirtyRect = NSUnionRect([self.contentView rectOfRow:selectedRowIndexes.firstIndex],
-                                [self.contentView rectOfRow:selectedRowIndexes.lastIndex]);
-        if (selectedColumnIndexes.count) {
-            NSRect dirtyColumnRect = NSUnionRect([self.contentView rectOfColumn:selectedColumnIndexes.firstIndex],
-                                                 [self.contentView rectOfColumn:selectedColumnIndexes.lastIndex]);
+    NSIndexSet *rowIndexes = self.selectedRowIndexes;
+    NSIndexSet *columnIndexes = self.selectedColumnIndexes;
+    if (rowIndexes.count) {
+        dirtyRect = NSUnionRect([self.contentView rectOfRow:rowIndexes.firstIndex],
+                                [self.contentView rectOfRow:rowIndexes.lastIndex]);
+        if (columnIndexes.count) {
+            NSRect dirtyColumnRect = NSUnionRect([self.contentView rectOfColumn:columnIndexes.firstIndex],
+                                                 [self.contentView rectOfColumn:columnIndexes.lastIndex]);
             dirtyRect = NSIntersectionRect(dirtyRect, dirtyColumnRect);
         }
-    } else if (selectedColumnIndexes.count) {
-        dirtyRect = NSUnionRect([self.contentView rectOfColumn:selectedColumnIndexes.firstIndex],
-                                [self.contentView rectOfColumn:selectedColumnIndexes.lastIndex]);
+    } else if (columnIndexes.count) {
+        dirtyRect = NSUnionRect([self.contentView rectOfColumn:columnIndexes.firstIndex],
+                                [self.contentView rectOfColumn:columnIndexes.lastIndex]);
     }
     return dirtyRect;
 }
@@ -1593,6 +1595,10 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 	return rowHeaderView;
 }
 
+- (MBTableGridFooterView *)columnFooterView {
+    return columnFooterView;
+}
+
 - (MBTableGridContentView *)contentView {
 	return contentView;
 }
@@ -1641,8 +1647,14 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
                                     toItem:nil
                                  attribute:NSLayoutAttributeNotAnAttribute
                                 multiplier:0.0
-                                  constant:isVisible ? MBTableGridRowHeaderWidth : 0.0].active = YES;
+                                  constant:isVisible ? _rowHeaderWidth : 0.0].active = YES;
     [self updateSubviewInsets];
+}
+
+- (void)setRowHeaderWidth:(CGFloat)newWidth {
+    _rowHeaderWidth = newWidth;
+    if (newWidth > 0.0 && self.isRowHeaderVisible)
+        self.rowHeaderVisible = YES; // trigger an update
 }
 
 - (void)setContentInsets:(NSEdgeInsets)contentInsets {
@@ -1658,7 +1670,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 }
 
 - (void)setSelectedColumnIndexes:(NSIndexSet *)anIndexSet notify:(BOOL)notify {
-    if ([anIndexSet isEqualToIndexSet:selectedColumnIndexes])
+    if ([anIndexSet isEqualToIndexSet:_selectedColumnIndexes])
 		return;
 
 	// Allow the delegate to validate the selection
@@ -1669,7 +1681,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
     // mark old selection as dirty
     [self.contentView setNeedsDisplayInRect:[self rectOfSelectionRelativeToContentView]];
 
-	selectedColumnIndexes = anIndexSet;
+	_selectedColumnIndexes = anIndexSet;
 
     // mark new selection as dirty
     [self.contentView setNeedsDisplayInRect:[self rectOfSelectionRelativeToContentView]];
@@ -1689,7 +1701,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 }
 
 - (void)setSelectedRowIndexes:(NSIndexSet *)anIndexSet notify:(BOOL)notify {
-    if ([anIndexSet isEqualToIndexSet:selectedRowIndexes])
+    if ([anIndexSet isEqualToIndexSet:_selectedRowIndexes])
         return;
 
 	// Allow the delegate to validate the selection
@@ -1700,7 +1712,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
     // mark old selection as dirty
     [self.contentView setNeedsDisplayInRect:[self rectOfSelectionRelativeToContentView]];
 
-	selectedRowIndexes = anIndexSet;
+	_selectedRowIndexes = anIndexSet;
 
     // mark new selection as dirty
     [self.contentView setNeedsDisplayInRect:[self rectOfSelectionRelativeToContentView]];
@@ -1715,30 +1727,30 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 }
 
 - (void)setDelegate:(id <MBTableGridDelegate> )anObject {
-	if (anObject == delegate)
+	if (anObject == _delegate)
 		return;
 
-	if (delegate) {
+	if (_delegate) {
 		// Unregister the delegate for relevant notifications
-		[NSNotificationCenter.defaultCenter removeObserver:delegate name:MBTableGridDidChangeSelectionNotification object:self];
-		[NSNotificationCenter.defaultCenter removeObserver:delegate name:MBTableGridDidMoveColumnsNotification object:self];
-		[NSNotificationCenter.defaultCenter removeObserver:delegate name:MBTableGridDidMoveRowsNotification object:self];
+		[NSNotificationCenter.defaultCenter removeObserver:_delegate name:MBTableGridDidChangeSelectionNotification object:self];
+		[NSNotificationCenter.defaultCenter removeObserver:_delegate name:MBTableGridDidMoveColumnsNotification object:self];
+		[NSNotificationCenter.defaultCenter removeObserver:_delegate name:MBTableGridDidMoveRowsNotification object:self];
 	}
 
-	delegate = anObject;
+	_delegate = anObject;
 
 	// Register the new delegate for relevant notifications
-	if ([delegate respondsToSelector:@selector(tableGridDidChangeSelection:)]) {
-		[NSNotificationCenter.defaultCenter addObserver:delegate selector:@selector(tableGridDidChangeSelection:) name:MBTableGridDidChangeSelectionNotification object:self];
+	if ([_delegate respondsToSelector:@selector(tableGridDidChangeSelection:)]) {
+		[NSNotificationCenter.defaultCenter addObserver:_delegate selector:@selector(tableGridDidChangeSelection:) name:MBTableGridDidChangeSelectionNotification object:self];
 	}
-	if ([delegate respondsToSelector:@selector(tableGridDidMoveColumns:)]) {
-		[NSNotificationCenter.defaultCenter addObserver:delegate selector:@selector(tableGridDidMoveColumns:) name:MBTableGridDidMoveColumnsNotification object:self];
+	if ([_delegate respondsToSelector:@selector(tableGridDidMoveColumns:)]) {
+		[NSNotificationCenter.defaultCenter addObserver:_delegate selector:@selector(tableGridDidMoveColumns:) name:MBTableGridDidMoveColumnsNotification object:self];
 	}
-	if ([delegate respondsToSelector:@selector(tableGridDidMoveRows:)]) {
-		[NSNotificationCenter.defaultCenter addObserver:delegate selector:@selector(tableGridDidMoveRows:) name:MBTableGridDidMoveRowsNotification object:self];
+	if ([_delegate respondsToSelector:@selector(tableGridDidMoveRows:)]) {
+		[NSNotificationCenter.defaultCenter addObserver:_delegate selector:@selector(tableGridDidMoveRows:) name:MBTableGridDidMoveRowsNotification object:self];
 	}
     
-    self.columnFooterVisible = [delegate respondsToSelector:@selector(tableGrid:footerCellForColumn:)];
+    self.columnFooterVisible = [_delegate respondsToSelector:@selector(tableGrid:footerCellForColumn:)];
 }
 
 @end
@@ -1799,7 +1811,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 }
 
 - (CGFloat)_minimumWidthForColumn:(NSUInteger)columnIndex {
-    CGFloat minColumnWidth = MBTableHeaderMinimumColumnWidth;
+    CGFloat minColumnWidth = _minimumColumnWidth;
     
     if ([columnHeaderView.indicatorImageColumns containsIndex:columnIndex]) {
         minColumnWidth += MBTableHeaderSortIndicatorWidth + MBTableHeaderSortIndicatorMargin;
