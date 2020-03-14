@@ -109,12 +109,6 @@ typedef NS_ENUM(NSUInteger, MBVerticalEdge) {
  * @author		Matthew Ball
  */
 @interface MBTableGrid : NSControl <NSDraggingSource, NSDraggingDestination> {
-	/* Data Source */
-	IBOutlet id <MBTableGridDataSource> __unsafe_unretained dataSource;
-	
-	/* Delegate */
-	IBOutlet id <MBTableGridDelegate> __unsafe_unretained delegate;
-	
 	/* Headers */
 	NSScrollView *columnHeaderScrollView;
 	MBTableGridHeaderView *columnHeaderView;
@@ -133,13 +127,6 @@ typedef NS_ENUM(NSUInteger, MBVerticalEdge) {
     NSVisualEffectView *headerCornerView;
     NSVisualEffectView *footerCornerView;
 	
-	/* Selections */
-	NSIndexSet *selectedColumnIndexes;
-	NSIndexSet *selectedRowIndexes;
-	
-	/* Behavior */
-	BOOL allowsMultipleSelection;
-	
 	/* Sticky Edges (for Shift+Arrow expansions) */
 	MBHorizontalEdge stickyColumnEdge;
 	MBVerticalEdge stickyRowEdge;
@@ -152,13 +139,12 @@ typedef NS_ENUM(NSUInteger, MBVerticalEdge) {
 @property (nonatomic, assign) BOOL showsGrabHandles;
 @property (getter=isFindBarVisible) BOOL findBarVisible;
 
-@property (nonatomic, readonly) MBTableGridHeaderView* columnHeaderView;
-@property (nonatomic, readonly) MBTableGridFooterView* columnFooterView;
-@property (nonatomic, readonly) MBTableGridHeaderView* rowHeaderView;
-
 @property (getter=isColumnHeaderVisible, nonatomic, assign) BOOL columnHeaderVisible;
 @property (getter=isColumnFooterVisible, nonatomic, assign) BOOL columnFooterVisible;
 @property (getter=isRowHeaderVisible, nonatomic, assign) BOOL rowHeaderVisible;
+
+@property (nonatomic, assign) CGFloat rowHeaderWidth;
+@property (nonatomic, assign) CGFloat minimumColumnWidth;
 
 @property (nonatomic) NSEdgeInsets contentInsets;
 @property (nonatomic, assign) NSUInteger sortColumnIndex; // NSNotFound for none
@@ -533,8 +519,23 @@ cells. A cell can individually override this behavior. */
  *				column headers.
  *
  * @see			rowHeaderView
+ * @see         columnFooterView
  */
-- (MBTableGridHeaderView *)columnHeaderView;
+
+@property (nonatomic, readonly) MBTableGridHeaderView* columnHeaderView;
+
+/**
+ * @brief        Returns the \c MBTableGridHeaderView object used
+ *                to draw headers under columns.
+ *
+ * @return        The \c MBTableGridHeaderView object used to draw
+ *                column footers.
+ *
+ * @see            rowHeaderView
+ * @see            columnHeaderView
+ */
+
+@property (nonatomic, readonly) MBTableGridFooterView* columnFooterView;
 
 /**
  * @brief		Returns the \c MBTableGridHeaderView object used
@@ -543,9 +544,11 @@ cells. A cell can individually override this behavior. */
  * @return		The \c MBTableGridHeaderView object used to draw
  *				column headers.
  *
- * @see			columnHeaderView
+ * @see            columnHeaderView
+ * @see            columnFooterView
  */
-- (MBTableGridHeaderView *)rowHeaderView;
+
+@property (nonatomic, readonly) MBTableGridHeaderView* rowHeaderView;
 
 /**
  * @brief		Returns the receiver's content view.
@@ -556,7 +559,7 @@ cells. A cell can individually override this behavior. */
  *
  * @return		The receiver's content view.
  */
-- (MBTableGridContentView *)contentView;
+@property (nonatomic, readonly) MBTableGridContentView *contentView;
 
 /**
  * @}
