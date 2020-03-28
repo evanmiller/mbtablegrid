@@ -227,6 +227,8 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
         
         [self updateSubviewConstraints];
         [self updateSubviewInsets];
+        
+        [self synchronizeScrollViewsWithScrollView:contentScrollView];
 
 		// We want to synchronize the scroll views
         for (NSScrollView *scrollView in @[ contentScrollView, columnHeaderScrollView, rowHeaderScrollView, columnFooterScrollView ]) {
@@ -922,6 +924,10 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
         scrollDelta.y = NSMaxY(cellRect) - NSMaxY(visibleRect);
     }
 
+    [self scrollDistance:scrollDelta];
+}
+
+- (void)scrollDistance:(NSPoint)scrollDelta {
     NSPoint scrollOffset = contentScrollView.contentView.bounds.origin;
     scrollOffset.x += scrollDelta.x;
     scrollOffset.y += scrollDelta.y;
@@ -941,17 +947,19 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 }
 
 - (void)scrollPageDown:(id)sender {
-    NSPoint point = contentScrollView.contentView.bounds.origin;
-    point.y += (contentScrollView.bounds.size.height - contentScrollView.verticalPageScroll);
-    if (point.y > self.contentView.bounds.size.height - contentScrollView.bounds.size.height)
-        point.y = self.contentView.bounds.size.height - contentScrollView.bounds.size.height;
+    NSPoint point = contentScrollView.insetContentViewBounds.origin;
+    point.y += (NSHeight(contentScrollView.insetBounds) - contentScrollView.verticalPageScroll);
+    if (point.y > NSHeight(self.contentView.bounds) - NSHeight(contentScrollView.insetBounds))
+        point.y = NSHeight(self.contentView.bounds) - NSHeight(contentScrollView.insetBounds);
+    if (point.y < 0.0)
+        point.y = 0.0;
 
     [self scrollToPoint:point animate:YES];
 }
 
 - (void)scrollPageUp:(id)sender {
-    NSPoint point = contentScrollView.contentView.bounds.origin;
-    point.y -= (contentScrollView.bounds.size.height - contentScrollView.verticalPageScroll);
+    NSPoint point = contentScrollView.insetContentViewBounds.origin;
+    point.y -= (NSHeight(contentScrollView.insetBounds) - contentScrollView.verticalPageScroll);
     if (point.y < 0.0)
         point.y = 0.0;
 
@@ -959,18 +967,21 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 }
 
 - (void)scrollToEndOfDocument:(id)sender {
-    NSPoint point = contentScrollView.contentView.bounds.origin;
-    point.y = (self.contentView.bounds.size.height - contentScrollView.bounds.size.height);
+    NSPoint point = contentScrollView.insetContentViewBounds.origin;
+    point.y = (NSHeight(self.contentView.bounds) - NSHeight(contentScrollView.insetBounds));
+    if (point.y < 0.0)
+        point.y = 0.0;
     [self scrollToPoint:point animate:YES];
 }
 
 - (void)scrollToBeginningOfDocument:(id)sender {
-    NSPoint point = contentScrollView.contentView.bounds.origin;
+    NSPoint point = contentScrollView.insetContentViewBounds.origin;
     point.y = 0.0;
     [self scrollToPoint:point animate:YES];
 }
 
 - (void)scrollToPoint:(NSPoint)point animate:(BOOL)shouldAnimate {
+    point = NSMakePoint(point.x - contentScrollView.contentInsets.left, point.y - contentScrollView.contentInsets.top);
     if (shouldAnimate) {
         [NSAnimationContext runAnimationGroup: ^(NSAnimationContext *context) {
             context.allowsImplicitAnimation = YES;
@@ -1404,6 +1415,12 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 - (void)updateSubviewInsets {
     self.needsLayout = YES;
     [self layoutSubtreeIfNeeded];
+    
+    NSPoint scrollDelta = {
+        .x = contentScrollView.contentInsets.left - (rowHeaderScrollView.frame.size.width + _contentInsets.left),
+        .y = contentScrollView.contentInsets.top - (columnHeaderScrollView.frame.size.height + _contentInsets.top)
+    };
+
     columnHeaderScrollView.contentInsets = NSEdgeInsetsMake(0, rowHeaderScrollView.frame.size.width + _contentInsets.left,
                                                             0, _contentInsets.right);
     columnFooterScrollView.contentInsets = NSEdgeInsetsMake(0, rowHeaderScrollView.frame.size.width + _contentInsets.left,
@@ -1414,6 +1431,8 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
                                                        _contentInsets.right);
     rowHeaderScrollView.contentInsets = NSEdgeInsetsMake(columnHeaderScrollView.frame.size.height + _contentInsets.top, 0,
                                                          columnFooterScrollView.frame.size.height + _contentInsets.bottom, 0);
+    
+    [self scrollDistance:scrollDelta];
 }
 
 - (void)updateAuxiliaryViewSizes {

@@ -30,4 +30,12 @@
     return [self _insetRectForRect:self.frame];
 }
 
+- (NSRect)insetBounds {
+    return [self _insetRectForRect:self.bounds];
+}
+
+- (NSRect)insetContentViewBounds {
+    return [self _insetRectForRect:self.contentView.bounds];
+}
+
 @end

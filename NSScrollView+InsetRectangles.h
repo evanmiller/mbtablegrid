@@ -16,6 +16,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly) NSRect insetDocumentVisibleRect;
 @property (nonatomic, readonly) NSRect insetFrame;
+@property (nonatomic, readonly) NSRect insetBounds;
+@property (nonatomic, readonly) NSRect insetContentViewBounds;
 
 @end
 
