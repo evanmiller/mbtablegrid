@@ -1942,6 +1942,20 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 	return stickyRowEdge;
 }
 
+- (BOOL)_containsFirstResponder {
+    NSResponder *firstResponder = self.window.firstResponder;
+    return self.window.isKeyWindow && [firstResponder isKindOfClass:NSView.class] && [(NSView *)firstResponder isDescendantOf:self];
+}
+
+- (NSColor *)_selectionColor {
+    NSColor *color = NSColor.alternateSelectedControlColor;
+    // If the view is not the first responder, then use a gray selection color
+    if (!self._containsFirstResponder)
+        return [color colorUsingColorSpace:NSColorSpace.genericGrayColorSpace];
+    
+    return color;
+}
+
 @end
 
 @implementation MBTableGrid (DragAndDrop)

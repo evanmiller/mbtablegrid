@@ -24,6 +24,8 @@
  */
 
 #import "MBTableGridHeaderCell.h"
+#import "MBTableGridHeaderView.h"
+#import "MBTableGrid.h"
 
 extern CGFloat MBTableHeaderSortIndicatorWidth;
 extern CGFloat MBTableHeaderSortIndicatorMargin;
@@ -32,6 +34,10 @@ extern CGFloat MBTableHeaderSortIndicatorMargin;
 
 @interface MBTableGridHeaderCell ()
 
+@end
+
+@interface MBTableGrid (Private)
+- (NSColor *)_selectionColor;
 @end
 
 #pragma mark -
@@ -71,7 +77,7 @@ extern CGFloat MBTableHeaderSortIndicatorMargin;
     return indicatorRect;
 }
 
-- (void)drawWithFrame:(NSRect)cellFrame inView:(NSView *)controlView
+- (void)drawWithFrame:(NSRect)cellFrame inView:(MBTableGridHeaderView *)controlView
 {
 	NSRect cellFrameRect = cellFrame;
 	
@@ -114,7 +120,7 @@ extern CGFloat MBTableHeaderSortIndicatorMargin;
 		}
 		NSBezierPath* path = [NSBezierPath bezierPathWithRoundedRect:fillRect xRadius:4.0 yRadius:4.0];
 
-		NSColor *overlayColor = [NSColor.alternateSelectedControlColor colorWithAlphaComponent:0.26];
+        NSColor *overlayColor = [controlView.tableGrid._selectionColor colorWithAlphaComponent:0.26];
 		[overlayColor set];
 		[path fill];
 	}
