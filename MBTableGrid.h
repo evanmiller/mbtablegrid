@@ -349,7 +349,7 @@ cells. A cell can individually override this behavior. */
  *
  * @see			delegate
  */
-@property(unsafe_unretained) id <MBTableGridDataSource> dataSource;
+@property(unsafe_unretained) IBOutlet id <MBTableGridDataSource> dataSource;
 
 /**
  * @brief		The object that acts as the delegate of the 
@@ -360,7 +360,7 @@ cells. A cell can individually override this behavior. */
  *
  * @see			dataSource
  */
-@property(nonatomic, unsafe_unretained) id <MBTableGridDelegate> delegate;
+@property(nonatomic, unsafe_unretained) IBOutlet id <MBTableGridDelegate> delegate;
 
 /**
  * @}
