@@ -47,6 +47,8 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 - (CGFloat)_widthForColumn:(NSUInteger)columnIndex;
 - (MBHorizontalEdge)_stickyColumn;
 - (MBVerticalEdge)_stickyRow;
+- (NSColor *)_selectionColor;
+- (BOOL)_containsFirstResponder;
 - (NSCell *)_footerCellForColumn:(NSUInteger)columnIndex;
 - (id)_footerValueForColumn:(NSUInteger)columnIndex;
 - (void)_setFooterValue:(id)value forColumn:(NSUInteger)columnIndex;
@@ -116,6 +118,109 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 	[[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
+- (void)drawCellInteriorsInRect:(NSRect)rect {
+    NSUInteger numberOfColumns = _tableGrid.numberOfColumns;
+    NSUInteger numberOfRows = _tableGrid.numberOfRows;
+    
+    NSUInteger firstColumn = NSNotFound;
+    NSUInteger lastColumn = (numberOfColumns==0) ? 0 : numberOfColumns - 1;
+    NSUInteger firstRow = MAX(0, floor(rect.origin.y / self.rowHeight));
+    NSUInteger lastRow = (numberOfRows==0) ? 0 : MIN(numberOfRows - 1, ceil((rect.origin.y + rect.size.height)/self.rowHeight));
+    
+    // Find the columns to draw
+    NSUInteger column = 0;
+    while (column < numberOfColumns) {
+        NSRect columnRect = [self rectOfColumn:column];
+        if (firstColumn == NSNotFound && NSMinX(rect) >= NSMinX(columnRect) && NSMinX(rect) <= NSMaxX(columnRect)) {
+            firstColumn = column;
+        } else if (firstColumn != NSNotFound && NSMaxX(rect) >= NSMinX(columnRect) && NSMaxX(rect) <= NSMaxX(columnRect)) {
+            lastColumn = column;
+            break;
+        }
+        column++;
+    }
+    
+    column = firstColumn;
+    while (column <= lastColumn) {
+        NSUInteger row = firstRow;
+        while (row <= lastRow) {
+            NSRect cellFrame = [self frameOfCellAtColumn:column row:row];
+            if ([self needsToDrawRect:cellFrame] && (!(row == editedRow && column == editedColumn))) {
+                // Only fetch the cell if we need to
+                NSCell* cell = [_tableGrid _cellForColumn:column row: row];
+                [cell drawWithFrame:cellFrame inView:self];
+            }
+            row++;
+        }
+        column++;
+    }
+}
+
+- (void)drawColumnDropIndicator {
+    // Draw the column drop indicator
+    if (isDraggingColumnOrRow && dropColumn != NSNotFound && dropColumn <= _tableGrid.numberOfColumns && dropRow == NSNotFound) {
+        NSRect columnBorder;
+        if(dropColumn < _tableGrid.numberOfColumns) {
+            columnBorder = [self rectOfColumn:dropColumn];
+        } else {
+            columnBorder = [self rectOfColumn:dropColumn-1];
+            columnBorder.origin.x += columnBorder.size.width;
+        }
+        columnBorder.origin.x = NSMinX(columnBorder)-DROP_TARGET_BOX_THICKNESS/2;
+        columnBorder.size.width = DROP_TARGET_BOX_THICKNESS;
+        
+        NSColor *selectionColor = NSColor.alternateSelectedControlColor;
+        
+        NSBezierPath *borderPath = [NSBezierPath bezierPathWithRect:columnBorder];
+        borderPath.lineWidth = DROP_TARGET_LINE_WIDTH;
+        
+        [selectionColor set];
+        [borderPath stroke];
+    }
+}
+
+- (void)drawRowDropIndicator {
+    // Draw the row drop indicator
+    if (isDraggingColumnOrRow && dropRow != NSNotFound && dropRow <= _tableGrid.numberOfRows && dropColumn == NSNotFound) {
+        NSRect rowBorder;
+        if(dropRow < _tableGrid.numberOfRows) {
+            rowBorder = [self rectOfRow:dropRow];
+        } else {
+            rowBorder = [self rectOfRow:dropRow-1];
+            rowBorder.origin.y += rowBorder.size.height;
+        }
+        rowBorder.origin.y = NSMinY(rowBorder)-DROP_TARGET_BOX_THICKNESS/2;
+        rowBorder.size.height = DROP_TARGET_BOX_THICKNESS;
+        
+        NSColor *selectionColor = NSColor.alternateSelectedControlColor;
+        
+        NSBezierPath *borderPath = [NSBezierPath bezierPathWithRect:rowBorder];
+        borderPath.lineWidth = DROP_TARGET_LINE_WIDTH;
+        
+        [selectionColor set];
+        [borderPath stroke];
+    }
+}
+
+- (void)drawCellDropIndicator {
+    // Draw the cell drop indicator
+    if (!isDraggingColumnOrRow && dropRow != NSNotFound && dropRow <= _tableGrid.numberOfRows && dropColumn != NSNotFound && dropColumn <= _tableGrid.numberOfColumns) {
+        NSRect cellFrame = [self frameOfCellAtColumn:dropColumn row:dropRow];
+        cellFrame.origin.x -= 2.0;
+        cellFrame.origin.y -= 2.0;
+        cellFrame.size.width += 3.0;
+        cellFrame.size.height += 3.0;
+        
+        NSBezierPath *borderPath = [NSBezierPath bezierPathWithRect:NSInsetRect(cellFrame, 2, 2)];
+        
+        NSColor *dropColor = NSColor.alternateSelectedControlColor;
+        [dropColor set];
+        
+        borderPath.lineWidth = 2.0;
+        [borderPath stroke];
+    }
+}
+
 - (void)drawRect:(NSRect)rect
 {
     NSIndexSet *selectedColumns = _tableGrid.selectedColumnIndexes;
@@ -126,70 +231,47 @@ NSString * const MBTableGridTrackingPartKey = @"part";
     if (numberOfColumns == 0 || numberOfRows == 0)
         return;
     
-	NSUInteger firstColumn = NSNotFound;
-    NSUInteger lastColumn = (numberOfColumns==0) ? 0 : numberOfColumns - 1;
-	NSUInteger firstRow = MAX(0, floor(rect.origin.y / self.rowHeight));
-    NSUInteger lastRow = (numberOfRows==0) ? 0 : MIN(numberOfRows - 1, ceil((rect.origin.y + rect.size.height)/self.rowHeight));
-	
-	// Find the columns to draw
-	NSUInteger column = 0;
-	while (column < numberOfColumns) {
-		NSRect columnRect = [self rectOfColumn:column];
-		if (firstColumn == NSNotFound && NSMinX(rect) >= NSMinX(columnRect) && NSMinX(rect) <= NSMaxX(columnRect)) {
-			firstColumn = column;
-		} else if (firstColumn != NSNotFound && NSMaxX(rect) >= NSMinX(columnRect) && NSMaxX(rect) <= NSMaxX(columnRect)) {
-			lastColumn = column;
-			break;
-		}
-		column++;
-	}
-	
-	column = firstColumn;
-	while (column <= lastColumn) {
-		NSUInteger row = firstRow;
-		while (row <= lastRow) {
-			NSRect cellFrame = [self frameOfCellAtColumn:column row:row];
-			if ([self needsToDrawRect:cellFrame] && (!(row == editedRow && column == editedColumn))) {
-                // Only fetch the cell if we need to
-                NSCell* cell = [_tableGrid _cellForColumn:column row: row];
-				[cell drawWithFrame:cellFrame inView:self];
-			}
-			row++;
-		}
-		column++;
-	}
-	
-	// Draw the selection rectangle
+    NSBezierPath *selectionPath = nil;
+    NSColor *selectionColor = _tableGrid._selectionColor;
+    BOOL disabled = !_tableGrid._containsFirstResponder;
+    NSRect selectionInsetRect = NSZeroRect;
+    
+    if (isFilling && !disabled) {
+        selectionColor = NSColor.systemYellowColor;
+    }
+    
+	// Determine the selection rectangle
     if(selectedColumns.count && selectedRows.count) {
 		NSRect selectionTopLeft = [self frameOfCellAtColumn:selectedColumns.firstIndex row:selectedRows.firstIndex];
 		NSRect selectionBottomRight = [self frameOfCellAtColumn:selectedColumns.lastIndex row:selectedRows.lastIndex];
 		
         NSRect selectionRect = NSUnionRect(selectionTopLeft, selectionBottomRight);
-        NSRect selectionInsetRect = NSInsetRect(selectionRect, 0, 0);
-		NSBezierPath *selectionPath = [NSBezierPath bezierPathWithRect:selectionInsetRect];
-		NSAffineTransform *translate = [NSAffineTransform transform];
-		//[translate translateXBy:-0.5 yBy:-0.5];
-		[selectionPath transformUsingAffineTransform:translate];
-		
-		NSColor *selectionColor = NSColor.alternateSelectedControlColor;
-		
-		// If the view is not the first responder, then use a gray selection color
-		NSResponder *firstResponder = [self.window firstResponder];
-		BOOL disabled = (![firstResponder.class isSubclassOfClass:NSView.class] || ![(NSView *)firstResponder isDescendantOf:_tableGrid] || !self.window.isKeyWindow);
-		
-		if (disabled) {
-            selectionColor = [[selectionColor colorUsingColorSpace:NSColorSpace.genericGrayColorSpace] colorUsingColorSpace:NSColorSpace.genericRGBColorSpace];
-        } else if (isFilling) {
-            selectionColor = [NSColor colorWithCalibratedRed:0.996 green:0.827 blue:0.176 alpha:1.000];
-        }
-		
-		[[selectionColor colorWithAlphaComponent:0.3] set];
-		selectionPath.lineWidth = 1.0;
-		[selectionPath stroke];
-        
+        selectionInsetRect = NSInsetRect(selectionRect, 0, 0);
+        selectionPath = [NSBezierPath bezierPathWithRect:selectionInsetRect];
+        NSAffineTransform *translate = [NSAffineTransform transform];
+        [translate translateXBy:-0.5 yBy:-0.5];
+        [selectionPath transformUsingAffineTransform:translate];
+    }
+    
+    // Fill the selection rectangle
+    if (selectionPath) {
         [[selectionColor colorWithAlphaComponent:0.2f] set];
         [selectionPath fill];
+    }
+    
+    [self drawCellInteriorsInRect:rect];
+
+    // Draw the selection borders and grab handle art
+    if (selectionPath) {
+        [NSGraphicsContext.currentContext saveGraphicsState];
+        [selectionPath addClip];
         
+        [[selectionColor colorWithAlphaComponent:0.3] set];
+        selectionPath.lineWidth = 2.0;
+        [selectionPath stroke];
+        
+        [NSGraphicsContext.currentContext restoreGraphicsState];
+
 		if (!showsGrabHandle || disabled || selectedColumns.count > 1) {
 			grabHandleRect = NSZeroRect;
 		}
@@ -202,65 +284,10 @@ NSString * const MBTableGridTrackingPartKey = @"part";
         // Inavlidate cursors so we use the correct cursor for the selection in the right place
         [self.window invalidateCursorRectsForView:self];
 	}
-	
-	// Draw the column drop indicator
-	if (isDraggingColumnOrRow && dropColumn != NSNotFound && dropColumn <= _tableGrid.numberOfColumns && dropRow == NSNotFound) {
-		NSRect columnBorder;
-		if(dropColumn < _tableGrid.numberOfColumns) {
-			columnBorder = [self rectOfColumn:dropColumn];
-        } else {
-			columnBorder = [self rectOfColumn:dropColumn-1];
-			columnBorder.origin.x += columnBorder.size.width;
-		}
-		columnBorder.origin.x = NSMinX(columnBorder)-DROP_TARGET_BOX_THICKNESS/2;
-		columnBorder.size.width = DROP_TARGET_BOX_THICKNESS;
-		
-		NSColor *selectionColor = NSColor.alternateSelectedControlColor;
-		
-		NSBezierPath *borderPath = [NSBezierPath bezierPathWithRect:columnBorder];
-		borderPath.lineWidth = DROP_TARGET_LINE_WIDTH;
-		
-		[selectionColor set];
-		[borderPath stroke];
-	}
-	
-	// Draw the row drop indicator
-	if (isDraggingColumnOrRow && dropRow != NSNotFound && dropRow <= _tableGrid.numberOfRows && dropColumn == NSNotFound) {
-		NSRect rowBorder;
-		if(dropRow < _tableGrid.numberOfRows) {
-			rowBorder = [self rectOfRow:dropRow];
-		} else {
-			rowBorder = [self rectOfRow:dropRow-1];
-			rowBorder.origin.y += rowBorder.size.height;
-		}
-		rowBorder.origin.y = NSMinY(rowBorder)-DROP_TARGET_BOX_THICKNESS/2;
-		rowBorder.size.height = DROP_TARGET_BOX_THICKNESS;
-		
-		NSColor *selectionColor = NSColor.alternateSelectedControlColor;
-		
-		NSBezierPath *borderPath = [NSBezierPath bezierPathWithRect:rowBorder];
-		borderPath.lineWidth = DROP_TARGET_LINE_WIDTH;
-		
-		[selectionColor set];
-		[borderPath stroke];
-	}
-	
-	// Draw the cell drop indicator
-	if (!isDraggingColumnOrRow && dropRow != NSNotFound && dropRow <= _tableGrid.numberOfRows && dropColumn != NSNotFound && dropColumn <= _tableGrid.numberOfColumns) {
-		NSRect cellFrame = [self frameOfCellAtColumn:dropColumn row:dropRow];
-		cellFrame.origin.x -= 2.0;
-		cellFrame.origin.y -= 2.0;
-		cellFrame.size.width += 3.0;
-		cellFrame.size.height += 3.0;
-		
-		NSBezierPath *borderPath = [NSBezierPath bezierPathWithRect:NSInsetRect(cellFrame, 2, 2)];
-		
-		NSColor *dropColor = NSColor.alternateSelectedControlColor;
-		[dropColor set];
-		
-		borderPath.lineWidth = 2.0;
-		[borderPath stroke];
-	}
+    
+    [self drawColumnDropIndicator];
+    [self drawRowDropIndicator];
+    [self drawCellDropIndicator];
 }
 
 - (BOOL)isFlipped
@@ -471,7 +498,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 	
 	mouseDownColumn = NSNotFound;
 	mouseDownRow = NSNotFound;
-	[self.window resetCursorRects];
+    [self.window invalidateCursorRectsForView:self];
 }
 
 - (void)mouseEntered:(NSEvent *)theEvent
@@ -707,6 +734,8 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 	editor.delegate = self;
 	editor.alignment = selectedCell.alignment;
 	editor.font = selectedCell.font;
+    if ([selectedCell isKindOfClass:[NSTextFieldCell class]])
+        ((NSTextFieldCell *)selectedCell).textColor = NSColor.controlTextColor;
 	selectedCell.stringValue = currentValue;
 	editor.string = currentValue;
 	NSEvent* event = NSApp.currentEvent;
@@ -896,7 +925,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 	// Set the color in the current graphics context
 	
 	[NSColor.darkGrayColor setStroke];
-	[[NSColor colorWithCalibratedRed:0.996 green:0.827 blue:0.176 alpha:1.000] setFill];
+    [NSColor.systemYellowColor setFill];
 	
 	// Create our circle path
 	NSRect rect = NSMakeRect(1.0, 1.0, kGRAB_HANDLE_SIDE_LENGTH - 2.0, kGRAB_HANDLE_SIDE_LENGTH - 2.0);

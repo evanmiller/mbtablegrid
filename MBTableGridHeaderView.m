@@ -374,7 +374,7 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
         isResizing = NO;
 		
         [self.window enableCursorRects];
-        [self.window resetCursorRects];
+        [self.window invalidateCursorRectsForView:self];
         
 		// update cache of column rects
 		
