@@ -568,7 +568,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 	[self.window makeFirstResponder:self.tableGrid];
 
 	if(movementType != NSTextMovementCancel) {
-		NSString *stringValue = [[aNotification.object string] copy];
+        NSString *stringValue = [((NSText *)aNotification.object).string copy];
 		[self.tableGrid _setObjectValue:stringValue forColumn:editedColumn row:editedRow];
 	}
 
@@ -701,7 +701,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 	selectedCell.editable = YES;
 	selectedCell.selectable = YES;
 	
-	id currentValue = [self.tableGrid _objectValueForColumn:editedColumn row:editedRow];
+	NSString *currentValue = [self.tableGrid _objectValueForColumn:editedColumn row:editedRow];
 
 	NSText *editor = [self.window fieldEditor:YES forObject:self];
 	editor.delegate = self;
@@ -714,7 +714,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 		[selectedCell editWithFrame:cellFrame inView:self editor:editor delegate:self event:event];
 	}
 	else {
-		[selectedCell selectWithFrame:cellFrame inView:self editor:editor delegate:self start:0 length:[currentValue length]];
+        [selectedCell selectWithFrame:cellFrame inView:self editor:editor delegate:self start:0 length:currentValue.length];
 	}
 }
 
