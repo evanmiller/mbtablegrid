@@ -64,7 +64,7 @@
  */
 
 /**
- * @brief		Returns the rectangle containing the header tile for
+ * @brief		Returns the rectangle containing the footer tile for
  *				the column at \c columnIndex.
  * @param		columnIndex	The index of the column containing the
  *							header whose rectangle you want.
@@ -72,9 +72,9 @@
  *				\c columnIndex. Returns \c NSZeroRect if \c columnIndex 
  *				lies outside the range of valid column indices for the 
  *				receiver.
- * @see			headerRectOfRow:
  */
-//- (NSRect)headerRectOfColumn:(NSUInteger)columnIndex;
+
+- (NSRect)footerRectOfColumn:(NSUInteger)columnIndex;
 
 /**
  * @}

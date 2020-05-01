@@ -1213,10 +1213,28 @@ cells. A cell can individually override this behavior. */
  *
  *  @param  columnIndex     The column that was clicked (right-clicked or Control-clicked)
  *
+ *  @see    tableGrid:willDisplayFooterMenu:forColumn:
  *  @see    tableGrid:willDisplayHeaderMenu:forRow:
  */
 
 - (void)tableGrid:(MBTableGrid *)aTableGrid willDisplayHeaderMenu:(NSMenu *)menu forColumn:(NSUInteger)columnIndex;
+
+/**
+ * @brief   Informs the delegate that the column footer's contextual menu is about to be displayed.
+ *          The menu items can then be customized for the particular column.
+ *          (The column header menu can be set via the \c menu property of the table grid's \c columnFooterView.)
+ *
+ *  @param  aTableGrid      The table grid object that will display the menu
+ *
+ *  @param  menu                    The menu about to be displayed
+ *
+ *  @param  columnIndex     The column that was clicked (right-clicked or Control-clicked)
+ *
+ *  @see    tableGrid:willDisplayHeaderMenu:forRow:
+ *  @see    tableGrid:willDisplayHeaderMenu:forColumn:
+ */
+
+- (void)tableGrid:(MBTableGrid *)aTableGrid willDisplayFooterMenu:(NSMenu *)menu forColumn:(NSUInteger)columnIndex;
 
 /**
  * @brief   Informs the delegate that the row header's contextual menu is about to be displayed.
@@ -1230,6 +1248,7 @@ cells. A cell can individually override this behavior. */
  *  @param  rowIndex            The row that was clicked (right-clicked or Control-clicked)
  *
  *  @see    tableGrid:willDisplayHeaderMenu:forColumn:
+ *  @see    tableGrid:willDisplayFooterMenu:forColumn:
  */
 
 - (void)tableGrid:(MBTableGrid *)aTableGrid willDisplayHeaderMenu:(NSMenu *)menu forRow:(NSUInteger)rowIndex;
