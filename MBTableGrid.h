@@ -1222,7 +1222,7 @@ cells. A cell can individually override this behavior. */
 /**
  * @brief   Informs the delegate that the column footer's contextual menu is about to be displayed.
  *          The menu items can then be customized for the particular column.
- *          (The column header menu can be set via the \c menu property of the table grid's \c columnFooterView.)
+ *          (The column footer menu can be set via the \c menu property of the table grid's \c columnFooterView.)
  *
  *  @param  aTableGrid      The table grid object that will display the menu
  *
