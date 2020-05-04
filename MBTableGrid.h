@@ -144,6 +144,7 @@ typedef NS_ENUM(NSUInteger, MBVerticalEdge) {
 @property (getter=isRowHeaderVisible, nonatomic, assign) BOOL rowHeaderVisible;
 
 @property (nonatomic, assign) CGFloat rowHeaderWidth;
+@property (nonatomic, assign) CGFloat columnFooterHeight;
 @property (nonatomic, assign) CGFloat minimumColumnWidth;
 
 @property (nonatomic) NSEdgeInsets contentInsets;

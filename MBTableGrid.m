@@ -143,6 +143,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		self.cell = defaultCell;
 
         _rowHeaderWidth = MBTableGridRowHeaderWidth;
+        _columnFooterHeight = MBTableGridColumnFooterHeight;
         _minimumColumnWidth = MBTableGridMinimumColumnWidth;
         
         // Setup the content view
@@ -179,8 +180,8 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		[self addSubview:columnHeaderScrollView];
         
         // Setup the footer view
-        NSRect columnFooterFrame = NSMakeRect(0, frameRect.size.height - MBTableGridColumnFooterHeight,
-                                              frameRect.size.width, MBTableGridColumnFooterHeight);
+        NSRect columnFooterFrame = NSMakeRect(0, frameRect.size.height - _columnFooterHeight,
+                                              frameRect.size.width, _columnFooterHeight);
         
         columnFooterScrollView = [[NSScrollView alloc] initWithFrame:columnFooterFrame];
         columnFooterView = [[MBTableGridFooterView alloc] initWithFrame:NSMakeRect(0, 0,
@@ -214,8 +215,8 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
         headerCornerView.translatesAutoresizingMaskIntoConstraints = NO;
         [self addSubview:headerCornerView];
         
-        footerCornerView = [[NSVisualEffectView alloc] initWithFrame:NSMakeRect(0, self.frame.size.height - MBTableGridColumnFooterHeight,
-                                                                                MBTableGridRowHeaderWidth, MBTableGridColumnFooterHeight)];
+        footerCornerView = [[NSVisualEffectView alloc] initWithFrame:NSMakeRect(0, self.frame.size.height - _columnFooterHeight,
+                                                                                _rowHeaderWidth, _columnFooterHeight)];
         footerCornerView.material = NSVisualEffectMaterialSidebar;
         footerCornerView.blendingMode = NSVisualEffectBlendingModeWithinWindow;
         footerCornerView.translatesAutoresizingMaskIntoConstraints = NO;
@@ -1455,7 +1456,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
     [rowHeaderView setFrameSize:rowHeaderSize];
 
     // Update the colunm footer view's size
-    NSSize columnFooterSize = NSMakeSize(contentRectSize.width, NSHeight(columnFooterView.frame));
+    NSSize columnFooterSize = NSMakeSize(contentRectSize.width, _columnFooterHeight);
     if (!contentScrollView.verticalScroller.isHidden && contentScrollView.scrollerStyle == NSScrollerStyleLegacy) {
         columnFooterSize.width += [NSScroller scrollerWidthForControlSize:NSControlSizeRegular
                                                             scrollerStyle:contentScrollView.scrollerStyle];
@@ -1650,7 +1651,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
                                     toItem:nil
                                  attribute:NSLayoutAttributeNotAnAttribute
                                 multiplier:0.0
-                                  constant:isVisible ? MBTableGridColumnFooterHeight : 0.0].active = YES;
+                                  constant:isVisible ? _columnFooterHeight : 0.0].active = YES;
     [self updateSubviewInsets];
 }
 
@@ -1672,8 +1673,12 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 - (void)setRowHeaderWidth:(CGFloat)newWidth {
     _rowHeaderWidth = newWidth;
-    if (newWidth > 0.0 && self.isRowHeaderVisible)
-        self.rowHeaderVisible = YES; // trigger an update
+    self.rowHeaderVisible = self.isRowHeaderVisible; // trigger an update
+}
+
+- (void)setColumnFooterHeight:(CGFloat)newHeight {
+    _columnFooterHeight = newHeight;
+    self.columnFooterVisible = self.isColumnFooterVisible; // trigger an update
 }
 
 - (void)setContentInsets:(NSEdgeInsets)contentInsets {
