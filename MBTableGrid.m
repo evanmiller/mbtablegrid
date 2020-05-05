@@ -45,6 +45,7 @@ CGFloat MBTableHeaderSortIndicatorMargin = 4.0;
 #define MBTableGridColumnHeaderHeight 24.0
 #define MBTableGridColumnFooterHeight 24.0
 #define MBTableGridRowHeaderWidth 56.0
+#define MBTableGridRowFooterWidth 24.0
 
 #pragma mark -
 #pragma mark Drag Types
@@ -64,8 +65,7 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 - (void)_setWidth:(CGFloat) width forColumn:(NSUInteger)columnIndex;
 - (BOOL)_canEditCellAtColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 - (NSCell *)_footerCellForColumn:(NSUInteger)columnIndex;
-- (id)_footerValueForColumn:(NSUInteger)columnIndex;
-- (void)_setFooterValue:(id)value forColumn:(NSUInteger)columnIndex;
+- (NSCell *)_footerCellForRow:(NSUInteger)rowIndex;
 @end
 
 @interface MBTableGrid (DragAndDrop)
@@ -78,7 +78,6 @@ NSString *MBTableGridRowDataType = @"mbtablegrid.pasteboard.row";
 @end
 
 @interface MBTableGrid (PrivateAccessors)
-- (MBTableGridContentView *)_contentView;
 - (void)_setStickyColumn:(MBHorizontalEdge)stickyColumn row:(MBVerticalEdge)stickyRow;
 - (MBHorizontalEdge)_stickyColumn;
 - (MBVerticalEdge)_stickyRow;
@@ -144,6 +143,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
         _rowHeaderWidth = MBTableGridRowHeaderWidth;
         _columnFooterHeight = MBTableGridColumnFooterHeight;
+        _rowFooterWidth = MBTableGridRowFooterWidth;
         _minimumColumnWidth = MBTableGridMinimumColumnWidth;
         
         // Setup the content view
@@ -174,10 +174,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		columnHeaderView.orientation = MBTableHeaderHorizontalOrientation;
 		columnHeaderScrollView.documentView = columnHeaderView;
 		columnHeaderScrollView.drawsBackground = NO;
-        columnHeaderScrollView.automaticallyAdjustsContentInsets = NO;
-        columnHeaderScrollView.translatesAutoresizingMaskIntoConstraints = NO;
         columnHeaderScrollView.verticalScrollElasticity = NSScrollElasticityNone;
-		[self addSubview:columnHeaderScrollView];
         
         // Setup the footer view
         NSRect columnFooterFrame = NSMakeRect(0, frameRect.size.height - _columnFooterHeight,
@@ -190,10 +187,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
                                                            andTableGrid:self];
         columnFooterScrollView.documentView = columnFooterView;
         columnFooterScrollView.drawsBackground = YES;
-        columnFooterScrollView.automaticallyAdjustsContentInsets = NO;
-        columnFooterScrollView.translatesAutoresizingMaskIntoConstraints = NO;
         columnFooterScrollView.verticalScrollElasticity = NSScrollElasticityNone;
-        [self addSubview:columnFooterScrollView];
 
 		// Setup the row headers
 		NSRect rowHeaderFrame = NSMakeRect(0, 0, _rowHeaderWidth,
@@ -204,27 +198,47 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		rowHeaderView.orientation = MBTableHeaderVerticalOrientation;
 		rowHeaderScrollView.documentView = rowHeaderView;
 		rowHeaderScrollView.drawsBackground = NO;
-        rowHeaderScrollView.automaticallyAdjustsContentInsets = NO;
-        rowHeaderScrollView.translatesAutoresizingMaskIntoConstraints = NO;
         rowHeaderScrollView.horizontalScrollElasticity = NSScrollElasticityNone;
-		[self addSubview:rowHeaderScrollView];
         
-        headerCornerView = [[NSVisualEffectView alloc] initWithFrame:NSMakeRect(0, 0, _rowHeaderWidth, MBTableGridColumnHeaderHeight)];
-        headerCornerView.material = NSVisualEffectMaterialSidebar;
-        headerCornerView.blendingMode = NSVisualEffectBlendingModeWithinWindow;
-        headerCornerView.translatesAutoresizingMaskIntoConstraints = NO;
-        [self addSubview:headerCornerView];
+        // Setup the row footer
+        NSRect rowFooterFrame = NSMakeRect(frameRect.size.width - _rowFooterWidth, 0,
+                                           _rowFooterWidth, self.frame.size.height);
+        rowFooterScrollView = [[NSScrollView alloc] initWithFrame:rowHeaderFrame];
+        rowFooterView = [[MBTableGridFooterView alloc] initWithFrame:NSMakeRect(0, 0, rowFooterFrame.size.width, rowFooterFrame.size.height)
+                                                        andTableGrid:self];
+        rowFooterView.vertical = YES;
+        rowFooterScrollView.documentView = rowFooterView;
+        rowFooterScrollView.drawsBackground = YES;
+        rowFooterScrollView.horizontalScrollElasticity = NSScrollElasticityNone;
         
-        footerCornerView = [[NSVisualEffectView alloc] initWithFrame:NSMakeRect(0, self.frame.size.height - _columnFooterHeight,
-                                                                                _rowHeaderWidth, _columnFooterHeight)];
-        footerCornerView.material = NSVisualEffectMaterialSidebar;
-        footerCornerView.blendingMode = NSVisualEffectBlendingModeWithinWindow;
-        footerCornerView.translatesAutoresizingMaskIntoConstraints = NO;
-        [self addSubview:footerCornerView];
+        for (NSScrollView *scrollView in @[ rowHeaderScrollView, rowFooterScrollView,
+                                            columnHeaderScrollView, columnFooterScrollView ]) {
+            scrollView.automaticallyAdjustsContentInsets = NO;
+            scrollView.translatesAutoresizingMaskIntoConstraints = NO;
+            [self addSubview:scrollView];
+        }
+        
+        leadingHeaderCornerView = [[NSVisualEffectView alloc] initWithFrame:NSMakeRect(0, 0, _rowHeaderWidth, MBTableGridColumnHeaderHeight)];
+        leadingFooterCornerView = [[NSVisualEffectView alloc] initWithFrame:NSMakeRect(0, self.frame.size.height - _columnFooterHeight,
+                                                                                       _rowHeaderWidth, _columnFooterHeight)];
+        trailingHeaderCornerView = [[NSVisualEffectView alloc] initWithFrame:NSMakeRect(self.frame.size.width - _rowFooterWidth, 0,
+                                                                                        _rowFooterWidth, MBTableGridColumnHeaderHeight)];
+        trailingFooterCornerView = [[NSVisualEffectView alloc] initWithFrame:NSMakeRect(self.frame.size.width - _rowFooterWidth,
+                                                                                        self.frame.size.height - _columnFooterHeight,
+                                                                                       _rowHeaderWidth, _columnFooterHeight)];
+        
+        for (NSVisualEffectView *cornerView in @[ leadingHeaderCornerView, leadingFooterCornerView,
+                                                  trailingHeaderCornerView, trailingFooterCornerView ]) {
+            cornerView.material = NSVisualEffectMaterialSidebar;
+            cornerView.blendingMode = NSVisualEffectBlendingModeWithinWindow;
+            cornerView.translatesAutoresizingMaskIntoConstraints = NO;
+            [self addSubview:cornerView];
+        }
 
         self.columnHeaderVisible = YES;
         self.rowHeaderVisible = YES;
         self.columnFooterVisible = YES;
+        self.rowFooterVisible = NO;
         
         [self updateSubviewConstraints];
         [self updateSubviewInsets];
@@ -232,7 +246,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
         [self synchronizeScrollViewsWithScrollView:contentScrollView];
 
 		// We want to synchronize the scroll views
-        for (NSScrollView *scrollView in @[ contentScrollView, columnHeaderScrollView, rowHeaderScrollView, columnFooterScrollView ]) {
+        for (NSScrollView *scrollView in [self _scrollViews]) {
             [NSNotificationCenter.defaultCenter addObserver:self
                                                    selector:@selector(clipViewBoundsDidChange:)
                                                        name:NSViewBoundsDidChangeNotification
@@ -377,6 +391,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
     columnHeaderView.needsDisplay = needsDisplay;
     rowHeaderView.needsDisplay = needsDisplay;
     columnFooterView.needsDisplay = needsDisplay;
+    rowFooterView.needsDisplay = needsDisplay;
 }
 
 #pragma mark Resize scrollview content size
@@ -385,15 +400,16 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 - (NSView*) hitTest:(NSPoint)point {
 	NSView* v = [super hitTest:point];
 
-    // If a mouse click hit a clip view, clear the selection
-    if (v == contentScrollView.contentView || v == columnHeaderScrollView.contentView ||
-        v == rowHeaderScrollView.contentView || v == columnFooterScrollView.contentView) {
-        if (self.window.currentEvent.type == NSEventTypeLeftMouseDown) {
-			NSIndexSet* empty = [NSIndexSet indexSet];
-			[self setSelectedRowIndexes:empty notify:YES];
-			[self setSelectedColumnIndexes:empty notify:YES];
-		}
-	}
+    // If a mouse click hits a clip view, clear the selection
+    for (NSScrollView *scrollView in [self _scrollViews]) {
+        if (v == scrollView.contentView) {
+            if (self.window.currentEvent.type == NSEventTypeLeftMouseDown) {
+                NSIndexSet* empty = [NSIndexSet indexSet];
+                [self setSelectedRowIndexes:empty notify:YES];
+                [self setSelectedColumnIndexes:empty notify:YES];
+            }
+        }
+    }
 	return v;
 }
 
@@ -1069,6 +1085,12 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 #pragma mark -
 #pragma mark Notifications
 
+- (NSArray<NSScrollView *> *)_scrollViews {
+    return @[ contentScrollView,
+              rowHeaderScrollView, rowFooterScrollView,
+              columnHeaderScrollView, columnFooterScrollView ];
+}
+
 - (void)synchronizeScrollView:(NSScrollView *)scrollView withChangedBoundsOrigin:(NSPoint)changedBoundsOrigin horizontal:(BOOL)horizontal {
     // Get the current origin
     NSPoint curOffset = scrollView.contentView.bounds.origin;
@@ -1090,7 +1112,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 - (void)synchronizeScrollViewsWithScrollView:(NSScrollView *)scrollView {
     NSPoint changedBoundsOrigin = scrollView.contentView.bounds.origin;
-    for (NSScrollView *targetScrollView in @[ contentScrollView, rowHeaderScrollView, columnHeaderScrollView, columnFooterScrollView ]) {
+    for (NSScrollView *targetScrollView in [self _scrollViews]) {
         if (targetScrollView == scrollView)
             continue;
         
@@ -1107,7 +1129,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 }
 
 - (void)clipViewBoundsDidChange:(NSNotification *)aNotification {
-    for (NSScrollView *scrollView in @[ contentScrollView, rowHeaderScrollView, columnHeaderScrollView, columnFooterScrollView ]) {
+    for (NSScrollView *scrollView in [self _scrollViews]) {
         if (scrollView.contentView == aNotification.object) {
             [self synchronizeScrollViewsWithScrollView:scrollView];
             return;
@@ -1398,15 +1420,29 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
     [rowHeaderScrollView.topAnchor constraintEqualToAnchor:self.topAnchor].active = YES;
     [rowHeaderScrollView.bottomAnchor constraintEqualToAnchor:self.bottomAnchor].active = YES;
     
-    [headerCornerView.leadingAnchor constraintEqualToAnchor:rowHeaderScrollView.leadingAnchor].active = YES;
-    [headerCornerView.topAnchor constraintEqualToAnchor:columnHeaderScrollView.topAnchor].active = YES;
-    [headerCornerView.trailingAnchor constraintEqualToAnchor:rowHeaderScrollView.trailingAnchor].active = YES;
-    [headerCornerView.bottomAnchor constraintEqualToAnchor:columnHeaderScrollView.bottomAnchor].active = YES;
+    [rowFooterScrollView.trailingAnchor constraintEqualToAnchor:self.trailingAnchor constant:-_contentInsets.right].active = YES;
+    [rowFooterScrollView.topAnchor constraintEqualToAnchor:self.topAnchor].active = YES;
+    [rowFooterScrollView.bottomAnchor constraintEqualToAnchor:self.bottomAnchor].active = YES;
     
-    [footerCornerView.leadingAnchor constraintEqualToAnchor:rowHeaderScrollView.leadingAnchor].active = YES;
-    [footerCornerView.bottomAnchor constraintEqualToAnchor:columnFooterScrollView.bottomAnchor].active = YES;
-    [footerCornerView.trailingAnchor constraintEqualToAnchor:rowHeaderScrollView.trailingAnchor].active = YES;
-    [footerCornerView.topAnchor constraintEqualToAnchor:columnFooterScrollView.topAnchor].active = YES;
+    [leadingHeaderCornerView.leadingAnchor constraintEqualToAnchor:rowHeaderScrollView.leadingAnchor].active = YES;
+    [leadingHeaderCornerView.topAnchor constraintEqualToAnchor:columnHeaderScrollView.topAnchor].active = YES;
+    [leadingHeaderCornerView.trailingAnchor constraintEqualToAnchor:rowHeaderScrollView.trailingAnchor].active = YES;
+    [leadingHeaderCornerView.bottomAnchor constraintEqualToAnchor:columnHeaderScrollView.bottomAnchor].active = YES;
+    
+    [leadingFooterCornerView.leadingAnchor constraintEqualToAnchor:rowHeaderScrollView.leadingAnchor].active = YES;
+    [leadingFooterCornerView.bottomAnchor constraintEqualToAnchor:columnFooterScrollView.bottomAnchor].active = YES;
+    [leadingFooterCornerView.trailingAnchor constraintEqualToAnchor:rowHeaderScrollView.trailingAnchor].active = YES;
+    [leadingFooterCornerView.topAnchor constraintEqualToAnchor:columnFooterScrollView.topAnchor].active = YES;
+    
+    [trailingHeaderCornerView.leadingAnchor constraintEqualToAnchor:rowFooterScrollView.leadingAnchor].active = YES;
+    [trailingHeaderCornerView.topAnchor constraintEqualToAnchor:columnHeaderScrollView.topAnchor].active = YES;
+    [trailingHeaderCornerView.trailingAnchor constraintEqualToAnchor:rowFooterScrollView.trailingAnchor].active = YES;
+    [trailingHeaderCornerView.bottomAnchor constraintEqualToAnchor:columnHeaderScrollView.bottomAnchor].active = YES;
+    
+    [trailingFooterCornerView.leadingAnchor constraintEqualToAnchor:rowFooterScrollView.leadingAnchor].active = YES;
+    [trailingFooterCornerView.bottomAnchor constraintEqualToAnchor:columnFooterScrollView.bottomAnchor].active = YES;
+    [trailingFooterCornerView.trailingAnchor constraintEqualToAnchor:rowFooterScrollView.trailingAnchor].active = YES;
+    [trailingFooterCornerView.topAnchor constraintEqualToAnchor:columnFooterScrollView.topAnchor].active = YES;
     
 }
 
@@ -1420,14 +1456,16 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
     };
 
     columnHeaderScrollView.contentInsets = NSEdgeInsetsMake(0, rowHeaderScrollView.frame.size.width + _contentInsets.left,
-                                                            0, _contentInsets.right);
+                                                            0, rowFooterScrollView.frame.size.width + _contentInsets.right);
     columnFooterScrollView.contentInsets = NSEdgeInsetsMake(0, rowHeaderScrollView.frame.size.width + _contentInsets.left,
-                                                            0, _contentInsets.right);
+                                                            0, rowFooterScrollView.frame.size.width + _contentInsets.right);
     contentScrollView.contentInsets = NSEdgeInsetsMake(columnHeaderScrollView.frame.size.height + _contentInsets.top,
                                                        rowHeaderScrollView.frame.size.width + _contentInsets.left,
                                                        columnFooterScrollView.frame.size.height + _contentInsets.bottom,
-                                                       _contentInsets.right);
+                                                       rowFooterScrollView.frame.size.width + _contentInsets.right);
     rowHeaderScrollView.contentInsets = NSEdgeInsetsMake(columnHeaderScrollView.frame.size.height + _contentInsets.top, 0,
+                                                         columnFooterScrollView.frame.size.height + _contentInsets.bottom, 0);
+    rowFooterScrollView.contentInsets = NSEdgeInsetsMake(columnHeaderScrollView.frame.size.height + _contentInsets.top, 0,
                                                          columnFooterScrollView.frame.size.height + _contentInsets.bottom, 0);
     
     [self scrollDistance:scrollDelta];
@@ -1436,29 +1474,29 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 - (void)updateAuxiliaryViewSizes {
     NSSize contentRectSize = contentView.frame.size;
 
-	// Update the column header view's size
+	// Update the column header/footer view's size
     NSSize columnHeaderSize = NSMakeSize(contentRectSize.width, NSHeight(columnHeaderView.frame));
+    NSSize columnFooterSize = NSMakeSize(contentRectSize.width, NSHeight(columnFooterView.frame));
     if (!contentScrollView.verticalScroller.isHidden && contentScrollView.scrollerStyle == NSScrollerStyleLegacy) {
-        columnHeaderSize.width += [NSScroller scrollerWidthForControlSize:NSControlSizeRegular
-                                                            scrollerStyle:contentScrollView.scrollerStyle];
+        CGFloat scroller_width = [NSScroller scrollerWidthForControlSize:NSControlSizeRegular
+                                                           scrollerStyle:contentScrollView.scrollerStyle];
+        columnHeaderSize.width += scroller_width;
+        columnFooterSize.width += scroller_width;
     }
     [columnHeaderView setFrameSize:columnHeaderSize];
+    [columnFooterView setFrameSize:columnFooterSize];
 
-    // Update the row header view's size
+    // Update the row header/footer view's size
     NSSize rowHeaderSize = NSMakeSize(_rowHeaderWidth, contentRectSize.height);
+    NSSize rowFooterSize = NSMakeSize(_rowFooterWidth, contentRectSize.height);
     if (!contentScrollView.horizontalScroller.isHidden && contentScrollView.scrollerStyle == NSScrollerStyleLegacy) {
-        rowHeaderSize.height += [NSScroller scrollerWidthForControlSize:NSControlSizeRegular
-                                                          scrollerStyle:contentScrollView.scrollerStyle];
+        CGFloat scroller_height = [NSScroller scrollerWidthForControlSize:NSControlSizeRegular
+                                                            scrollerStyle:contentScrollView.scrollerStyle];
+        rowHeaderSize.height += scroller_height;
+        rowFooterSize.height += scroller_height;
     }
     [rowHeaderView setFrameSize:rowHeaderSize];
-
-    // Update the colunm footer view's size
-    NSSize columnFooterSize = NSMakeSize(contentRectSize.width, _columnFooterHeight);
-    if (!contentScrollView.verticalScroller.isHidden && contentScrollView.scrollerStyle == NSScrollerStyleLegacy) {
-        columnFooterSize.width += [NSScroller scrollerWidthForControlSize:NSControlSizeRegular
-                                                            scrollerStyle:contentScrollView.scrollerStyle];
-    }
-    [columnFooterView setFrameSize:columnFooterSize];
+    [rowFooterView setFrameSize:rowFooterSize];
 }
 
 - (void)preferredScrollerStyleDidChange:(NSNotification *)notification {
@@ -1542,7 +1580,8 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 - (NSRect)rectOfRow:(NSUInteger)rowIndex {
 	NSRect rect = [self convertRect:[contentView rectOfRow:rowIndex] fromView:contentView];
 	rect.origin.x = 0;
-	rect.size.width += rowHeaderScrollView.frame.size.width;
+    rect.size.width += rowHeaderScrollView.frame.size.width;
+    rect.size.width += rowFooterScrollView.frame.size.width;
 
 	return rect;
 }
@@ -1579,11 +1618,11 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 }
 
 - (NSRect)headerRectOfCorner {
-    return headerCornerView.frame;
+    return leadingHeaderCornerView.frame;
 }
 
 - (NSRect)footerRectOfCorner {
-    return footerCornerView.frame;
+    return leadingFooterCornerView.frame;
 }
 
 - (NSInteger)columnAtPoint:(NSPoint)aPoint {
@@ -1614,6 +1653,10 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 - (MBTableGridFooterView *)columnFooterView {
     return columnFooterView;
+}
+
+- (MBTableGridFooterView *)rowFooterView {
+    return rowFooterView;
 }
 
 - (MBTableGridContentView *)contentView {
@@ -1652,6 +1695,11 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
     [self updateSubviewInsets];
 }
 
+- (void)setColumnFooterHeight:(CGFloat)newHeight {
+    _columnFooterHeight = newHeight;
+    self.columnFooterVisible = self.isColumnFooterVisible; // trigger an update
+}
+
 - (BOOL)isRowHeaderVisible {
     return rowHeaderScrollView.frame.size.width > 0.0;
 }
@@ -1673,9 +1721,25 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
     self.rowHeaderVisible = self.isRowHeaderVisible; // trigger an update
 }
 
-- (void)setColumnFooterHeight:(CGFloat)newHeight {
-    _columnFooterHeight = newHeight;
-    self.columnFooterVisible = self.isColumnFooterVisible; // trigger an update
+- (BOOL)isRowFooterVisible {
+    return rowFooterScrollView.frame.size.width > 0.0;
+}
+
+- (void)setRowFooterVisible:(BOOL)isVisible {
+    [rowFooterScrollView removeConstraints:rowFooterScrollView.constraints];
+    [NSLayoutConstraint constraintWithItem:rowFooterScrollView
+                                 attribute:NSLayoutAttributeWidth
+                                 relatedBy:NSLayoutRelationEqual
+                                    toItem:nil
+                                 attribute:NSLayoutAttributeNotAnAttribute
+                                multiplier:0.0
+                                  constant:isVisible ? _rowFooterWidth : 0.0].active = YES;
+    [self updateSubviewInsets];
+}
+
+- (void)setRowFooterWidth:(CGFloat)newWidth {
+    _rowFooterWidth = newWidth;
+    self.rowFooterVisible = self.isRowFooterVisible; // trigger an update
 }
 
 - (void)setContentInsets:(NSEdgeInsets)contentInsets {
@@ -1886,7 +1950,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 	return YES;
 }
 
-#pragma mark Footer
+#pragma mark Footers
 
 - (NSCell *)_footerCellForColumn:(NSUInteger)columnIndex {
     if ([self.dataSource respondsToSelector:@selector(tableGrid:footerCellForColumn:)]) {
@@ -1895,18 +1959,11 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
     return nil;
 }
 
-- (id)_footerValueForColumn:(NSUInteger)columnIndex {
-    if ([self.dataSource respondsToSelector:@selector(tableGrid:footerValueForColumn:)]) {
-        id value = [self.dataSource tableGrid:self footerValueForColumn:columnIndex];
-        return value;
+- (NSCell *)_footerCellForRow:(NSUInteger)rowIndex {
+    if ([self.dataSource respondsToSelector:@selector(tableGrid:footerCellForRow:)]) {
+        return [self.dataSource tableGrid:self footerCellForRow:rowIndex];
     }
     return nil;
-}
-
-- (void)_setFooterValue:(id)value forColumn:(NSUInteger)columnIndex {
-    if ([self.dataSource respondsToSelector:@selector(tableGrid:setFooterValue:forColumn:)]) {
-        [self.dataSource tableGrid:self setFooterValue:value forColumn:columnIndex];
-    }
 }
 
 @end
@@ -1926,10 +1983,6 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 @end
 
 @implementation MBTableGrid (PrivateAccessors)
-
-- (MBTableGridContentView *)_contentView {
-	return contentView;
-}
 
 - (void)_setStickyColumn:(MBHorizontalEdge)stickyColumn row:(MBVerticalEdge)stickyRow {
 	stickyColumnEdge = stickyColumn;

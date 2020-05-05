@@ -115,17 +115,21 @@ typedef NS_ENUM(NSUInteger, MBVerticalEdge) {
 	NSScrollView *rowHeaderScrollView;
 	MBTableGridHeaderView *rowHeaderView;
 	
-	/* Footer */
+	/* Footers */
 	NSScrollView *columnFooterScrollView;
 	MBTableGridFooterView *columnFooterView;
+    NSScrollView *rowFooterScrollView;
+    MBTableGridFooterView *rowFooterView;
 	
 	/* Content */
 	NSScrollView *contentScrollView;
 	MBTableGridContentView *contentView;
 
     /* Corners */
-    NSVisualEffectView *headerCornerView;
-    NSVisualEffectView *footerCornerView;
+    NSVisualEffectView *leadingHeaderCornerView;
+    NSVisualEffectView *leadingFooterCornerView;
+    NSVisualEffectView *trailingHeaderCornerView;
+    NSVisualEffectView *trailingFooterCornerView;
 	
 	/* Sticky Edges (for Shift+Arrow expansions) */
 	MBHorizontalEdge stickyColumnEdge;
@@ -142,9 +146,11 @@ typedef NS_ENUM(NSUInteger, MBVerticalEdge) {
 @property (getter=isColumnHeaderVisible, nonatomic, assign) BOOL columnHeaderVisible;
 @property (getter=isColumnFooterVisible, nonatomic, assign) BOOL columnFooterVisible;
 @property (getter=isRowHeaderVisible, nonatomic, assign) BOOL rowHeaderVisible;
+@property (getter=isRowHeaderVisible, nonatomic, assign) BOOL rowFooterVisible;
 
 @property (nonatomic, assign) CGFloat rowHeaderWidth;
 @property (nonatomic, assign) CGFloat columnFooterHeight;
+@property (nonatomic, assign) CGFloat rowFooterWidth;
 @property (nonatomic, assign) CGFloat minimumColumnWidth;
 
 @property (nonatomic) NSEdgeInsets contentInsets;
@@ -767,7 +773,7 @@ cells. A cell can individually override this behavior. */
  * @}
  */
 
-#pragma mark Footer
+#pragma mark Footers
 
 @optional
 
@@ -783,6 +789,20 @@ cells. A cell can individually override this behavior. */
  *  @return     The cell for the specified column footer.
  */
 - (NSCell *)tableGrid:(MBTableGrid *)aTableGrid footerCellForColumn:(NSUInteger)columnIndex;
+
+/**
+ *  @brief      Returns the cell for the footer of the specified row.
+ *
+ * @details        Optional; if not implemented, or returns nil, an empty footer is
+ *                displayed for this row.
+ *
+ *  @param      aTableGrid  The table grid that sent the message.
+ *  @param      rowIndex A row in \c aTableGrid.
+ *
+ *  @return     The cell for the specified row footer.
+ */
+- (NSCell *)tableGrid:(MBTableGrid *)aTableGrid footerCellForRow:(NSUInteger)rowIndex;
+
 
 /**
  * @brief		Returns the data object for the footer of the specified column.
@@ -1187,6 +1207,8 @@ cells. A cell can individually override this behavior. */
 - (void)tableGrid:(MBTableGrid *)aTableGrid didAddRows:(NSIndexSet *)rowIndexes;
 
 - (void)tableGrid:(MBTableGrid*)aTableGrid footerCellClicked:(NSCell*)cell forColumn:(NSUInteger)columnIndex withEvent:(NSEvent*)theEvent;
+
+- (void)tableGrid:(MBTableGrid*)aTableGrid footerCellClicked:(NSCell*)cell forRow:(NSUInteger)columnIndex withEvent:(NSEvent*)theEvent;
 
 #pragma mark Sorting
 

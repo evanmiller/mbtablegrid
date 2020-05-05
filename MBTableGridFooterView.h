@@ -25,18 +25,32 @@
 
 #import <Cocoa/Cocoa.h>
 
-@class MBTableGrid, MBFooterTextCell;
+@class MBTableGrid;
 
 /**
  * @brief		\c MBTableGridFooterView deals with the
  *				display and interaction with grid footers.
  */
 @interface MBTableGridFooterView : NSView {
-    MBFooterTextCell *_defaultCell;
     NSInteger editedColumn;
 }
 
 - (instancetype)initWithFrame:(NSRect)frameRect andTableGrid:(MBTableGrid *)tableGrid;
+
+/**
+ * @name        Display Properties
+ */
+/**
+ * @{
+ */
+
+/**
+ * @brief        The orientation of the receiver.
+ */
+@property (nonatomic, getter=isVertical) BOOL vertical;
+/**
+* @}
+*/
 
 /**
  * @name		The Grid View
@@ -49,7 +63,6 @@
  * @brief		Returns the \c MBTableGrid the receiver 
  *				belongs to.
  */
-//- (MBTableGrid *)tableGrid;
 @property (nonatomic, weak) MBTableGrid* tableGrid;
 
 /**
@@ -73,7 +86,6 @@
  *				lies outside the range of valid column indices for the 
  *				receiver.
  */
-
 - (NSRect)footerRectOfColumn:(NSUInteger)columnIndex;
 
 /**

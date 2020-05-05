@@ -26,14 +26,11 @@
 #import "MBTableGridFooterView.h"
 #import "MBTableGrid.h"
 #import "MBTableGridContentView.h"
-#import "MBFooterTextCell.h"
 
 @interface MBTableGrid ()
-- (MBTableGridContentView *)_contentView;
 - (NSCell *)_footerCellForColumn:(NSUInteger)columnIndex;
-- (id)_footerValueForColumn:(NSUInteger)columnIndex;
-- (void)_setFooterValue:(id)value forColumn:(NSUInteger)columnIndex;
 - (void)_willDisplayFooterMenu:(NSMenu *)menu forColumn:(NSUInteger)columnIndex;
+- (NSCell *)_footerCellForRow:(NSUInteger)columnIndex;
 @end
 
 @implementation MBTableGridFooterView
@@ -42,8 +39,6 @@
 {
     if(self = [super initWithFrame:frameRect]) {
 		self.tableGrid = tableGrid;
-        _defaultCell = [[MBFooterTextCell alloc] initTextCell:@""];
-        _defaultCell.bordered = NO;
     }
     return self;
 }
@@ -51,22 +46,17 @@
 - (void)drawRect:(NSRect)rect {
 	
 	// Draw the column footers
-	NSUInteger numberOfColumns = self.tableGrid.numberOfColumns;
+    NSUInteger numberOfColumns = self.isVertical ? self.tableGrid.numberOfRows : self.tableGrid.numberOfColumns;
 	NSUInteger column = 0;
     
 	while (column < numberOfColumns) {
-		NSRect cellFrame = [self footerRectOfColumn:column];
+        NSRect cellFrame = self.isVertical ? [self footerRectOfRow:column] : [self footerRectOfColumn:column];
 		
 		// Only draw the header if we need to
 		if ([self needsToDrawRect:cellFrame]) {
-            NSCell *_cell = [self.tableGrid _footerCellForColumn:column];
+            NSCell *_cell = self.isVertical ? [self.tableGrid _footerCellForRow:column] : [self.tableGrid _footerCellForColumn:column];
             
-            if (!_cell) {
-                _cell = _defaultCell;
-            }
-
-            MBTableGridCell *cell = (MBTableGridCell *)_cell;
-			[cell drawWithFrame:cellFrame inView:self];
+			[_cell drawWithFrame:cellFrame inView:self];
 		}
 		
 		column++;
@@ -96,11 +86,20 @@
         // Pass the event back to the MBTableGrid (Used to give First Responder status)
         [self.tableGrid mouseDown:theEvent];
         
-        editedColumn = mouseDownColumn;
+        editedColumn = (self.isVertical ?
+                        [self footerRowAtPoint:mouseLocationInContentView] :
+                        [self footerColumnAtPoint:mouseLocationInContentView]);
         
-        if ([self.tableGrid.delegate respondsToSelector:@selector(tableGrid:footerCellClicked:forColumn:withEvent:)]) {
-            NSCell *cell = [self.tableGrid _footerCellForColumn:mouseDownColumn];
-            [self.tableGrid.delegate tableGrid:self.tableGrid footerCellClicked:cell forColumn:mouseDownColumn withEvent:theEvent];
+        if (self.isVertical) {
+            if ([self.tableGrid.delegate respondsToSelector:@selector(tableGrid:footerCellClicked:forRow:withEvent:)]) {
+                NSCell *cell = [self.tableGrid _footerCellForRow:mouseDownColumn];
+                [self.tableGrid.delegate tableGrid:self.tableGrid footerCellClicked:cell forRow:editedColumn withEvent:theEvent];
+            }
+        } else {
+            if ([self.tableGrid.delegate respondsToSelector:@selector(tableGrid:footerCellClicked:forColumn:withEvent:)]) {
+                NSCell *cell = [self.tableGrid _footerCellForColumn:mouseDownColumn];
+                [self.tableGrid.delegate tableGrid:self.tableGrid footerCellClicked:cell forColumn:editedColumn withEvent:theEvent];
+            }
         }
     }
     
@@ -111,7 +110,11 @@
 {
     NSRect modifiedRect = proposedVisibleRect;
     
-    modifiedRect.origin.y = 0.0;
+    if (self.isVertical) {
+        modifiedRect.origin.x = 0.0;
+    } else {
+        modifiedRect.origin.y = 0.0;
+    }
     
     return modifiedRect;
 }
@@ -120,15 +123,28 @@
 
 - (NSRect)footerRectOfColumn:(NSUInteger)columnIndex
 {
-	NSRect rect = [[self.tableGrid _contentView] rectOfColumn:columnIndex];
+    NSRect rect = [self.tableGrid.contentView rectOfColumn:columnIndex];
 	rect.size.height = NSHeight(self.bounds);
 	
 	return rect;
 }
 
+- (NSRect)footerRectOfRow:(NSUInteger)rowIndex
+{
+    NSRect rect = [self.tableGrid.contentView rectOfRow:rowIndex];
+    rect.size.width = NSWidth(self.bounds);
+    
+    return rect;
+}
+
 - (NSInteger)footerColumnAtPoint:(NSPoint)aPoint
 {
-    return [[self.tableGrid _contentView] columnAtPoint:aPoint];
+    return [self.tableGrid.contentView columnAtPoint:aPoint];
+}
+
+- (NSInteger)footerRowAtPoint:(NSPoint)aPoint
+{
+    return [self.tableGrid.contentView rowAtPoint:aPoint];
 }
 
 @end

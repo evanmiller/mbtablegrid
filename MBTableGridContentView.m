@@ -50,8 +50,6 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 - (NSColor *)_selectionColor;
 - (BOOL)_containsFirstResponder;
 - (NSCell *)_footerCellForColumn:(NSUInteger)columnIndex;
-- (id)_footerValueForColumn:(NSUInteger)columnIndex;
-- (void)_setFooterValue:(id)value forColumn:(NSUInteger)columnIndex;
 @end
 
 @interface MBTableGridContentView (Cursors)

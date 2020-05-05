@@ -5,9 +5,9 @@
 //  Created by David Sinclair on 2015-02-27.
 //
 
-#import "MBFooterTextCell.h"
+#import "MBTableGridFooterTextCell.h"
 
-@interface MBFooterTextCell ()
+@interface MBTableGridFooterTextCell ()
 
 @property (nonatomic, strong) NSFont *attributedTitleFont;
 
@@ -15,7 +15,7 @@
 
 #pragma mark -
 
-@implementation MBFooterTextCell
+@implementation MBTableGridFooterTextCell
 
 - (NSAttributedString *)attributedTitle
 {
