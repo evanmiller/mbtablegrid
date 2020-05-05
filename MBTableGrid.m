@@ -440,9 +440,6 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 #pragma mark Mouse Events
 
 - (void)mouseDown:(NSEvent *)theEvent {
-	// End editing (if necessary)
-	[self.cell endEditing:[self.window fieldEditor:NO forObject:contentView]];
-
 	// If we're not the first responder, we need to be
 	if (self.window.firstResponder != self) {
 		[self.window makeFirstResponder:self];
