@@ -33,6 +33,7 @@
 - (NSCell *)_footerCellForColumn:(NSUInteger)columnIndex;
 - (id)_footerValueForColumn:(NSUInteger)columnIndex;
 - (void)_setFooterValue:(id)value forColumn:(NSUInteger)columnIndex;
+- (void)_willDisplayFooterMenu:(NSMenu *)menu forColumn:(NSUInteger)columnIndex;
 @end
 
 @implementation MBTableGridFooterView
@@ -76,6 +77,14 @@
 - (BOOL)isFlipped
 {
 	return YES;
+}
+
+- (NSMenu *)menuForEvent:(NSEvent *)theEvent {
+    NSPoint event_location = theEvent.locationInWindow;
+    NSPoint local_point = [self convertPoint:event_location fromView:nil];
+    NSInteger column = [self.tableGrid columnAtPoint:[self convertPoint:local_point toView:self.tableGrid]];
+    [self.tableGrid _willDisplayFooterMenu:self.menu forColumn:column];
+    return self.menu;
 }
 
 - (void)mouseDown:(NSEvent *)theEvent
