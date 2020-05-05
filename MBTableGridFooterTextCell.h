@@ -7,6 +7,6 @@
 
 #import "MBTableGridCell.h"
 
-@interface MBFooterTextCell : MBTableGridCell
+@interface MBTableGridFooterTextCell : MBTableGridCell
 
 @end

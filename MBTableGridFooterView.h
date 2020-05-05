@@ -25,18 +25,32 @@
 
 #import <Cocoa/Cocoa.h>
 
-@class MBTableGrid, MBFooterTextCell;
+@class MBTableGrid;
 
 /**
  * @brief		\c MBTableGridFooterView deals with the
  *				display and interaction with grid footers.
  */
 @interface MBTableGridFooterView : NSView {
-    MBFooterTextCell *_defaultCell;
     NSInteger editedColumn;
 }
 
 - (instancetype)initWithFrame:(NSRect)frameRect andTableGrid:(MBTableGrid *)tableGrid;
+
+/**
+ * @name        Display Properties
+ */
+/**
+ * @{
+ */
+
+/**
+ * @brief        The orientation of the receiver.
+ */
+@property (nonatomic, getter=isVertical) BOOL vertical;
+/**
+* @}
+*/
 
 /**
  * @name		The Grid View
@@ -49,7 +63,6 @@
  * @brief		Returns the \c MBTableGrid the receiver 
  *				belongs to.
  */
-//- (MBTableGrid *)tableGrid;
 @property (nonatomic, weak) MBTableGrid* tableGrid;
 
 /**
@@ -72,9 +85,23 @@
  *				\c columnIndex. Returns \c NSZeroRect if \c columnIndex 
  *				lies outside the range of valid column indices for the 
  *				receiver.
+ * @see         footerRectOfRow:
  */
-
 - (NSRect)footerRectOfColumn:(NSUInteger)columnIndex;
+
+/**
+ * @brief        Returns the rectangle containing the footer tile for
+ *                the row at \c rowIndex (vertical footers only).
+ * @param        rowIndex    The index of the row containing the
+ *                            footer whose rectangle you want.
+ * @return        A rectangle locating the footer for the row at
+ *                \c rowIndex. Returns \c NSZeroRect if \c rowIndex
+ *                lies outside the range of valid row indices for the
+ *                receiver.
+ * @see           headerRectOfRow:
+ * @see           vertical
+ */
+- (NSRect)footerRectOfRow:(NSUInteger)rowIndex;
 
 /**
  * @}

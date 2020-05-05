@@ -25,7 +25,7 @@
 
 #import "MBTableGridController.h"
 #import "MBTableGridCell.h"
-#import "MBFooterTextCell.h"
+#import "MBTableGridFooterTextCell.h"
 
 NSString* kAutosavedColumnWidthKey = @"AutosavedColumnWidth";
 NSString* kAutosavedColumnIndexKey = @"AutosavedColumnIndex";
@@ -39,7 +39,7 @@ NSString * const PasteboardTypeColumnClass = @"pasteboardTypeColumnClass";
 
 @interface MBTableGridController()
 @property (nonatomic, strong) MBTableGridCell *textCell;
-@property (nonatomic, strong) MBFooterTextCell *footerTextCell;
+@property (nonatomic, strong) MBTableGridFooterTextCell *footerTextCell;
 @property (nonatomic, strong) NSDictionary *columnWidths;
 @property (nonatomic, strong) NSMutableArray *columnIdentifiers;
 @end
@@ -79,8 +79,7 @@ NSString * const PasteboardTypeColumnClass = @"pasteboardTypeColumnClass";
 	[tableGrid registerForDraggedTypes:@[NSStringPboardType]];
 	
 	self.textCell = [[MBTableGridCell alloc] initTextCell:@""];
-
-	self.footerTextCell = [[MBFooterTextCell alloc] initTextCell:@""];
+	self.footerTextCell = [[MBTableGridFooterTextCell alloc] initTextCell:@""];
 }
 
 -(NSString *) genRandStringLength: (int) len
@@ -194,12 +193,8 @@ NSString * const PasteboardTypeColumnClass = @"pasteboardTypeColumnClass";
 
 - (NSCell *)tableGrid:(MBTableGrid *)aTableGrid footerCellForColumn:(NSUInteger)columnIndex;
 {
+    self.footerTextCell.title = [NSString stringWithFormat:@"Footer %lu", columnIndex];
 	return self.footerTextCell;
-}
-
-- (id)tableGrid:(MBTableGrid *)aTableGrid footerValueForColumn:(NSUInteger)columnIndex;
-{
-	return [NSString stringWithFormat:@"Footer %lu", columnIndex];
 }
 
 #pragma mark Dragging

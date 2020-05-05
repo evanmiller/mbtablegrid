@@ -35,7 +35,6 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 @interface MBTableGrid (Private)
 - (NSString *)_headerStringForColumn:(NSUInteger)columnIndex;
 - (NSString *)_headerStringForRow:(NSUInteger)rowIndex;
-- (MBTableGridContentView *)_contentView;
 - (void)_dragColumnsWithEvent:(NSEvent *)theEvent;
 - (void)_dragRowsWithEvent:(NSEvent *)theEvent;
 - (void)_sortButtonClickedForColumn:(NSUInteger)column;
@@ -159,7 +158,7 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 		NSUInteger numberOfRows = self.tableGrid.numberOfRows;
 		headerCell.orientation = self.orientation;
 
-		CGFloat rowHeight = [self.tableGrid _contentView].rowHeight;
+        CGFloat rowHeight = self.tableGrid.contentView.rowHeight;
 		NSUInteger row = MAX(0, floor(rect.origin.y / rowHeight));
 		NSUInteger endRow = MIN(numberOfRows, ceil((rect.origin.y + rect.size.height) / rowHeight));
 
@@ -455,7 +454,7 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 
 - (NSRect)headerRectOfColumn:(NSUInteger)columnIndex
 {
-	NSRect rect = [self.tableGrid._contentView rectOfColumn:columnIndex];
+	NSRect rect = [self.tableGrid.contentView rectOfColumn:columnIndex];
 	rect.size.height = NSHeight(self.bounds);
 	
 	return rect;
@@ -463,7 +462,7 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 
 - (NSRect)headerRectOfRow:(NSUInteger)rowIndex
 {
-	NSRect rect = [self.tableGrid._contentView rectOfRow:rowIndex];
+	NSRect rect = [self.tableGrid.contentView rectOfRow:rowIndex];
 	rect.size.width = NSWidth(self.bounds);
 	
 	return rect;
