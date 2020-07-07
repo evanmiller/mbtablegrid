@@ -1586,6 +1586,44 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 	return rect;
 }
 
+- (NSRange)_rangeOfColumnsIntersectingRect:(NSRect)rect {
+    NSRect contentRect = [self convertRect:rect toView:self.contentView];
+    NSUInteger numberOfColumns = self.numberOfColumns;
+    NSUInteger column = 0;
+    
+    NSUInteger firstColumn = NSNotFound;
+    NSUInteger lastColumn = numberOfColumns - 1;
+    if (numberOfColumns == 0)
+        return NSMakeRange(NSNotFound, 0);
+    
+    while (column < numberOfColumns) {
+        NSRect columnRect = [self.contentView rectOfColumn:column];
+        if (NSMaxX(contentRect) >= NSMinX(columnRect) &&
+            NSMinX(contentRect) <= NSMaxX(columnRect)) {
+            if (firstColumn == NSNotFound) {
+                firstColumn = column;
+            }
+            lastColumn = column;
+        } else if (NSMinX(columnRect) > NSMaxX(contentRect)) {
+            break;
+        }
+        column++;
+    }
+    return NSMakeRange(firstColumn, lastColumn - firstColumn + 1);
+}
+
+- (NSRange)_rangeOfRowsIntersectingRect:(NSRect)rect {
+    NSRect contentRect = [self convertRect:rect toView:self.contentView];
+    CGFloat rowHeight = self.contentView.rowHeight;
+    NSUInteger numberOfRows = self.numberOfRows;
+    if (numberOfRows == 0)
+        return NSMakeRange(NSNotFound, 0);
+    
+    NSUInteger firstRow = MAX(0, floor(NSMinY(contentRect) / rowHeight));
+    NSUInteger lastRow = MIN(numberOfRows - 1, ceil(NSMaxY(contentRect)/rowHeight));
+    return NSMakeRange(firstRow, lastRow - firstRow + 1);
+}
+
 - (NSRect)rectOfSelectionRelativeToContentView {
     NSRect dirtyRect = NSZeroRect;
     NSIndexSet *rowIndexes = self.selectedRowIndexes;
@@ -1869,6 +1907,14 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 	return [NSString stringWithFormat:@"%lu", (rowIndex + 1)];
 }
 
+- (NSControlStateValue)_headerStateForColumn:(NSUInteger)columnIndex {
+    return [self.selectedColumnIndexes containsIndex:columnIndex];
+}
+
+- (NSControlStateValue)_headerStateForRow:(NSUInteger)rowIndex {
+    return [self.selectedRowIndexes containsIndex:rowIndex];
+}
+
 // This form prefers the singular form of the setObjectValue: data source method,
 // but will fall back to the plural form
 - (void)_setObjectValue:(id)value forColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex {
@@ -1978,6 +2024,11 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 - (void)_didDoubleClickRow:(NSUInteger)rowIndex {
     if ([self.delegate respondsToSelector:@selector(tableGrid:didDoubleClickRow:)])
         [self.delegate tableGrid:self didDoubleClickRow:rowIndex];
+}
+
+- (void)_didDoubleClickColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex {
+    if ([self.delegate respondsToSelector:@selector(tableGrid:didDoubleClickColumn:row:)])
+        [self.delegate tableGrid:self didDoubleClickColumn:columnIndex row:rowIndex];
 }
 
 @end
@@ -2149,6 +2200,11 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 - (void)_willDisplayHeaderMenu:(NSMenu *)menu forRow:(NSUInteger)rowIndex {
     if ([self.delegate respondsToSelector:@selector(tableGrid:willDisplayHeaderMenu:forRow:)])
         [self.delegate tableGrid:self willDisplayHeaderMenu:menu forRow:rowIndex];
+}
+
+- (void)_willDisplayFooterMenu:(NSMenu *)menu forRow:(NSUInteger)columnIndex {
+    if ([self.delegate respondsToSelector:@selector(tableGrid:willDisplayFooterMenu:forRow:)])
+        [self.delegate tableGrid:self willDisplayFooterMenu:menu forRow:columnIndex];
 }
 
 @end

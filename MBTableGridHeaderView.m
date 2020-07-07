@@ -35,6 +35,8 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 @interface MBTableGrid (Private)
 - (NSString *)_headerStringForColumn:(NSUInteger)columnIndex;
 - (NSString *)_headerStringForRow:(NSUInteger)rowIndex;
+- (NSControlStateValue)_headerStateForColumn:(NSUInteger)columnIndex;
+- (NSControlStateValue)_headerStateForRow:(NSUInteger)rowIndex;
 - (void)_dragColumnsWithEvent:(NSEvent *)theEvent;
 - (void)_dragRowsWithEvent:(NSEvent *)theEvent;
 - (void)_sortButtonClickedForColumn:(NSUInteger)column;
@@ -42,6 +44,8 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 - (void)_willDisplayHeaderMenu:(NSMenu *)menu forRow:(NSUInteger)rowIndex;
 - (void)_didDoubleClickColumn:(NSUInteger)columnIndex;
 - (void)_didDoubleClickRow:(NSUInteger)rowIndex;
+- (NSRange)_rangeOfColumnsIntersectingRect:(NSRect)rect;
+- (NSRange)_rangeOfRowsIntersectingRect:(NSRect)rect;
 @end
 
 @implementation MBTableGridHeaderView
@@ -75,10 +79,10 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 	if (self.orientation == MBTableHeaderHorizontalOrientation) {
         NSRect visibleRect = self.enclosingScrollView.insetDocumentVisibleRect;
 		// Draw the column headers
-		NSUInteger numberOfColumns = self.tableGrid.numberOfColumns;
-		headerCell.orientation = self.orientation;
-		NSUInteger column = 0;
-		while (column < numberOfColumns) {
+        NSRange columnRange = [self.tableGrid _rangeOfColumnsIntersectingRect:
+                               [self convertRect:visibleRect toView:self.tableGrid]];
+        NSUInteger column = columnRange.location;
+		while (column != NSNotFound && column < NSMaxRange(columnRange)) {
 			NSRect headerRect = [self headerRectOfColumn:column];
 			NSRect resizeRect = NSMakeRect(NSMinX(headerRect) + NSWidth(headerRect) - 2, NSMinY(headerRect), 5, NSHeight(headerRect));
 
@@ -99,17 +103,18 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 	[super updateTrackingAreas];
 
 	if (self.orientation == MBTableHeaderHorizontalOrientation) {
+        NSRect visibleRect = self.enclosingScrollView.insetDocumentVisibleRect;
 		// Draw the column headers
-		NSUInteger numberOfColumns = self.tableGrid.numberOfColumns;
-		headerCell.orientation = self.orientation;
-		NSUInteger column = 0;
-		while (column < numberOfColumns) {
+        NSRange columnRange = [self.tableGrid _rangeOfColumnsIntersectingRect:
+                               [self convertRect:visibleRect toView:self.tableGrid]];
+        NSUInteger column = columnRange.location;
+        while (column != NSNotFound && column < NSMaxRange(columnRange)) {
 			NSRect headerRect = [self headerRectOfColumn:column];
 
 			// Create new tracking area for resizing columns
 			NSRect resizeRect = NSMakeRect(NSMinX(headerRect) + NSWidth(headerRect) - 2, NSMinY(headerRect), 5, NSHeight(headerRect));
 
-			if(CGRectIntersectsRect(resizeRect, self.visibleRect)) {
+			if(CGRectIntersectsRect(resizeRect, visibleRect)) {
 				NSTrackingArea *resizeTrackingArea = [[NSTrackingArea alloc] initWithRect:resizeRect options: (NSTrackingMouseEnteredAndExited | NSTrackingActiveAlways) owner:self userInfo:nil];
 				[self addTrackingArea:resizeTrackingArea];
 			}
@@ -121,20 +126,18 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 
 - (void)drawRect:(NSRect)rect
 {
+    headerCell.orientation = self.orientation;
+    
 	if (self.orientation == MBTableHeaderHorizontalOrientation) {
-		// Draw the column headers
-		NSUInteger numberOfColumns = self.tableGrid.numberOfColumns;
-		headerCell.orientation = self.orientation;
-		NSUInteger column = 0;
-		while (column < numberOfColumns) {
+        // Draw the column headers
+        NSRange columnRange = [self.tableGrid _rangeOfColumnsIntersectingRect:
+                               [self convertRect:rect toView:self.tableGrid]];
+        NSUInteger column = columnRange.location;
+        while (column != NSNotFound && column < NSMaxRange(columnRange)) {
 			NSRect headerRect = [self headerRectOfColumn:column];
 			
 			// Only draw the header if we need to
 			if ([self needsToDrawRect:headerRect]) {
-				// Check if any part of the selection is in this column
-				NSIndexSet *selectedColumns = [self.tableGrid selectedColumnIndexes];
-                headerCell.state = [selectedColumns containsIndex:column] ? NSControlStateValueOn : NSControlStateValueOff;
-				
 				if ([self.indicatorImageColumns containsIndex:column]) {
                     if (_tableGrid.sortColumnIndex == column) {
                         headerCell.sortIndicatorAscending = _tableGrid.isSortColumnAscending;
@@ -147,6 +150,7 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 					headerCell.sortIndicatorColor = nil;
 				}
 				
+                headerCell.state = [self.tableGrid _headerStateForColumn:column];
 				headerCell.stringValue = [self.tableGrid _headerStringForColumn:column];
 				[headerCell drawWithFrame:headerRect inView:self];
 			}
@@ -155,22 +159,15 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
         
 	} else if (self.orientation == MBTableHeaderVerticalOrientation) {
 		// Draw the row headers
-		NSUInteger numberOfRows = self.tableGrid.numberOfRows;
-		headerCell.orientation = self.orientation;
-
-        CGFloat rowHeight = self.tableGrid.contentView.rowHeight;
-		NSUInteger row = MAX(0, floor(rect.origin.y / rowHeight));
-		NSUInteger endRow = MIN(numberOfRows, ceil((rect.origin.y + rect.size.height) / rowHeight));
-
-		while(row < endRow) {
+        NSRange rowRange = [self.tableGrid _rangeOfRowsIntersectingRect:
+                            [self convertRect:rect toView:self.tableGrid]];
+        NSUInteger row = rowRange.location;
+        while (row != NSNotFound && row < NSMaxRange(rowRange)) {
 			NSRect headerRect = [self headerRectOfRow:row];
 			
 			// Only draw the header if we need to
 			if ([self needsToDrawRect:headerRect]) {
-				// Check if any part of the selection is in this column
-				NSIndexSet *selectedRows = [self.tableGrid selectedRowIndexes];
-                headerCell.state = [selectedRows containsIndex:row] ? NSControlStateValueOn : NSControlStateValueOff;
-				
+                headerCell.state = [self.tableGrid _headerStateForRow:row];
 				headerCell.stringValue = [self.tableGrid _headerStringForRow:row];
 				[headerCell drawWithFrame:headerRect inView:self];
 			}
