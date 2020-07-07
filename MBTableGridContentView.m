@@ -293,12 +293,24 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 	return YES;
 }
 
+- (void)startAutoscrollTimer {
+    // Setup the timer for autoscrolling
+    // (the simply calling autoscroll: from mouseDragged: only works as long as the mouse is moving)
+    if (!autoscrollTimer)
+        autoscrollTimer = [NSTimer scheduledTimerWithTimeInterval:0.1 target:self
+                                                         selector:@selector(_timerAutoscrollCallback:)
+                                                         userInfo:nil repeats:NO];
+}
+
+- (void)stopAutoscrollTimer {
+    [autoscrollTimer invalidate];
+    autoscrollTimer = nil;
+}
+
 - (void)mouseDown:(NSEvent *)theEvent
 {
-	// Setup the timer for autoscrolling
-	// (the simply calling autoscroll: from mouseDragged: only works as long as the mouse is moving)
-	autoscrollTimer = [NSTimer scheduledTimerWithTimeInterval:0.1 target:self selector:@selector(_timerAutoscrollCallback:) userInfo:nil repeats:YES];
-	
+    [self startAutoscrollTimer];
+    
 	NSPoint mouseLocationInContentView = [self convertPoint:theEvent.locationInWindow fromView:nil];
 	mouseDownColumn = [self columnAtPoint:mouseLocationInContentView];
 	mouseDownRow = [self rowAtPoint:mouseLocationInContentView];
@@ -470,8 +482,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 
 - (void)mouseUp:(NSEvent *)theEvent
 {
-	[autoscrollTimer invalidate];
-	autoscrollTimer = nil;
+    [self stopAutoscrollTimer];
 	
 	if (isFilling) {
 		id value = [self.tableGrid _objectValueForColumn:mouseDownColumn row:mouseDownRow];
@@ -646,10 +657,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 
 - (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender
 {
-	// Setup the timer for autoscrolling 
-	// (the simply calling autoscroll: from mouseDragged: only works as long as the mouse is moving)
-	autoscrollTimer = [NSTimer scheduledTimerWithTimeInterval:0.1 target:self selector:@selector(_timerAutoscrollCallback:) userInfo:nil repeats:YES];
-	
+    [self startAutoscrollTimer];
 	return [self.tableGrid draggingEntered:sender];
 }
 
@@ -660,9 +668,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 
 - (void)draggingExited:(id <NSDraggingInfo>)sender
 {
-	[autoscrollTimer invalidate];
-	autoscrollTimer = nil;
-	
+    [self stopAutoscrollTimer];
 	[self.tableGrid draggingExited:sender];
 }
 
@@ -977,9 +983,12 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 
 - (void)_timerAutoscrollCallback:(NSTimer *)aTimer
 {
-	NSEvent* event = NSApp.currentEvent;
-    if (NSApp.currentEvent.type == NSEventTypeLeftMouseDragged)
+    if (autoscrollTimer) { // i.e. not cancelled
+        [self stopAutoscrollTimer];
+        NSEvent* event = NSApp.currentEvent;
         [self autoscroll:event];
+        [self startAutoscrollTimer]; // non-repeating timer, restart it here
+    }
 }
 
 @end
