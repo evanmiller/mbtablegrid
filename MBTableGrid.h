@@ -153,6 +153,11 @@ typedef NS_ENUM(NSUInteger, MBVerticalEdge) {
 @property (nonatomic, assign) CGFloat rowFooterWidth;
 @property (nonatomic, assign) CGFloat minimumColumnWidth;
 
+@property (nonatomic, readonly) NSView *leadingHeaderCornerView;
+@property (nonatomic, readonly) NSView *leadingFooterCornerView;
+@property (nonatomic, readonly) NSView *trailingHeaderCornerView;
+@property (nonatomic, readonly) NSView *trailingFooterCornerView;
+
 @property (nonatomic) NSEdgeInsets contentInsets;
 @property (nonatomic, assign) NSUInteger sortColumnIndex; // NSNotFound for none
 @property (getter=isSortColumnAscending, nonatomic, assign) BOOL sortColumnAscending;
@@ -219,7 +224,8 @@ typedef NS_ENUM(NSUInteger, MBVerticalEdge) {
  *
  */
 
-@property (nonatomic, strong) NSMutableDictionary<NSNumber *, NSValue *> *columnRects;
+@property (nonatomic, readonly) NSMutableDictionary<NSNumber *, NSValue *> *columnRects;
+@property (nonatomic, readonly) NSMutableDictionary<NSNumber *, NSNumber *> *columnWidths;
 
 
 - (void)resizeColumnWithIndex:(NSUInteger)columnIndex width:(float)w;
@@ -527,6 +533,7 @@ cells. A cell can individually override this behavior. */
  *
  * @see			rowHeaderView
  * @see         columnFooterView
+ * @see         rowFooterView
  */
 
 @property (nonatomic, readonly) MBTableGridHeaderView* columnHeaderView;
@@ -540,6 +547,7 @@ cells. A cell can individually override this behavior. */
  *
  * @see            rowHeaderView
  * @see            columnHeaderView
+ * @see            rowFooterView
  */
 
 @property (nonatomic, readonly) MBTableGridFooterView* columnFooterView;
@@ -549,13 +557,28 @@ cells. A cell can individually override this behavior. */
  *				to draw headers beside rows.
  *
  * @return		The \c MBTableGridHeaderView object used to draw
- *				column headers.
+ *				row headers.
  *
+ * @see            rowFooterView
  * @see            columnHeaderView
  * @see            columnFooterView
  */
 
 @property (nonatomic, readonly) MBTableGridHeaderView* rowHeaderView;
+
+/**
+ * @brief        Returns the \c MBTableGridFooterView object used
+ *                to draw footers beside rows.
+ *
+ * @return        The \c MBTableGridFooterView object used to draw
+ *                row footers.
+ *
+ * @see            rowHeaderView
+ * @see            columnHeaderView
+ * @see            columnFooterView
+ */
+
+@property (nonatomic, readonly) MBTableGridFooterView* rowFooterView;
 
 /**
  * @brief		Returns the receiver's content view.

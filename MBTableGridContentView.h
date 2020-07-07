@@ -65,9 +65,6 @@ typedef NS_ENUM(NSUInteger, MBTableGridTrackingPart)
     MBTableGridTrackingPart shouldDrawFillPart;
 	
 	MBTableGridCell *_defaultCell;
-    
-    NSMutableArray<NSNumber *> *columnWidths;
-    
 }
 
 - (instancetype)initWithFrame:(NSRect)frameRect andTableGrid:(MBTableGrid*)tableGrid;
