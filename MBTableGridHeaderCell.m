@@ -130,9 +130,14 @@ extern CGFloat MBTableHeaderSortIndicatorMargin;
 }
 
 - (NSAttributedString *)attributedStringValue {
+    NSMutableParagraphStyle *paragraphStyle = [[NSParagraphStyle defaultParagraphStyle] mutableCopy];
+    if (self.orientation == MBTableHeaderVerticalOrientation) {
+        paragraphStyle.alignment = NSTextAlignmentCenter;
+    }
 	NSDictionary<NSAttributedStringKey, id> *attributes = @{
 		NSFontAttributeName: self.labelFont,
-		NSForegroundColorAttributeName: self.textColor
+		NSForegroundColorAttributeName: self.textColor,
+        NSParagraphStyleAttributeName: paragraphStyle
 	};
 	return [[NSAttributedString alloc] initWithString:self.stringValue attributes:attributes];
 }
@@ -168,18 +173,25 @@ extern CGFloat MBTableHeaderSortIndicatorMargin;
 	static CGFloat TEXT_PADDING = 6;
 	NSRect textFrame;
 	CGSize stringSize = self.attributedStringValue.size;
+    NSStringDrawingOptions options = (NSStringDrawingTruncatesLastVisibleLine | NSStringDrawingUsesLineFragmentOrigin);
 	if (self.orientation == MBTableHeaderHorizontalOrientation) {
 		textFrame = NSMakeRect(cellFrameRect.origin.x + TEXT_PADDING,
 							   cellFrameRect.origin.y + (cellFrameRect.size.height - stringSize.height)/2,
 							   cellFrameRect.size.width - TEXT_PADDING,
 							   stringSize.height);
 	} else {
-		textFrame = NSMakeRect(cellFrameRect.origin.x + (cellFrameRect.size.width - stringSize.width)/2,
-							   cellFrameRect.origin.y + (cellFrameRect.size.height - stringSize.height)/2,
-							   stringSize.width,
-							   stringSize.height);
+        NSRect boundingRect = [self.attributedStringValue boundingRectWithSize:cellFrame.size
+                                                                       options:options];
+        if (boundingRect.size.height < cellFrame.size.height) {
+            textFrame = NSMakeRect(cellFrameRect.origin.x,
+                                   cellFrameRect.origin.y + (cellFrameRect.size.height - boundingRect.size.height)/2,
+                                   cellFrame.size.width,
+                                   cellFrame.size.height - (cellFrameRect.size.height - boundingRect.size.height)/2);
+        } else {
+            textFrame = cellFrame;
+        }
 	}
-	[self.attributedStringValue drawWithRect:textFrame options:NSStringDrawingTruncatesLastVisibleLine | NSStringDrawingUsesLineFragmentOrigin];
+	[self.attributedStringValue drawWithRect:textFrame options:options];
     [self drawSortIndicatorWithFrame:cellFrame inView:controlView ascending:self.sortIndicatorAscending priority:0];
 }
 
