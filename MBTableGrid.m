@@ -122,6 +122,18 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 @implementation MBTableGrid
 
+@synthesize columnHeaderView=columnHeaderView;
+@synthesize columnFooterView=columnFooterView;
+@synthesize rowHeaderView=rowHeaderView;
+@synthesize rowFooterView=rowFooterView;
+
+@synthesize leadingHeaderCornerView=leadingHeaderCornerView;
+@synthesize leadingFooterCornerView=leadingFooterCornerView;
+@synthesize trailingHeaderCornerView=trailingHeaderCornerView;
+@synthesize trailingFooterCornerView=trailingFooterCornerView;
+
+@synthesize contentView=contentView;
+
 #pragma mark -
 #pragma mark Initialization & Superclass Overrides
 
@@ -270,7 +282,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
         self.previousVerticalSelectionDirection = MBVerticalEdgeTop;
         self.previousHorizontalSelectionDirection = MBHorizontalEdgeLeft;
 		
-		self.columnRects = [NSMutableDictionary dictionary];
+		_columnRects = [[NSMutableDictionary alloc] init];
         [self registerForDraggedTypes:@[MBTableGridColumnDataType, MBTableGridRowDataType]];
         
         _textFinder = [[NSTextFinder alloc] init];
@@ -1648,26 +1660,6 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 }
 
 #pragma mark Auxiliary Views
-
-- (MBTableGridHeaderView *)columnHeaderView {
-	return columnHeaderView;
-}
-
-- (MBTableGridHeaderView *)rowHeaderView {
-	return rowHeaderView;
-}
-
-- (MBTableGridFooterView *)columnFooterView {
-    return columnFooterView;
-}
-
-- (MBTableGridFooterView *)rowFooterView {
-    return rowFooterView;
-}
-
-- (MBTableGridContentView *)contentView {
-	return contentView;
-}
 
 - (BOOL)isColumnHeaderVisible {
     return columnHeaderScrollView.frame.size.height > 0.0;
