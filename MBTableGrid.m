@@ -463,6 +463,10 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 	}
 }
 
+- (void)mouseUp:(NSEvent *)theEvent {
+    // Don't pass it up the view hierarchy
+}
+
 #pragma mark Keyboard Events
 
 - (void)keyDown:(NSEvent *)theEvent {
@@ -577,7 +581,8 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		row = self.selectedRowIndexes.lastIndex;
 	}
 
-    if (row <= 0) { return; }
+    if (row <= 0 || row == NSNotFound || column == NSNotFound)
+        return;
 
 	self.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:column];
 	self.selectedRowIndexes = [NSIndexSet indexSetWithIndex:(row - 1)];
@@ -622,7 +627,8 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		row = self.selectedRowIndexes.lastIndex;
 	}
 
-    if (row >= (_numberOfRows - 1)) { return; }
+    if (row >= (_numberOfRows - 1) || column == NSNotFound || row == NSNotFound)
+        return;
 
 	self.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:column];
 	self.selectedRowIndexes = [NSIndexSet indexSetWithIndex:(row + 1)];
@@ -668,7 +674,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		row = self.selectedRowIndexes.lastIndex;
 	}
 
-    if (column == 0)
+    if (column == 0 || column == NSNotFound || row == NSNotFound)
         return;
 
     self.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:(column - 1)];
@@ -714,7 +720,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		row = self.selectedRowIndexes.lastIndex;
 	}
 
-    if (column >= (_numberOfColumns - 1))
+    if (column >= (_numberOfColumns - 1) || column == NSNotFound || row == NSNotFound)
         return;
 
     self.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:(column + 1)];
