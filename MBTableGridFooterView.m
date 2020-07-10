@@ -29,8 +29,11 @@
 
 @interface MBTableGrid ()
 - (NSCell *)_footerCellForColumn:(NSUInteger)columnIndex;
+- (NSCell *)_footerCellForRow:(NSUInteger)rowIndex;
 - (void)_willDisplayFooterMenu:(NSMenu *)menu forColumn:(NSUInteger)columnIndex;
-- (NSCell *)_footerCellForRow:(NSUInteger)columnIndex;
+- (void)_willDisplayFooterMenu:(NSMenu *)menu forRow:(NSUInteger)rowIndex;
+- (NSRange)_rangeOfColumnsIntersectingRect:(NSRect)rect;
+- (NSRange)_rangeOfRowsIntersectingRect:(NSRect)rect;
 @end
 
 @implementation MBTableGridFooterView
@@ -46,10 +49,13 @@
 - (void)drawRect:(NSRect)rect {
 	
 	// Draw the column footers
-    NSUInteger numberOfColumns = self.isVertical ? self.tableGrid.numberOfRows : self.tableGrid.numberOfColumns;
-	NSUInteger column = 0;
-    
-	while (column < numberOfColumns) {
+    NSRange columnRange = (self.isVertical ?
+                           [self.tableGrid _rangeOfRowsIntersectingRect:[self convertRect:rect toView:self.tableGrid]] :
+                           [self.tableGrid _rangeOfColumnsIntersectingRect:[self convertRect:rect toView:self.tableGrid]]);
+
+    // Find the columns to draw
+    NSUInteger column = columnRange.location;
+    while (column != NSNotFound && column < NSMaxRange(columnRange)) {
         NSRect cellFrame = self.isVertical ? [self footerRectOfRow:column] : [self footerRectOfColumn:column];
 		
 		// Only draw the header if we need to
@@ -70,10 +76,14 @@
 }
 
 - (NSMenu *)menuForEvent:(NSEvent *)theEvent {
-    NSPoint event_location = theEvent.locationInWindow;
-    NSPoint local_point = [self convertPoint:event_location fromView:nil];
-    NSInteger column = [self.tableGrid columnAtPoint:[self convertPoint:local_point toView:self.tableGrid]];
-    [self.tableGrid _willDisplayFooterMenu:self.menu forColumn:column];
+    NSPoint local_point = [self convertPoint:theEvent.locationInWindow fromView:nil];
+    if (self.isVertical) {
+        NSInteger column = [self footerRowAtPoint:local_point];
+        [self.tableGrid _willDisplayFooterMenu:self.menu forRow:column];
+    } else {
+        NSInteger column = [self footerColumnAtPoint:local_point];
+        [self.tableGrid _willDisplayFooterMenu:self.menu forColumn:column];
+    }
     return self.menu;
 }
 

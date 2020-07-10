@@ -50,6 +50,9 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 - (NSColor *)_selectionColor;
 - (BOOL)_containsFirstResponder;
 - (NSCell *)_footerCellForColumn:(NSUInteger)columnIndex;
+- (void)_didDoubleClickColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
+- (NSRange)_rangeOfRowsIntersectingRect:(NSRect)rect;
+- (NSRange)_rangeOfColumnsIntersectingRect:(NSRect)rect;
 @end
 
 @interface MBTableGridContentView (Cursors)
@@ -117,31 +120,13 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 }
 
 - (void)drawCellInteriorsInRect:(NSRect)rect {
-    NSUInteger numberOfColumns = _tableGrid.numberOfColumns;
-    NSUInteger numberOfRows = _tableGrid.numberOfRows;
+    NSRange columnRange = [_tableGrid _rangeOfColumnsIntersectingRect:[self convertRect:rect toView:_tableGrid]];
+    NSRange rowRange = [_tableGrid _rangeOfRowsIntersectingRect:[self convertRect:rect toView:_tableGrid]];
     
-    NSUInteger firstColumn = NSNotFound;
-    NSUInteger lastColumn = (numberOfColumns==0) ? 0 : numberOfColumns - 1;
-    NSUInteger firstRow = MAX(0, floor(rect.origin.y / self.rowHeight));
-    NSUInteger lastRow = (numberOfRows==0) ? 0 : MIN(numberOfRows - 1, ceil((rect.origin.y + rect.size.height)/self.rowHeight));
-    
-    // Find the columns to draw
-    NSUInteger column = 0;
-    while (column < numberOfColumns) {
-        NSRect columnRect = [self rectOfColumn:column];
-        if (firstColumn == NSNotFound && NSMinX(rect) >= NSMinX(columnRect) && NSMinX(rect) <= NSMaxX(columnRect)) {
-            firstColumn = column;
-        } else if (firstColumn != NSNotFound && NSMaxX(rect) >= NSMinX(columnRect) && NSMaxX(rect) <= NSMaxX(columnRect)) {
-            lastColumn = column;
-            break;
-        }
-        column++;
-    }
-    
-    column = firstColumn;
-    while (column <= lastColumn) {
-        NSUInteger row = firstRow;
-        while (row <= lastRow) {
+    NSUInteger column = columnRange.location;
+    while (column != NSNotFound && column < NSMaxRange(columnRange)) {
+        NSUInteger row = rowRange.location;
+        while (row != NSNotFound && row < NSMaxRange(rowRange)) {
             NSRect cellFrame = [self frameOfCellAtColumn:column row:row];
             if ([self needsToDrawRect:cellFrame] && (!(row == editedRow && column == editedColumn))) {
                 // Only fetch the cell if we need to
@@ -399,7 +384,9 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 			[self.tableGrid _setStickyColumn:MBHorizontalEdgeLeft row:MBVerticalEdgeTop];
 		}
     // Edit cells on double click if they don't already edit on first click
-	}
+    } else if (theEvent.clickCount == 2) {
+        [self.tableGrid _didDoubleClickColumn:mouseDownColumn row:mouseDownRow];
+    }
 
 	// Any cells that should edit on first click are handled here
 	if (cellEditsOnFirstClick) {
@@ -801,7 +788,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 	NSInteger column = 0;
 	while(column < self.tableGrid.numberOfColumns) {
 		NSRect columnFrame = [self rectOfColumn:column];
-		if(aPoint.x >= columnFrame.origin.x && aPoint.x < (columnFrame.origin.x + columnFrame.size.width)) {
+        if(aPoint.x >= NSMinX(columnFrame) && aPoint.x < NSMaxX(columnFrame)) {
 			return column;
 		}
 		column++;
