@@ -822,42 +822,39 @@ NSString * const MBTableGridTrackingPartKey = @"part";
  */
 - (NSImage *)_cellSelectionCursorImage
 {
-	NSImage *image = [[NSImage alloc] initWithSize:NSMakeSize(20, 20)];
-	[image lockFocusFlipped:YES];
-	
-	NSRect horizontalInner = NSMakeRect(7.0, 2.0, 2.0, 12.0);
-	NSRect verticalInner = NSMakeRect(2.0, 7.0, 12.0, 2.0);
-	
-	NSRect horizontalOuter = NSInsetRect(horizontalInner, -1.0, -1.0);
-	NSRect verticalOuter = NSInsetRect(verticalInner, -1.0, -1.0);
-	
-	// Set the shadow
-	NSShadow *shadow = [[NSShadow alloc] init];
-	shadow.shadowColor = [NSColor colorWithCalibratedWhite:0.0 alpha:0.8];
-	shadow.shadowBlurRadius = 2.0;
-	shadow.shadowOffset = NSMakeSize(0, -1.0);
-	
-	[NSGraphicsContext.currentContext saveGraphicsState];
-	
-	[shadow set];
-	
-	[NSColor.blackColor set];
-	NSRectFill(horizontalOuter);
-	NSRectFill(verticalOuter);
-	
-	[NSGraphicsContext.currentContext restoreGraphicsState];
-	
-	// Fill them again to compensate for the shadows
-	NSRectFill(horizontalOuter);
-	NSRectFill(verticalOuter);
-	
-	[NSColor.whiteColor set];
-	NSRectFill(horizontalInner);
-	NSRectFill(verticalInner);
-	
-	[image unlockFocus];
-	
-	return image;
+    return [NSImage imageWithSize:NSMakeSize(20, 20) flipped:YES drawingHandler:^(NSRect dstRect) {
+        NSRect horizontalInner = NSMakeRect(7.0, 2.0, 2.0, 12.0);
+        NSRect verticalInner = NSMakeRect(2.0, 7.0, 12.0, 2.0);
+        
+        NSRect horizontalOuter = NSInsetRect(horizontalInner, -1.0, -1.0);
+        NSRect verticalOuter = NSInsetRect(verticalInner, -1.0, -1.0);
+        
+        // Set the shadow
+        NSShadow *shadow = [[NSShadow alloc] init];
+        shadow.shadowColor = [NSColor colorWithCalibratedWhite:0.0 alpha:0.8];
+        shadow.shadowBlurRadius = 2.0;
+        shadow.shadowOffset = NSMakeSize(0, -1.0);
+        
+        [NSGraphicsContext.currentContext saveGraphicsState];
+        
+        [shadow set];
+        
+        [NSColor.blackColor set];
+        NSRectFill(horizontalOuter);
+        NSRectFill(verticalOuter);
+        
+        [NSGraphicsContext.currentContext restoreGraphicsState];
+        
+        // Fill them again to compensate for the shadows
+        NSRectFill(horizontalOuter);
+        NSRectFill(verticalOuter);
+        
+        [NSColor.whiteColor set];
+        NSRectFill(horizontalInner);
+        NSRectFill(verticalInner);
+        
+        return YES;
+    }];
 }
 
 - (NSCursor *)_cellExtendSelectionCursor
@@ -873,66 +870,62 @@ NSString * const MBTableGridTrackingPartKey = @"part";
  */
 - (NSImage *)_cellExtendSelectionCursorImage
 {
-	NSImage *image = [[NSImage alloc] initWithSize:NSMakeSize(20, 20)];
-	[image lockFocusFlipped:YES];
-	
-	NSRect horizontalInner = NSMakeRect(7.0, 1.0, 0.5, 12.0);
-	NSRect verticalInner = NSMakeRect(1.0, 6.0, 12.0, 0.5);
-	
-	NSRect horizontalOuter = NSInsetRect(horizontalInner, -1.0, -1.0);
-	NSRect verticalOuter = NSInsetRect(verticalInner, -1.0, -1.0);
-	
-	[NSGraphicsContext.currentContext saveGraphicsState];
+    return [NSImage imageWithSize:NSMakeSize(20, 20) flipped:YES drawingHandler:^(NSRect dstRect) {
+        NSRect horizontalInner = NSMakeRect(7.0, 1.0, 0.5, 12.0);
+        NSRect verticalInner = NSMakeRect(1.0, 6.0, 12.0, 0.5);
+        
+        NSRect horizontalOuter = NSInsetRect(horizontalInner, -1.0, -1.0);
+        NSRect verticalOuter = NSInsetRect(verticalInner, -1.0, -1.0);
+        
+        [NSGraphicsContext.currentContext saveGraphicsState];
 
-	[NSColor.whiteColor set];
-	NSRectFill(horizontalOuter);
-	NSRectFill(verticalOuter);
-	
-	[NSGraphicsContext.currentContext restoreGraphicsState];
-	
-	// Fill them again to compensate for the shadows
-	NSRectFill(horizontalOuter);
-	NSRectFill(verticalOuter);
-	
-	[NSColor.blackColor set];
-	NSRectFill(horizontalInner);
-	NSRectFill(verticalInner);
-	
-	[image unlockFocus];
-	
-	return image;
+        [NSColor.whiteColor set];
+        NSRectFill(horizontalOuter);
+        NSRectFill(verticalOuter);
+        
+        [NSGraphicsContext.currentContext restoreGraphicsState];
+        
+        // Fill them again to compensate for the shadows
+        NSRectFill(horizontalOuter);
+        NSRectFill(verticalOuter);
+        
+        [NSColor.blackColor set];
+        NSRectFill(horizontalInner);
+        NSRectFill(verticalInner);
+        
+        return YES;
+    }];
 }
 
 - (NSImage *)_grabHandleImage;
 {
-	NSImage *image = [[NSImage alloc] initWithSize:NSMakeSize(kGRAB_HANDLE_SIDE_LENGTH, kGRAB_HANDLE_SIDE_LENGTH)];
-	[image lockFocusFlipped:YES];
-	
-	NSGraphicsContext *gc = NSGraphicsContext.currentContext;
-	
-	// Save the current graphics context
-	[gc saveGraphicsState];
-	
-	// Set the color in the current graphics context
-	
-	[NSColor.darkGrayColor setStroke];
-    [NSColor.systemYellowColor setFill];
-	
-	// Create our circle path
-	NSRect rect = NSMakeRect(1.0, 1.0, kGRAB_HANDLE_SIDE_LENGTH - 2.0, kGRAB_HANDLE_SIDE_LENGTH - 2.0);
-	NSBezierPath *circlePath = [NSBezierPath bezierPath];
-	circlePath.lineWidth = 0.5;
-	[circlePath appendBezierPathWithOvalInRect: rect];
-	
-	// Outline and fill the path
-	[circlePath fill];
-	[circlePath stroke];
-	
-	// Restore the context
-	[gc restoreGraphicsState];
-	[image unlockFocus];
-	
-	return image;
+    return [NSImage imageWithSize:NSMakeSize(kGRAB_HANDLE_SIDE_LENGTH, kGRAB_HANDLE_SIDE_LENGTH) flipped:YES
+                   drawingHandler:^(NSRect dstRect) {
+        NSGraphicsContext *gc = NSGraphicsContext.currentContext;
+        
+        // Save the current graphics context
+        [gc saveGraphicsState];
+        
+        // Set the color in the current graphics context
+        
+        [NSColor.darkGrayColor setStroke];
+        [NSColor.systemYellowColor setFill];
+        
+        // Create our circle path
+        NSRect rect = NSMakeRect(1.0, 1.0, kGRAB_HANDLE_SIDE_LENGTH - 2.0, kGRAB_HANDLE_SIDE_LENGTH - 2.0);
+        NSBezierPath *circlePath = [NSBezierPath bezierPath];
+        circlePath.lineWidth = 0.5;
+        [circlePath appendBezierPathWithOvalInRect: rect];
+        
+        // Outline and fill the path
+        [circlePath fill];
+        [circlePath stroke];
+        
+        // Restore the context
+        [gc restoreGraphicsState];
+        
+        return YES;
+    }];
 }
 
 @end

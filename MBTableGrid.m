@@ -2105,18 +2105,11 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 	// Take a snapshot of the view
 	NSImage *opaqueImage = [[NSImage alloc] initWithData:[self dataWithPDFInsideRect:columnsFrame]];
-
 	// Create the translucent drag image
-	NSImage *finalImage = [[NSImage alloc] initWithSize:opaqueImage.size];
-	[finalImage lockFocus];
-#if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_8
-	[opaqueImage compositeToPoint:NSZeroPoint operation:NSCompositeCopy fraction:0.7];
-#else
-    [opaqueImage drawAtPoint:NSZeroPoint fromRect:NSZeroRect operation:NSCompositingOperationCopy fraction:0.7];
-#endif
-	[finalImage unlockFocus];
-
-	return finalImage;
+    return [NSImage imageWithSize:opaqueImage.size flipped:NO drawingHandler:^(NSRect dstRect) {
+        [opaqueImage drawAtPoint:NSZeroPoint fromRect:NSZeroRect operation:NSCompositingOperationCopy fraction:0.7];
+        return YES;
+    }];
 }
 
 - (NSImage *)_imageForSelectedRows {
@@ -2131,16 +2124,10 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 	NSImage *opaqueImage = [[NSImage alloc] initWithData:[self dataWithPDFInsideRect:rowsFrame]];
 
 	// Create the translucent drag image
-	NSImage *finalImage = [[NSImage alloc] initWithSize:opaqueImage.size];
-	[finalImage lockFocus];
-#if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_8
-	[opaqueImage compositeToPoint:NSZeroPoint operation:NSCompositeCopy fraction:0.7];
-#else
-    [opaqueImage drawAtPoint:NSZeroPoint fromRect:NSZeroRect operation:NSCompositingOperationCopy fraction:0.7];
-#endif
-	[finalImage unlockFocus];
-
-	return finalImage;
+    return [NSImage imageWithSize:opaqueImage.size flipped:NO drawingHandler:^(NSRect dstRect) {
+        [opaqueImage drawAtPoint:NSZeroPoint fromRect:NSZeroRect operation:NSCompositingOperationCopy fraction:0.7];
+        return YES;
+    }];
 }
 
 - (NSUInteger)_dropColumnForPoint:(NSPoint)aPoint {
