@@ -355,7 +355,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 	if ([self.dataSource respondsToSelector:@selector(tableGrid:cellForColumn:row:)]) {
 		return [self.dataSource tableGrid:self cellForColumn:columnIndex row:rowIndex];
 	}
-	else {
+	else if (self.dataSource) {
 		NSLog(@"WARNING: MBTableGrid data source does not implement tableGrid:cellForColumn:row:");
 	}
 	return nil;
@@ -365,7 +365,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 	if ([self.dataSource respondsToSelector:@selector(tableGrid:objectValueForColumn:row:)]) {
 		return [self.dataSource tableGrid:self objectValueForColumn:columnIndex row:rowIndex];
 	}
-	else {
+	else if (self.dataSource) {
 		NSLog(@"WARNING: MBTableGrid data source does not implement tableGrid:objectValueForColumn:row:");
 	}
 	return nil;
@@ -538,12 +538,9 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 }
 
 - (void)paste:(id)sender {
-	
-    NSIndexSet *selectedColumns = [self selectedColumnIndexes];
-    NSIndexSet *selectedRows = [self selectedRowIndexes];
-    
     if ([self.delegate respondsToSelector:@selector(tableGrid:pasteCellsAtColumns:rows:)]) {
-        [self.delegate tableGrid:self pasteCellsAtColumns:selectedColumns rows:selectedRows];
+        [self.delegate tableGrid:self pasteCellsAtColumns:self.selectedColumnIndexes
+                            rows:self.selectedRowIndexes];
         [self reloadData];
     }
 }
