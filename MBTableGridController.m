@@ -76,7 +76,7 @@ NSString * const PasteboardTypeColumnClass = @"pasteboardTypeColumnClass";
 	[tableGrid reloadData];
 	
 	// Register to receive text strings
-	[tableGrid registerForDraggedTypes:@[NSStringPboardType]];
+	[tableGrid registerForDraggedTypes:@[NSPasteboardTypeString]];
 	
 	self.textCell = [[MBTableGridCell alloc] initTextCell:@""];
 	self.footerTextCell = [[MBTableGridFooterTextCell alloc] initTextCell:@""];
@@ -235,7 +235,7 @@ NSString * const PasteboardTypeColumnClass = @"pasteboardTypeColumnClass";
 {
 	NSPasteboard *pboard = [info draggingPasteboard];
 	
-	NSString *value = [pboard stringForType:NSStringPboardType];
+	NSString *value = [pboard stringForType:NSPasteboardTypeString];
 	[self tableGrid:aTableGrid setObjectValue:value forColumn:columnIndex row:rowIndex];
 	
 	return YES;
