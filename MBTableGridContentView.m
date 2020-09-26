@@ -105,7 +105,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 		isDraggingColumnOrRow = NO;
         shouldDrawFillPart = MBTableGridTrackingPartNone;
 
-		_rowHeight = 20.0f;
+		_rowHeight = 20.0;
 		
 		_defaultCell = [[MBTableGridCell alloc] initTextCell:@""];
         _defaultCell.bordered = YES;
@@ -238,7 +238,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
     
     // Fill the selection rectangle
     if (selectionPath) {
-        [[selectionColor colorWithAlphaComponent:0.2f] set];
+        [[selectionColor colorWithAlphaComponent:0.2] set];
         [selectionPath fill];
     }
     
@@ -831,7 +831,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
         
         // Set the shadow
         NSShadow *shadow = [[NSShadow alloc] init];
-        shadow.shadowColor = [NSColor colorWithCalibratedWhite:0.0 alpha:0.8];
+        shadow.shadowColor = NSColor.shadowColor;
         shadow.shadowBlurRadius = 2.0;
         shadow.shadowOffset = NSMakeSize(0, -1.0);
         

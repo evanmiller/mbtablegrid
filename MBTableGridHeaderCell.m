@@ -49,8 +49,8 @@ extern CGFloat MBTableHeaderSortIndicatorMargin;
 
 - (NSColor*)borderColor
 {
-	if (_borderColor == nil)
-		_borderColor = NSColor.gridColor;
+    if (_borderColor == nil)
+        _borderColor = NSColor.quaternaryLabelColor;
 	return _borderColor;
 }
 
