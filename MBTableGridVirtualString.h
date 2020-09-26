@@ -13,6 +13,6 @@
     MBTableGrid *_tableGrid;
 }
 
-- (id)initWithTableGrid:(MBTableGrid *)tableGrid;
+- (instancetype)initWithTableGrid:(MBTableGrid *)tableGrid;
 
 @end

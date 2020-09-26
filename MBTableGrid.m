@@ -139,7 +139,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 + (BOOL)requiresConstraintBasedLayout { return YES; }
 
-- (id)initWithFrame:(NSRect)frameRect {
+- (instancetype)initWithFrame:(NSRect)frameRect {
 	if (self = [super initWithFrame:frameRect]) {
 		_columnWidths = [NSMutableDictionary dictionary];
 
