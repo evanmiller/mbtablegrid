@@ -38,6 +38,11 @@
 NSString * const MBTableGridTrackingPartKey = @"part";
 
 @interface MBTableGrid (Private)
+@property (nonatomic, readonly) MBHorizontalEdge _stickyColumn;
+@property (nonatomic, readonly) MBVerticalEdge _stickyRow;
+@property (nonatomic, readonly) NSColor *_selectionColor;
+@property (nonatomic, readonly) BOOL _containsFirstResponder;
+
 - (NSCell *)_cellForColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 - (id)_objectValueForColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 - (void)_setObjectValue:(id)value forColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
@@ -45,10 +50,6 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 - (BOOL)_canEditCellAtColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 - (void)_setStickyColumn:(MBHorizontalEdge)stickyColumn row:(MBVerticalEdge)stickyRow;
 - (CGFloat)_widthForColumn:(NSUInteger)columnIndex;
-- (MBHorizontalEdge)_stickyColumn;
-- (MBVerticalEdge)_stickyRow;
-- (NSColor *)_selectionColor;
-- (BOOL)_containsFirstResponder;
 - (NSCell *)_footerCellForColumn:(NSUInteger)columnIndex;
 - (void)_didDoubleClickColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 - (NSRange)_rangeOfRowsIntersectingRect:(NSRect)rect;
@@ -56,11 +57,11 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 @end
 
 @interface MBTableGridContentView (Cursors)
-- (NSCursor *)_cellSelectionCursor;
-- (NSImage *)_cellSelectionCursorImage;
-- (NSCursor *)_cellExtendSelectionCursor;
-- (NSImage *)_cellExtendSelectionCursorImage;
-- (NSImage *)_grabHandleImage;
+@property (nonatomic, copy, readonly) NSCursor *_cellSelectionCursor;
+@property (nonatomic, copy, readonly) NSImage *_cellSelectionCursorImage;
+@property (nonatomic, copy, readonly) NSCursor *_cellExtendSelectionCursor;
+@property (nonatomic, copy, readonly) NSImage *_cellExtendSelectionCursorImage;
+@property (nonatomic, copy, readonly) NSImage *_grabHandleImage;
 @end
 
 @interface MBTableGridContentView (DragAndDrop)
@@ -98,8 +99,8 @@ NSString * const MBTableGridTrackingPartKey = @"part";
         grabHandleRect = NSZeroRect;
 		
 		// Cache the cursor image
-		cursorImage = [self _cellSelectionCursorImage];
-        cursorExtendSelectionImage = [self _cellExtendSelectionCursorImage];
+		cursorImage = self._cellSelectionCursorImage;
+        cursorExtendSelectionImage = self._cellExtendSelectionCursorImage;
 		
         isCompleting = NO;
 		isDraggingColumnOrRow = NO;
@@ -559,7 +560,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 
 - (void) resetCursorRects {
     NSRect visibleRect = NSIntersectionRect(self.enclosingScrollView.insetDocumentVisibleRect, self.visibleRect);
-    [self addCursorRect:visibleRect cursor:[self _cellSelectionCursor]];
+    [self addCursorRect:visibleRect cursor:self._cellSelectionCursor];
 }
 
 #pragma mark -

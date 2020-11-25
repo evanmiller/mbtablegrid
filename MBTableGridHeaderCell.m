@@ -130,7 +130,7 @@ extern CGFloat MBTableHeaderSortIndicatorMargin;
 }
 
 - (NSAttributedString *)attributedStringValue {
-    NSMutableParagraphStyle *paragraphStyle = [[NSParagraphStyle defaultParagraphStyle] mutableCopy];
+    NSMutableParagraphStyle *paragraphStyle = [NSParagraphStyle.defaultParagraphStyle mutableCopy];
     if (self.orientation == MBTableHeaderVerticalOrientation) {
         paragraphStyle.alignment = NSTextAlignmentCenter;
     }
