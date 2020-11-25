@@ -1301,7 +1301,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 - (BOOL)prepareForDragOperation:(id <NSDraggingInfo> )sender {
 	// Do not accept drag if this doesn't come from us
-	if([sender draggingSource] != self) {
+	if(sender.draggingSource != self) {
 		return NO;
 	}
 	return YES;
