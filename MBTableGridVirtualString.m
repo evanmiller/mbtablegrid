@@ -29,7 +29,7 @@
  * Searches in column-first order.
  */
 
-- (id)initWithTableGrid:(MBTableGrid *)tableGrid {
+- (instancetype)initWithTableGrid:(MBTableGrid *)tableGrid {
     if (self = [super init]) {
         _tableGrid = tableGrid;
     }

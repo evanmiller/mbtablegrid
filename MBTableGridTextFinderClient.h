@@ -15,6 +15,6 @@
     NSMutableDictionary<NSNumber *, NSDictionary<NSString *, id> *> *_pending_replacements;
 }
 
-- (id)initWithTableGrid:(MBTableGrid *)tableGrid;
+- (instancetype)initWithTableGrid:(MBTableGrid *)tableGrid;
 
 @end

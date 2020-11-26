@@ -31,7 +31,7 @@
 #define _col(cellIndex, rows, cols) ((cellIndex) / (rows) + (cols-cols))
 #define _cell(rowIndex, columnIndex, rowCount, columCount) ((columnIndex) * (rowCount) + (rowIndex) + (columnCount-columnCount))
 
-- (id)initWithTableGrid:(MBTableGrid *)tableGrid {
+- (instancetype)initWithTableGrid:(MBTableGrid *)tableGrid {
     if (self = [super init]) {
         _tableGrid = tableGrid;
         _pending_replacements = [[NSMutableDictionary alloc] init];

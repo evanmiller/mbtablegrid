@@ -35,14 +35,12 @@
 
 @implementation MBTableGridCell
 
--(id)initTextCell:(NSString *)aString
+-(instancetype)initTextCell:(NSString *)aString
 {
-    self = [super initTextCell:aString];
-    
-    if (self)
+    if (self = [super initTextCell:aString])
     {
         self.backgroundColor = NSColor.clearColor;
-		self.borderColor = NSColor.gridColor;
+        self.borderColor = NSColor.quaternaryLabelColor;
 		self.truncatesLastVisibleLine = YES;
         return self;
     }
