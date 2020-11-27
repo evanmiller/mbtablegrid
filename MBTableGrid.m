@@ -1486,9 +1486,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
     [self scrollDistance:scrollDelta];
 }
 
-- (void)updateAuxiliaryViewSizes {
-    NSSize contentRectSize = contentView.frame.size;
-
+- (void)updateAuxiliaryViewSizesWithFrameSize:(NSSize)contentRectSize {
 	// Update the column header/footer view's size
     NSSize columnHeaderSize = NSMakeSize(contentRectSize.width, NSHeight(columnHeaderView.frame));
     NSSize columnFooterSize = NSMakeSize(contentRectSize.width, NSHeight(columnFooterView.frame));
@@ -1515,7 +1513,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 }
 
 - (void)preferredScrollerStyleDidChange:(NSNotification *)notification {
-    [self updateAuxiliaryViewSizes];
+    [self updateAuxiliaryViewSizesWithFrameSize:contentView.frame.size];
 }
 
 - (void)reloadData {
@@ -1555,8 +1553,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 	NSSize contentRectSize = NSMakeSize(NSMaxX(bottomRightCellFrame), NSMaxY(bottomRightCellFrame));
 	[contentView setFrameSize:contentRectSize];
-
-    [self updateAuxiliaryViewSizes];
+    [self updateAuxiliaryViewSizesWithFrameSize:contentRectSize];
 
 	if(_numberOfRows > 0) {
 		if((visibleRect.size.height + visibleRect.origin.y) > contentRectSize.height) {
