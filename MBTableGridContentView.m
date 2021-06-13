@@ -762,7 +762,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
                 rect.origin.x = previousRect.origin.x + previousRect.size.width;
             }
 
-			self.tableGrid.columnRects[@(columnIndex)] = [NSValue valueWithRect:rect];
+			self.tableGrid.columnRects[@(columnIndex)] = @(rect);
 
 		}
 	}

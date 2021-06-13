@@ -9,6 +9,8 @@
 #import "MBTableGridVirtualString.h"
 #import "MBTableGrid.h"
 #import "MBTableGridContentView.h"
+//enabling support for boxed NSRange
+typedef struct __attribute__((objc_boxable)) _NSRange NSRange;
 
 @interface MBTableGrid ()
 - (NSCell *)_cellForColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
@@ -130,7 +132,7 @@
     NSUInteger rowIndex = _row(cellIndex, rowCount, columnCount);
     NSUInteger filteredIndex = _col(cellIndex, rowCount, columnCount);
         
-    return @[ [NSValue valueWithRect:[_tableGrid.contentView frameOfCellAtColumn:filteredIndex row:rowIndex] ] ];
+    return @[ @([_tableGrid.contentView frameOfCellAtColumn:filteredIndex row:rowIndex] ) ];
 }
 
 - (NSArray<NSValue *> *)visibleCharacterRanges {
@@ -154,7 +156,7 @@
         NSInteger firstIndex = (j*rowCount + minRow);
         NSInteger lastIndex = (j*rowCount + maxRow);
         NSRange range = NSMakeRange(firstIndex, (lastIndex - firstIndex + 1));
-        [arrays_of_ranges addObject:[NSValue valueWithRange:range]];
+        [arrays_of_ranges addObject:@(range)];
     }
     return arrays_of_ranges;
 }
