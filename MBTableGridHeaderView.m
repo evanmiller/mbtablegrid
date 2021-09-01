@@ -76,12 +76,17 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 }
 
 - (void) resetCursorRects {
+    if (!self.tableGrid.acceptsFirstResponder)
+        return;
+    
 	if (self.orientation == MBTableHeaderHorizontalOrientation) {
         NSRect visibleRect = self.enclosingScrollView.insetDocumentVisibleRect;
 		// Draw the column headers
         NSRange columnRange = [self.tableGrid _rangeOfColumnsIntersectingRect:
                                [self convertRect:visibleRect toView:self.tableGrid]];
         NSUInteger column = columnRange.location;
+        [self removeAllToolTips];
+        [self.tableGrid removeAllToolTips];
 		while (column != NSNotFound && column < NSMaxRange(columnRange)) {
 			NSRect headerRect = [self headerRectOfColumn:column];
 			NSRect resizeRect = NSMakeRect(NSMinX(headerRect) + NSWidth(headerRect) - 2, NSMinY(headerRect), 5, NSHeight(headerRect));
@@ -89,9 +94,18 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 			if(CGRectIntersectsRect(resizeRect, visibleRect)) {
 				[self addCursorRect:resizeRect cursor:NSCursor.resizeLeftRightCursor];
 			}
+            headerCell.stringValue = [self.tableGrid _headerStringForColumn:column] ?: @"";
+            if (headerCell.attributedStringValue.size.width > [headerCell titleRectForBounds:headerRect].size.width) {
+                [self addToolTipRect:[headerCell titleRectForBounds:headerRect] owner:self userData:nil];
+            }
 			column++;
 		}
 	}
+}
+
+- (NSString *)view:(NSView *)view stringForToolTip:(NSToolTipTag)tag point:(NSPoint)point userData:(void *)data {
+    NSInteger column = [self.tableGrid columnAtPoint:[self convertPoint:point toView:self.tableGrid]];
+    return [self.tableGrid _headerStringForColumn:column];
 }
 
 - (void) updateTrackingAreas {
@@ -151,7 +165,7 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 				}
 				
                 headerCell.state = [self.tableGrid _headerStateForColumn:column];
-				headerCell.stringValue = [self.tableGrid _headerStringForColumn:column];
+                headerCell.stringValue = [self.tableGrid _headerStringForColumn:column] ?: @"";
 				[headerCell drawWithFrame:headerRect inView:self];
 			}
 			column++;
@@ -168,7 +182,7 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 			// Only draw the header if we need to
 			if ([self needsToDrawRect:headerRect]) {
                 headerCell.state = [self.tableGrid _headerStateForRow:row];
-				headerCell.stringValue = [self.tableGrid _headerStringForRow:row];
+                headerCell.stringValue = [self.tableGrid _headerStringForRow:row] ?: @"";
 				[headerCell drawWithFrame:headerRect inView:self];
 			}
 			row++;

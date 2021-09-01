@@ -32,7 +32,7 @@
  * @brief		\c MBTableGridHeaderView deals with the
  *				display and interaction with grid headers.
  */
-@interface MBTableGridHeaderView : NSView {
+@interface MBTableGridHeaderView : NSView<NSViewToolTipOwner> {
 	MBTableGridHeaderCell *headerCell;
 	MBTableGridHeaderOrientation orientation;
 	
