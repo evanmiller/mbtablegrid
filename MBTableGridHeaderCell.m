@@ -131,7 +131,7 @@ extern CGFloat MBTableHeaderSortIndicatorMargin;
 
 - (NSAttributedString *)attributedStringValue {
     NSMutableParagraphStyle *paragraphStyle = [NSParagraphStyle.defaultParagraphStyle mutableCopy];
-    if (self.orientation == MBTableHeaderVerticalOrientation) {
+    if (self.orientation == MBTableHeaderVerticalOrientation || !self.sortIndicatorColor) {
         paragraphStyle.alignment = NSTextAlignmentCenter;
     }
 	NSDictionary<NSAttributedStringKey, id> *attributes = @{
@@ -148,7 +148,7 @@ extern CGFloat MBTableHeaderSortIndicatorMargin;
     
     NSRect indicatorRect = [self sortIndicatorRectForBounds:cellFrame];
     NSBezierPath *path = [NSBezierPath bezierPath];
-    path.lineCapStyle = NSRoundLineCapStyle;
+    path.lineCapStyle = NSLineCapStyleRound;
     path.lineWidth = 1.5;
     [self.sortIndicatorColor setStroke];
     [path moveToPoint:NSMakePoint(NSMinX(indicatorRect) + path.lineWidth / 2,
@@ -166,20 +166,21 @@ extern CGFloat MBTableHeaderSortIndicatorMargin;
     [path stroke];
 }
 
-- (void)drawInteriorWithFrame:(NSRect)cellFrame inView:(NSView *)controlView
-{
-	NSRect cellFrameRect = cellFrame;
+- (NSRect)titleRectForBounds:(NSRect)cellFrame {
+    NSRect cellFrameRect = cellFrame;
 
-	static CGFloat TEXT_PADDING = 6;
-	NSRect textFrame;
-	CGSize stringSize = self.attributedStringValue.size;
+    static CGFloat TEXT_PADDING = 6;
+    NSRect textFrame;
+    CGSize stringSize = self.attributedStringValue.size;
     NSStringDrawingOptions options = (NSStringDrawingTruncatesLastVisibleLine | NSStringDrawingUsesLineFragmentOrigin);
-	if (self.orientation == MBTableHeaderHorizontalOrientation) {
-		textFrame = NSMakeRect(cellFrameRect.origin.x + TEXT_PADDING,
-							   cellFrameRect.origin.y + (cellFrameRect.size.height - stringSize.height)/2,
-							   cellFrameRect.size.width - TEXT_PADDING,
-							   stringSize.height);
-	} else {
+    if (self.orientation == MBTableHeaderHorizontalOrientation) {
+        textFrame = NSMakeRect(cellFrameRect.origin.x + TEXT_PADDING,
+                               cellFrameRect.origin.y + (cellFrameRect.size.height - stringSize.height)/2,
+                               cellFrameRect.size.width - 2 * TEXT_PADDING,
+                               stringSize.height);
+        if (self.sortIndicatorColor)
+            textFrame.size.width -= MBTableHeaderSortIndicatorWidth;
+    } else {
         NSRect boundingRect = [self.attributedStringValue boundingRectWithSize:cellFrame.size
                                                                        options:options];
         if (boundingRect.size.height < cellFrame.size.height) {
@@ -190,8 +191,20 @@ extern CGFloat MBTableHeaderSortIndicatorMargin;
         } else {
             textFrame = cellFrame;
         }
-	}
-	[self.attributedStringValue drawWithRect:textFrame options:options];
+    }
+    return textFrame;
+}
+
+- (void)drawInteriorWithFrame:(NSRect)cellFrame inView:(NSView *)controlView
+{
+    NSRect cellBounds = cellFrame;
+    cellBounds.origin.x = 0;
+    cellBounds.origin.y = 0;
+    NSRect titleFrame = [self titleRectForBounds:cellBounds];
+    titleFrame.origin.x += cellFrame.origin.x;
+    titleFrame.origin.y += cellFrame.origin.y;
+    NSStringDrawingOptions options = (NSStringDrawingTruncatesLastVisibleLine | NSStringDrawingUsesLineFragmentOrigin);
+	[self.attributedStringValue drawWithRect:titleFrame options:options];
     [self drawSortIndicatorWithFrame:cellFrame inView:controlView ascending:self.sortIndicatorAscending priority:0];
 }
 

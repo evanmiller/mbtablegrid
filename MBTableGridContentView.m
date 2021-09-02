@@ -412,7 +412,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
                 row = [self rowAtPoint:loc];
             }
             
-            [self resetCursorRects];
+            [self.window invalidateCursorRectsForView:self];
         }
         
         // While filling, if dragging upwards, remove any rows added during the fill operation
@@ -427,7 +427,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
             
             [self.tableGrid.dataSource tableGrid:self.tableGrid removeRows:rowIndexes];
             
-            [self resetCursorRects];
+            [self.window invalidateCursorRectsForView:self];
         }
 		
 		MBHorizontalEdge columnEdge = MBHorizontalEdgeLeft;
@@ -445,7 +445,6 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 			}
 			
 			self.tableGrid.selectedColumnIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(firstColumnToSelect,numberOfColumnsToSelect)];
-			
 		}
 		
 		// Select the appropriate number of rows
@@ -460,7 +459,6 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 			}
 			
 			self.tableGrid.selectedRowIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(firstRowToSelect,numberOfRowsToSelect)];
-			
 		}
 		
 		// Set the sticky edges
@@ -558,9 +556,40 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 	[super updateTrackingAreas];
 }
 
-- (void) resetCursorRects {
+- (void)resetCursorRects {
     NSRect visibleRect = NSIntersectionRect(self.enclosingScrollView.insetDocumentVisibleRect, self.visibleRect);
-    [self addCursorRect:visibleRect cursor:self._cellSelectionCursor];
+    if (self.tableGrid.acceptsFirstResponder)
+        [self addCursorRect:visibleRect cursor:self._cellSelectionCursor];
+    
+    [self resetToolTips];
+}
+
+- (void)resetToolTips {
+    NSRect visibleRect = NSIntersectionRect(self.enclosingScrollView.insetDocumentVisibleRect, self.visibleRect);
+
+    [self removeAllToolTips];
+    NSRange columnRange = [_tableGrid _rangeOfColumnsIntersectingRect:[self convertRect:visibleRect toView:_tableGrid]];
+    NSRange rowRange = [_tableGrid _rangeOfRowsIntersectingRect:[self convertRect:visibleRect toView:_tableGrid]];
+    
+    NSUInteger column = columnRange.location;
+    while (column != NSNotFound && column < NSMaxRange(columnRange)) {
+        NSUInteger row = rowRange.location;
+        while (row != NSNotFound && row < NSMaxRange(rowRange)) {
+            NSRect cellFrame = [self frameOfCellAtColumn:column row:row];
+            // Only fetch the cell if we need to
+            NSCell* cell = [_tableGrid _cellForColumn:column row: row];
+            if (cell.cellSize.width > [cell titleRectForBounds:cellFrame].size.width) {
+                [self addToolTipRect:[cell titleRectForBounds:cellFrame] owner:self userData:nil];
+            }
+            row++;
+        }
+        column++;
+    }
+}
+
+- (NSString *)view:(NSView *)view stringForToolTip:(NSToolTipTag)tag point:(NSPoint)point userData:(void *)data {
+    return [self.tableGrid _objectValueForColumn:[self columnAtPoint:point]
+                                             row:[self rowAtPoint:point]];
 }
 
 #pragma mark -
