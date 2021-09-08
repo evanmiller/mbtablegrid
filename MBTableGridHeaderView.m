@@ -188,7 +188,6 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 			row++;
 		}
 	}
-	
 }
 
 - (BOOL)isFlipped
@@ -201,17 +200,23 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
     NSPoint local_point = [self convertPoint:event_location fromView:nil];
     if (self.orientation == MBTableHeaderHorizontalOrientation) {
         NSInteger column = [self.tableGrid columnAtPoint:[self convertPoint:local_point toView:self.tableGrid]];
+        if (column == NSNotFound)
+            return nil;
         [self.tableGrid _willDisplayHeaderMenu:self.menu forColumn:column];
     } else {
         NSInteger row = [self.tableGrid rowAtPoint:[self convertPoint:local_point toView:self.tableGrid]];
+        if (row == NSNotFound)
+            return nil;
         [self.tableGrid _willDisplayHeaderMenu:self.menu forRow:row];
     }
 
     return self.menu;
 }
 
-- (void)_mouseDown:(NSEvent *)theEvent right:(BOOL)rightMouse
-{
+- (void)mouseDown:(NSEvent *)theEvent {
+    if (!self.tableGrid.acceptsFirstResponder)
+        return;
+    
 	// Get the location of the click
 	NSPoint loc = [self convertPoint:theEvent.locationInWindow fromView:nil];
 	mouseDownLocation = loc;
@@ -223,7 +228,7 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
         draggingColumnIndex = [self.tableGrid columnAtPoint:[self convertPoint:NSMakePoint(loc.x - 3, loc.y) toView:self.tableGrid]];
         lastMouseDraggingLocation = loc;
         isResizing = YES;
-    } else if (!rightMouse && self.orientation == MBTableHeaderHorizontalOrientation &&
+    } else if (self.orientation == MBTableHeaderHorizontalOrientation &&
                NSPointInRect(loc, [self sortIndicatorRectOfColumn:column])) {
         // Clicked the sort indicator
         [self.tableGrid _sortButtonClickedForColumn:column];
@@ -272,7 +277,7 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
                 }
             }
         }
-    } else if (theEvent.clickCount == 2 && !rightMouse) {
+    } else if (theEvent.clickCount == 2) {
         if (self.orientation == MBTableHeaderHorizontalOrientation) {
             [self.tableGrid _didDoubleClickColumn:column];
         } else {
@@ -282,14 +287,6 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 
     // Pass the event back to the MBTableGrid (Used to give First Responder status)
     [self.tableGrid mouseDown:theEvent];
-}
-
-- (void) mouseDown:(NSEvent *)theEvent {
-	[self _mouseDown:theEvent right:FALSE];
-}
-
-- (void) rightMouseDown:(NSEvent *)theEvent {
-	[self _mouseDown:theEvent right:TRUE];
 }
 
 - (void)mouseDragged:(NSEvent *)theEvent
@@ -320,7 +317,6 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
         }
                
     } else {
-    
         // Drag operation doesn't start until the mouse has moved more than 5 points
         CGFloat dragThreshold = 5.0;
         
@@ -374,9 +370,7 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 - (void)mouseUp:(NSEvent *)theEvent
 {
     if (canResize) {
-		
 		// if we have an autosaveName, store a dictionary of column widths.
-		
 		if (self.autosaveName) {
 			[self autoSaveColumnProperties];
 		}
@@ -387,12 +381,9 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
         [self.window invalidateCursorRectsForView:self];
         
 		// update cache of column rects
-		
 		[self.tableGrid.columnRects removeAllObjects];
 		[self updateTrackingAreas];
-		
     } else {
-        
         // If we only clicked on a header that was part of a bigger selection, select it
         if(shouldDragItems && !isInDrag) {
             if (self.orientation == MBTableHeaderHorizontalOrientation) {
@@ -414,7 +405,6 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
         
         // Reset the location
         mouseDownLocation = NSZeroPoint;
-        
     }
 }
 
@@ -457,8 +447,7 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 		columnAutoSaveProperties[[NSString stringWithFormat:@"C-%@", key]] = columnDict;
 	}];
 	
-	NSUserDefaults *defaults = NSUserDefaults.standardUserDefaults;
-	[defaults setObject:columnAutoSaveProperties forKey:self.autosaveName];
+	[NSUserDefaults.standardUserDefaults setObject:columnAutoSaveProperties forKey:self.autosaveName];
 }
 
 #pragma mark Layout Support
