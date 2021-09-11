@@ -1068,10 +1068,16 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 - (IBAction)performTextFinderAction:(NSControl *)sender {
     [_textFinder performAction:sender.tag];
+    if ([_delegate respondsToSelector:@selector(tableGrid:didPerformTextFinderAction:)]) {
+        [_delegate tableGrid:self didPerformTextFinderAction:sender.tag];
+    }
 }
 
 - (BOOL)validateUserInterfaceItem:(id<NSValidatedUserInterfaceItem>)item {
     if (item.action == @selector(performTextFinderAction:)) {
+        if ([_delegate respondsToSelector:@selector(tableGrid:validateTextFinderAction:)]) {
+            return [_delegate tableGrid:self validateTextFinderAction:item.tag];
+        }
         return [_textFinder validateAction:item.tag];
     }
     return YES;
@@ -1079,11 +1085,11 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 - (BOOL)_shouldAbortFindOperation {
     if (NSThread.isMainThread)
-        return self.isHiddenOrHasHiddenAncestor || !contentScrollView.findBarVisible;
+        return self.isHiddenOrHasHiddenAncestor || !contentScrollView.isFindBarVisible;
     
     __block BOOL return_value = NO;
     NSOperation *operation = [NSBlockOperation blockOperationWithBlock:^{
-        return_value = self.isHiddenOrHasHiddenAncestor || !self->contentScrollView.findBarVisible;
+        return_value = self.isHiddenOrHasHiddenAncestor || !self->contentScrollView.isFindBarVisible;
     }];
     [NSOperationQueue.mainQueue addOperations:@[ operation ] waitUntilFinished:YES];
     return return_value;

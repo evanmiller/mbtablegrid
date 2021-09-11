@@ -1146,6 +1146,29 @@ cells. A cell can individually override this behavior. */
 */
 - (void)tableGrid:(MBTableGrid *)aTableGrid didDoubleClickColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 
+#pragma mark -
+#pragma mark Find Bar Support
+
+/**
+ * @brief       Returns a boolean indicating whether the specified text finder action should be allowed.
+ *
+ * @param       aTableGrid      The table grid object that sent the message
+ * @param       finderActionTag The proposed finder action
+ *
+ * @see         NSTextFinderAction
+ */
+- (BOOL)tableGrid:(MBTableGrid *)aTableGrid validateTextFinderAction:(NSTextFinderAction)finderActionTag;
+
+/**
+ * @brief       Tells the delegate that the specified text finder action was performed.
+ *
+ * @param       aTableGrid      The table grid object that sent the message
+ * @param       finderActionTag The performed finder action
+ *
+ * @see         NSTextFinderAction
+ */
+- (void)tableGrid:(MBTableGrid *)aTableGrid didPerformTextFinderAction:(NSTextFinderAction)finderActionTag;
+
 /**
  * @}
  */

@@ -98,7 +98,7 @@ typedef struct __attribute__((objc_boxable)) _NSRange NSRange;
     NSUInteger columnCount = _tableGrid.numberOfColumns;
     NSUInteger rowCount = _tableGrid.numberOfRows;
     
-    if (selectedRanges.count) {
+    if (selectedRanges.count && columnCount && rowCount) {
         NSUInteger cellIndex = selectedRanges.firstObject.rangeValue.location;
         NSUInteger rowIndex = _row(cellIndex, rowCount, columnCount);
         NSUInteger filteredIndex = _col(cellIndex, rowCount, columnCount);
