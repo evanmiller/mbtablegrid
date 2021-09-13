@@ -46,6 +46,12 @@ NSString * const PasteboardTypeColumnClass = @"pasteboardTypeColumnClass";
 
 @implementation MBTableGridController
 
++ (void)initialize {
+    // See https://gist.github.com/lukaskubanek/9a61ac71dc0db8bb04db2028f2635779
+    [NSUserDefaults.standardUserDefaults registerDefaults:@{ @"NSViewUsesAutomaticLayerBackingStores": @NO }];
+    [super initialize];
+}
+
 - (void)awakeFromNib 
 {
     
