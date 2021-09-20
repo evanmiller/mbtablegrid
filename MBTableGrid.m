@@ -470,7 +470,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 - (void)mouseDown:(NSEvent *)theEvent {
 	// If we're not the first responder, we need to be
-	if (self.window.firstResponder != self) {
+	if (self.window.firstResponder != self && self.acceptsFirstResponder) {
 		[self.window makeFirstResponder:self];
 	}
 }
@@ -581,6 +581,9 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 - (void)moveUp:(id)sender {
 	NSUInteger column = self.selectedColumnIndexes.firstIndex;
 	NSUInteger row = self.selectedRowIndexes.firstIndex;
+    
+    if (row == NSNotFound || column == NSNotFound)
+        return NSBeep();
 
 	// Accomodate for the sticky edges
 	if (stickyColumnEdge == MBHorizontalEdgeRight) {
@@ -590,7 +593,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		row = self.selectedRowIndexes.lastIndex;
 	}
 
-    if (row <= 0 || row == NSNotFound || column == NSNotFound)
+    if (row <= 0)
         return;
 
 	self.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:column];
@@ -602,6 +605,9 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 - (void)moveUpAndModifySelection:(id)sender {
 	NSUInteger firstRow = self.selectedRowIndexes.firstIndex;
 	NSUInteger lastRow = self.selectedRowIndexes.lastIndex;
+    
+    if (firstRow == NSNotFound)
+        return NSBeep();
 
 	// If there is only one row selected, change the sticky edge to the bottom
 	if (self.selectedRowIndexes.count == 1) {
@@ -627,6 +633,10 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 - (void)moveDown:(id)sender {
 	NSUInteger column = self.selectedColumnIndexes.firstIndex;
 	NSUInteger row = self.selectedRowIndexes.firstIndex;
+    
+    if (column == NSNotFound || row == NSNotFound) {
+        return NSBeep();
+    }
 
 	// Accomodate for the sticky edges
 	if (stickyColumnEdge == MBHorizontalEdgeRight) {
@@ -636,7 +646,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		row = self.selectedRowIndexes.lastIndex;
 	}
 
-    if (row >= (_numberOfRows - 1) || column == NSNotFound || row == NSNotFound)
+    if (row >= (_numberOfRows - 1))
         return;
 
 	self.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:column];
@@ -648,6 +658,10 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 - (void)moveDownAndModifySelection:(id)sender {
 	NSUInteger firstRow = self.selectedRowIndexes.firstIndex;
 	NSUInteger lastRow = self.selectedRowIndexes.lastIndex;
+    
+    if (firstRow == NSNotFound) {
+        return NSBeep();
+    }
 
 	// If there is only one row selected, change the sticky edge to the top
 	if (self.selectedRowIndexes.count == 1) {
@@ -674,6 +688,9 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 - (void)moveLeft:(id)sender {
 	NSUInteger column = self.selectedColumnIndexes.firstIndex;
 	NSUInteger row = self.selectedRowIndexes.firstIndex;
+    
+    if (column == NSNotFound || row == NSNotFound)
+        return NSBeep();
 
 	// Accomodate for the sticky edges
 	if (stickyColumnEdge == MBHorizontalEdgeRight) {
@@ -683,7 +700,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		row = self.selectedRowIndexes.lastIndex;
 	}
 
-    if (column == 0 || column == NSNotFound || row == NSNotFound)
+    if (column == 0)
         return;
 
     self.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:(column - 1)];
@@ -695,6 +712,9 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 - (void)moveLeftAndModifySelection:(id)sender {
 	NSUInteger firstColumn = self.selectedColumnIndexes.firstIndex;
 	NSUInteger lastColumn = self.selectedColumnIndexes.lastIndex;
+    
+    if (firstColumn == NSNotFound)
+        return NSBeep();
 
 	// If there is only one column selected, change the sticky edge to the right
 	if (self.selectedColumnIndexes.count == 1) {
@@ -720,6 +740,9 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 - (void)moveRight:(id)sender {
 	NSUInteger column = self.selectedColumnIndexes.firstIndex;
 	NSUInteger row = self.selectedRowIndexes.firstIndex;
+    
+    if (column == NSNotFound || row == NSNotFound)
+        return NSBeep();
 
 	// Accomodate for the sticky edges
 	if (stickyColumnEdge == MBHorizontalEdgeRight) {
@@ -729,7 +752,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		row = self.selectedRowIndexes.lastIndex;
 	}
 
-    if (column >= (_numberOfColumns - 1) || column == NSNotFound || row == NSNotFound)
+    if (column >= (_numberOfColumns - 1))
         return;
 
     self.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:(column + 1)];
@@ -741,6 +764,9 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 - (void)moveRightAndModifySelection:(id)sender {
     NSUInteger firstColumn = self.selectedColumnIndexes.firstIndex;
     NSUInteger lastColumn = self.selectedColumnIndexes.lastIndex;
+    
+    if (firstColumn == NSNotFound)
+        return NSBeep();
 
     // If there is only one column selected, change the sticky edge to the left
     if (self.selectedColumnIndexes.count == 1) {
@@ -765,6 +791,9 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 - (void)moveToBeginningOfDocument:(id)sender {
     NSUInteger column = self.selectedColumnIndexes.firstIndex;
+    
+    if (column == NSNotFound)
+        return NSBeep();
 
     // Accomodate for the sticky edges
     if (stickyColumnEdge == MBHorizontalEdgeRight) {
@@ -781,6 +810,9 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
     NSUInteger firstRow = self.selectedRowIndexes.firstIndex;
     NSUInteger lastRow = self.selectedRowIndexes.lastIndex;
 
+    if (firstRow == NSNotFound)
+        return NSBeep();
+    
     if (stickyRowEdge == MBVerticalEdgeTop) {
         // If the top edge is sticky, contract the selection and switch stickiness
         lastRow = firstRow;
@@ -796,6 +828,9 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 - (void)moveToEndOfDocument:(id)sender {
     NSUInteger column = self.selectedColumnIndexes.firstIndex;
+    
+    if (column == NSNotFound)
+        return NSBeep();
 
     // Accomodate for the sticky edges
     if (stickyColumnEdge == MBHorizontalEdgeRight) {
@@ -812,6 +847,9 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
     NSUInteger firstRow = self.selectedRowIndexes.firstIndex;
     NSUInteger lastRow = self.selectedRowIndexes.lastIndex;
 
+    if (firstRow == NSNotFound)
+        return NSBeep();
+    
     if (stickyRowEdge == MBVerticalEdgeBottom) {
         // If the bottom edge is sticky, contract the selection and switch stickiness
         firstRow = lastRow;
@@ -827,6 +865,9 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 - (void)moveToBeginningOfLine:(id)sender {
     NSUInteger row = self.selectedRowIndexes.firstIndex;
+    
+    if (row == NSNotFound)
+        return NSBeep();
 
     // Accomodate for the sticky edges
     if (stickyRowEdge == MBVerticalEdgeBottom) {
@@ -843,6 +884,9 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
     NSUInteger firstColumn = self.selectedColumnIndexes.firstIndex;
     NSUInteger lastColumn = self.selectedColumnIndexes.lastIndex;
 
+    if (firstColumn == NSNotFound)
+        return NSBeep();
+    
     if (stickyColumnEdge == MBHorizontalEdgeLeft) {
         // If the left edge is sticky, contract the selection and switch stickiness
         lastColumn = firstColumn;
@@ -858,6 +902,9 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 - (void)moveToEndOfLine:(id)sender {
     NSUInteger row = self.selectedRowIndexes.firstIndex;
+    
+    if (row == NSNotFound)
+        return NSBeep();
 
     // Accomodate for the sticky edges
     if (stickyRowEdge == MBVerticalEdgeBottom) {
@@ -874,6 +921,9 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
     NSUInteger firstColumn = self.selectedColumnIndexes.firstIndex;
     NSUInteger lastColumn = self.selectedColumnIndexes.lastIndex;
 
+    if (firstColumn == NSNotFound)
+        return NSBeep();
+    
     if (stickyColumnEdge == MBHorizontalEdgeRight) {
         // If the right edge is sticky, contract the selection and switch stickiness
         firstColumn = lastColumn;
