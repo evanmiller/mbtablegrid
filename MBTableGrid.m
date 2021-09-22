@@ -40,6 +40,7 @@ NSString *MBTableGridDidMoveColumnsNotification         = @"MBTableGridDidMoveCo
 NSString *MBTableGridDidMoveRowsNotification            = @"MBTableGridDidMoveRowsNotification";
 CGFloat MBTableHeaderSortIndicatorWidth = 10.0;
 CGFloat MBTableHeaderSortIndicatorMargin = 4.0;
+CGFloat MBTableHeaderResizeLastColumnMargin = 4.0; // Need the header view to extend slightly past the rightmost column to catch clicks
 
 #define MBTableGridMinimumColumnWidth 60.0
 #define MBTableGridColumnHeaderHeight 24.0
@@ -447,6 +448,9 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
     }
 	
 	[self _setWidth:currentWidth forColumn:columnIndex];
+    
+    if (columnIndex == _numberOfColumns - 1)
+        [self scrollDistance:NSMakePoint(distance, 0.0)];
     
     // Update views with new sizes and mark the rightward columns as dirty
     for (NSView *horizontalView in @[ contentView, columnHeaderView, columnFooterView ]) {
@@ -1533,7 +1537,8 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
     contentScrollView.contentInsets = NSEdgeInsetsMake(columnHeaderScrollView.frame.size.height + _contentInsets.top,
                                                        rowHeaderScrollView.frame.size.width + _contentInsets.left,
                                                        columnFooterScrollView.frame.size.height + _contentInsets.bottom,
-                                                       rowFooterScrollView.frame.size.width + _contentInsets.right);
+                                                       rowFooterScrollView.frame.size.width + _contentInsets.right
+                                                       + MBTableHeaderResizeLastColumnMargin);
     rowHeaderScrollView.contentInsets = NSEdgeInsetsMake(columnHeaderScrollView.frame.size.height + _contentInsets.top, 0,
                                                          columnFooterScrollView.frame.size.height + _contentInsets.bottom, 0);
     rowFooterScrollView.contentInsets = NSEdgeInsetsMake(columnHeaderScrollView.frame.size.height + _contentInsets.top, 0,
@@ -1544,8 +1549,8 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 
 - (void)updateAuxiliaryViewSizesWithFrameSize:(NSSize)contentRectSize {
 	// Update the column header/footer view's size
-    NSSize columnHeaderSize = NSMakeSize(contentRectSize.width, NSHeight(columnHeaderView.frame));
-    NSSize columnFooterSize = NSMakeSize(contentRectSize.width, NSHeight(columnFooterView.frame));
+    NSSize columnHeaderSize = NSMakeSize(contentRectSize.width + MBTableHeaderResizeLastColumnMargin, NSHeight(columnHeaderView.frame));
+    NSSize columnFooterSize = NSMakeSize(contentRectSize.width + MBTableHeaderResizeLastColumnMargin, NSHeight(columnFooterView.frame));
     if (!contentScrollView.verticalScroller.isHidden && contentScrollView.scrollerStyle == NSScrollerStyleLegacy) {
         CGFloat scroller_width = [NSScroller scrollerWidthForControlSize:NSControlSizeRegular
                                                            scrollerStyle:contentScrollView.scrollerStyle];
