@@ -32,4 +32,6 @@
  */
 @interface MBTableGridCell : NSTextFieldCell
 
+- (void)drawBorderWithFrame:(NSRect)cellFrame inView:(NSView *)controlView;
+
 @end

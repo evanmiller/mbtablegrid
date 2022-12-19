@@ -43,14 +43,13 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 @property (nonatomic, readonly) NSColor *_selectionColor;
 @property (nonatomic, readonly) BOOL _containsFirstResponder;
 
-- (NSCell *)_cellForColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
+- (__kindof MBTableGridCell *)_cellForColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 - (id)_objectValueForColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 - (void)_setObjectValue:(id)value forColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 - (void)_setObjectValue:(id)value forColumns:(NSIndexSet *)columnIndexes rows:(NSIndexSet *)rowIndexes;
 - (BOOL)_canEditCellAtColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 - (void)_setStickyColumn:(MBHorizontalEdge)stickyColumn row:(MBVerticalEdge)stickyRow;
 - (CGFloat)_widthForColumn:(NSUInteger)columnIndex;
-- (NSCell *)_footerCellForColumn:(NSUInteger)columnIndex;
 - (void)_didDoubleClickColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 - (NSRange)_rangeOfRowsIntersectingRect:(NSRect)rect;
 - (NSRange)_rangeOfColumnsIntersectingRect:(NSRect)rect;
@@ -117,10 +116,10 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 }
 
 - (void) dealloc {
-	[[NSNotificationCenter defaultCenter] removeObserver:self];
+	[NSNotificationCenter.defaultCenter removeObserver:self];
 }
 
-- (void)drawCellInteriorsInRect:(NSRect)rect {
+- (void)enumerateCellsInRect:(NSRect)rect usingBlock:(void (^)(MBTableGridCell *cell, NSRect cellFrame))block {
     NSRange columnRange = [_tableGrid _rangeOfColumnsIntersectingRect:[self convertRect:rect toView:_tableGrid]];
     NSRange rowRange = [_tableGrid _rangeOfRowsIntersectingRect:[self convertRect:rect toView:_tableGrid]];
     
@@ -131,13 +130,24 @@ NSString * const MBTableGridTrackingPartKey = @"part";
             NSRect cellFrame = [self frameOfCellAtColumn:column row:row];
             if ([self needsToDrawRect:cellFrame] && (!(row == editedRow && column == editedColumn))) {
                 // Only fetch the cell if we need to
-                NSCell* cell = [_tableGrid _cellForColumn:column row: row];
-                [cell drawWithFrame:cellFrame inView:self];
+                block([_tableGrid _cellForColumn:column row: row], cellFrame);
             }
             row++;
         }
         column++;
     }
+}
+
+- (void)drawCellBordersInRect:(NSRect)rect {
+    [self enumerateCellsInRect:rect usingBlock:^(MBTableGridCell *cell, NSRect cellFrame) {
+        [cell drawBorderWithFrame:cellFrame inView:self];
+    }];
+}
+
+- (void)drawCellInteriorsInRect:(NSRect)rect {
+    [self enumerateCellsInRect:rect usingBlock:^(MBTableGridCell *cell, NSRect cellFrame) {
+        [cell drawInteriorWithFrame:cellFrame inView:self];
+    }];
 }
 
 - (void)drawColumnDropIndicator {
@@ -236,6 +246,8 @@ NSString * const MBTableGridTrackingPartKey = @"part";
         [translate translateXBy:-0.5 yBy:-0.5];
         [selectionPath transformUsingAffineTransform:translate];
     }
+    
+    [self drawCellBordersInRect:rect];
     
     // Fill the selection rectangle
     if (selectionPath) {
