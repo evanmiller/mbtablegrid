@@ -48,18 +48,21 @@
     return nil;
 }
 
+- (void)drawBorderWithFrame:(NSRect)cellFrame inView:(NSView *)controlView {
+    [_borderColor set];
+    
+    // Draw the right border
+    NSRect rightLine = NSMakeRect(NSMaxX(cellFrame)-1.0, NSMinY(cellFrame), 1.0, NSHeight(cellFrame));
+    NSRectFill(rightLine);
+    
+    // Draw the bottom border
+    NSRect bottomLine = NSMakeRect(NSMinX(cellFrame), NSMaxY(cellFrame)-1.0, NSWidth(cellFrame), 1.0);
+    NSRectFill(bottomLine);
+}
+
 - (void)drawWithFrame:(NSRect)cellFrame inView:(NSView *)controlView
 {
-	[_borderColor set];
-	
-	// Draw the right border
-	NSRect rightLine = NSMakeRect(NSMaxX(cellFrame)-1.0, NSMinY(cellFrame), 1.0, NSHeight(cellFrame));
-	NSRectFill(rightLine);
-	
-	// Draw the bottom border
-	NSRect bottomLine = NSMakeRect(NSMinX(cellFrame), NSMaxY(cellFrame)-1.0, NSWidth(cellFrame), 1.0);
-	NSRectFill(bottomLine);
-
+    [self drawBorderWithFrame:cellFrame inView:controlView];
 	[self drawInteriorWithFrame:cellFrame inView:controlView];
 }
 

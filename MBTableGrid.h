@@ -26,7 +26,8 @@
 #import <Cocoa/Cocoa.h>
 #import <QuartzCore/QuartzCore.h>
 
-@class MBTableGridHeaderView, MBTableGridFooterView, MBTableGridHeaderCell, MBTableGridContentView;
+@class MBTableGridHeaderView, MBTableGridFooterView, MBTableGridContentView;
+@class MBTableGridCell, MBTableGridHeaderCell;
 @protocol MBTableGridDelegate, MBTableGridDataSource;
 
 /* Notifications */
@@ -687,7 +688,7 @@ cells. A cell can individually override this behavior. */
  *
  * @return		The cell to render the specified column.
  */
-- (NSCell*) tableGrid:(MBTableGrid *)aTableGrid cellForColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
+- (__kindof MBTableGridCell *)tableGrid:(MBTableGrid *)aTableGrid cellForColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex;
 
 @optional
 

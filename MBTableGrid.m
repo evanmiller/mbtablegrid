@@ -352,7 +352,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 	return YES;
 }
 
-- (NSCell*) _cellForColumn: (NSUInteger)columnIndex row:(NSUInteger)rowIndex {
+- (__kindof MBTableGridCell *) _cellForColumn: (NSUInteger)columnIndex row:(NSUInteger)rowIndex {
 	if ([self.dataSource respondsToSelector:@selector(tableGrid:cellForColumn:row:)]) {
 		return [self.dataSource tableGrid:self cellForColumn:columnIndex row:rowIndex];
 	}
@@ -1713,7 +1713,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
         dirtyRect = NSUnionRect([self.contentView rectOfColumn:columnIndexes.firstIndex],
                                 [self.contentView rectOfColumn:columnIndexes.lastIndex]);
     }
-    return dirtyRect;
+    return NSInsetRect(dirtyRect, -1.0, -1.0);
 }
 
 - (NSRect)frameOfCellAtColumn:(NSUInteger)columnIndex row:(NSUInteger)rowIndex {
