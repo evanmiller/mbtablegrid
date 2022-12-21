@@ -727,18 +727,26 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 }
 */
 
-- (void)editSelectedCell:(id)sender text:(NSString *)aString
+- (__kindof MBTableGridCell *)editSelectedCell:(id)sender text:(NSString *)aString
 {
 	NSInteger selectedColumn = self.tableGrid.selectedColumnIndexes.firstIndex;
 	NSInteger selectedRow = self.tableGrid.selectedRowIndexes.firstIndex;
-	NSCell *selectedCell = [self.tableGrid _cellForColumn:selectedColumn row: selectedRow];
+    if (selectedColumn == NSNotFound || selectedRow == NSNotFound) {
+        editedColumn = NSNotFound;
+        editedRow = NSNotFound;
+        return nil;
+    }
+
+    MBTableGridCell *selectedCell = [self.tableGrid _cellForColumn:selectedColumn row: selectedRow];
 
 	// Check if the cell can be edited
 	if(![self.tableGrid _canEditCellAtColumn:selectedColumn row:selectedColumn]) {
 		editedColumn = NSNotFound;
 		editedRow = NSNotFound;
-		return;
+        return nil;
 	}
+
+    [self stopAutoscrollTimer];
 
 	// Select it and only it
 	if (self.tableGrid.selectedColumnIndexes.count > 1 && editedColumn != NSNotFound) {
@@ -752,7 +760,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 	editedColumn = selectedColumn;
 	editedRow = selectedRow;
 
-	NSRect cellFrame = [self frameOfCellAtColumn:editedColumn row:editedRow];
+    NSRect cellFrame = [selectedCell titleRectForBounds:[self frameOfCellAtColumn:editedColumn row:editedRow]];
 
 	selectedCell.editable = YES;
 	selectedCell.selectable = YES;
@@ -774,6 +782,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 	else {
         [selectedCell selectWithFrame:cellFrame inView:self editor:editor delegate:self start:0 length:currentValue.length];
 	}
+    return selectedCell;
 }
 
 #pragma mark Layout Support

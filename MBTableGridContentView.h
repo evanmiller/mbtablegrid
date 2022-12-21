@@ -104,7 +104,7 @@ typedef NS_ENUM(NSUInteger, MBTableGridTrackingPart)
  *				selects the top-left one and begins
  *				editing its value.
  */
-- (void)editSelectedCell:(id)sender text:(NSString *)aString;
+- (__kindof MBTableGridCell *)editSelectedCell:(id)sender text:(NSString *)aString;
 
 /**
  * @}
