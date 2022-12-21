@@ -1099,13 +1099,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 }
 
 - (void)insertText:(id)aString {
-	NSUInteger column = self.selectedColumnIndexes.firstIndex;
-	NSUInteger row = self.selectedRowIndexes.firstIndex;
-	NSCell *selectedCell = [self _cellForColumn:column row:row];
-
-	[contentView editSelectedCell:self text:aString];
-	
-	if ([selectedCell isKindOfClass:[MBTableGridCell class]]) {
+	if ([contentView editSelectedCell:self text:aString]) {
 		// Insert the typed string into the field editor
 		NSText *fieldEditor = [self.window fieldEditor:YES forObject:contentView];
 		fieldEditor.delegate = contentView;
