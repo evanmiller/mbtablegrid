@@ -1711,7 +1711,7 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
         return NSMakeRange(NSNotFound, 0);
     
     NSUInteger firstRow = MAX(0, floor(NSMinY(contentRect) / rowHeight));
-    NSUInteger lastRow = MIN(numberOfRows - 1, ceil(NSMaxY(contentRect)/rowHeight));
+    NSUInteger lastRow = MIN(numberOfRows - 1, MAX(0, ceil(NSMaxY(contentRect)/rowHeight)));
     return NSMakeRange(firstRow, lastRow - firstRow + 1);
 }
 
