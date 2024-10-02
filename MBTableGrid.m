@@ -1399,6 +1399,10 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 			// Get the index to move the columns to
 			NSUInteger dropColumn = [self _dropColumnForPoint:mouseLocation];
 
+			if (dropColumn == NSNotFound) {
+				return NO;
+			}
+            
 			// Tell the data source to move the columns
 			BOOL didDrag = [self.dataSource tableGrid:self moveColumns:draggedColumns toIndex:dropColumn];
 
@@ -1439,6 +1443,10 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 			// Get the index to move the rows to
 			NSUInteger dropRow = [self _dropRowForPoint:mouseLocation];
 
+			if (dropRow == NSNotFound) {
+				return NO;
+			}
+            
 			// Tell the data source to move the rows
 			BOOL didDrag = [self.dataSource tableGrid:self moveRows:draggedRows toIndex:dropRow];
 
