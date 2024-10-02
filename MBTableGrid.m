@@ -1443,6 +1443,10 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 			// Get the index to move the rows to
 			NSUInteger dropRow = [self _dropRowForPoint:mouseLocation];
 
+			if (dropRow == NSNotFound) {
+				return NO;
+			}
+            
 			// Tell the data source to move the rows
 			BOOL didDrag = [self.dataSource tableGrid:self moveRows:draggedRows toIndex:dropRow];
 
