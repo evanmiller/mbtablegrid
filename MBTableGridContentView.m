@@ -346,7 +346,7 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 			[self editSelectedCell:self text:nil];
 
 		// Expand a selection when the user holds the shift key
-        } else if ((theEvent.modifierFlags & NSEventModifierFlagShift) && self.tableGrid.allowsMultipleSelection && !isFilling) {
+        } else if ((theEvent.modifierFlags & NSEventModifierFlagShift) && self.tableGrid.allowsMultipleSelection && !isFilling && self.tableGrid.selectedColumnIndexes.count && self.tableGrid.selectedRowIndexes.count) {
 			// If the shift key was held down, extend the selection
 			NSUInteger stickyColumn = self.tableGrid.selectedColumnIndexes.firstIndex;
 			NSUInteger stickyRow = self.tableGrid.selectedRowIndexes.firstIndex;
