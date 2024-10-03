@@ -748,6 +748,10 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 
     [self stopAutoscrollTimer];
 
+	// Get the top-left selection
+	editedColumn = selectedColumn;
+	editedRow = selectedRow;
+ 
 	// Select it and only it
 	if (self.tableGrid.selectedColumnIndexes.count > 1 && editedColumn != NSNotFound) {
 		self.tableGrid.selectedColumnIndexes = [NSIndexSet indexSetWithIndex:editedColumn];
@@ -755,10 +759,6 @@ NSString * const MBTableGridTrackingPartKey = @"part";
 	if (self.tableGrid.selectedRowIndexes.count > 1 && editedRow != NSNotFound) {
 		self.tableGrid.selectedRowIndexes = [NSIndexSet indexSetWithIndex:editedRow];
 	}
-
-	// Get the top-left selection
-	editedColumn = selectedColumn;
-	editedRow = selectedRow;
 
     NSRect cellFrame = [selectedCell titleRectForBounds:[self frameOfCellAtColumn:editedColumn row:editedRow]];
 
