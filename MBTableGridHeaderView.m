@@ -376,6 +376,7 @@ NSString* kAutosavedColumnHiddenKey = @"AutosavedColumnHidden";
 		}
 		
         isResizing = NO;
+	canResize = NO;
 		
         [self.window enableCursorRects];
         [self.window invalidateCursorRectsForView:self];
