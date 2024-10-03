@@ -1107,6 +1107,8 @@ NS_INLINE MBVerticalEdge MBOppositeVerticalEdge(MBVerticalEdge other) {
 		
 		// The textDidBeginEditing notification isn't sent yet, so invoke a custom method
 		[contentView textDidBeginEditingWithEditor:fieldEditor];
+  
+		[self scrollSelectionToVisible];
 	}
 	self.needsDisplay = YES;
 }
