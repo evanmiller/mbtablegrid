@@ -532,8 +532,10 @@ NSString * const PasteboardTypeColumnClass = @"pasteboardTypeColumnClass";
 	
 	// Determine the new indexes for the objects
 	NSRange newRange = NSMakeRange(index, [indexes count]);
-	if (index > [indexes firstIndex]) {
+	if (index > [indexes lastIndex]) {
 		newRange.location -= [indexes count];
+	} else if (index > [indexes firstIndex]) {
+		newRange.location = [indexes firstIndex];
 	}
 	NSIndexSet *newIndexes = [NSIndexSet indexSetWithIndexesInRange:newRange];
 	
