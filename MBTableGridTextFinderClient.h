@@ -10,7 +10,7 @@
 @class MBTableGrid;
 
 @interface MBTableGridTextFinderClient : NSObject<NSTextFinderClient> {
-    MBTableGrid *_tableGrid;
+    __weak MBTableGrid *_tableGrid;
     
     NSMutableDictionary<NSNumber *, NSDictionary<NSString *, id> *> *_pending_replacements;
 }
